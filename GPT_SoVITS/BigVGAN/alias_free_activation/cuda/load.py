@@ -41,9 +41,9 @@ def load():
                 "-gencode",
                 "arch=compute_70,code=sm_70",
                 "--use_fast_math",
-            ]
-            + extra_cuda_flags
-            + cc_flag,
+                *extra_cuda_flags,
+                *cc_flag,
+            ],
             verbose=True,
         )
 

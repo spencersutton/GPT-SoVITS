@@ -1,7 +1,7 @@
 # punctuation = ['!', '?', '…', ",", ".","@"]#@是SP停顿
 punctuation = ["!", "?", "…", ",", "."]  # @是SP停顿
 punctuation.append("-")
-pu_symbols = punctuation + ["SP", "SP2", "SP3", "UNK"]
+pu_symbols = [*punctuation, "SP", "SP2", "SP3", "UNK"]
 # pu_symbols = punctuation + ["SP", 'SP2', 'SP3','SP4', "UNK"]
 pad = "_"
 
@@ -393,7 +393,7 @@ arpa = {
     "SH",
 }
 
-symbols = [pad] + c + v + ja_symbols + pu_symbols + list(arpa)
+symbols = [pad, *c, *v, *ja_symbols, *pu_symbols, *list(arpa)]
 symbols = sorted(set(symbols))
 if __name__ == "__main__":
     print(len(symbols))

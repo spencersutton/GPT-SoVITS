@@ -120,7 +120,7 @@ class MelSpec(nn.Module):
         mel_spec_type="vocos",
     ):
         super().__init__()
-        assert mel_spec_type in ["vocos", "bigvgan"], print(
+        assert mel_spec_type in ["vocos", "bigvgan"], (
             "We only support two extract mel backend: vocos or bigvgan"
         )
 
@@ -405,7 +405,7 @@ class Attention(nn.Module):
     def forward(
         self,
         x: float["b n d"],  # noised input x  # noqa: F722
-        c: float["b n d"] = None,  # context c  # noqa: F722
+        c: float["b n d"] | None = None,  # context c  # noqa: F722
         mask: bool["b n"] | None = None,  # noqa: F722
         rope=None,  # rotary position embedding for x
         c_rope=None,  # rotary position embedding for c
@@ -502,7 +502,7 @@ class JointAttnProcessor:
         self,
         attn: Attention,
         x: float["b n d"],  # noised input x  # noqa: F722
-        c: float["b nt d"] = None,  # context c, here text # noqa: F722
+        c: float["b nt d"] | None = None,  # context c, here text # noqa: F722
         mask: bool["b n"] | None = None,  # noqa: F722
         rope=None,  # rotary position embedding for x
         c_rope=None,  # rotary position embedding for c

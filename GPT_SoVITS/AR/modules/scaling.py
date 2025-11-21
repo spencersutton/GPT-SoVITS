@@ -246,7 +246,7 @@ class ActivationBalancer(torch.nn.Module):
         max_abs: float = 100.0,
         min_prob: float = 0.1,
     ):
-        super(ActivationBalancer, self).__init__()
+        super().__init__()
         self.num_channels = num_channels
         self.channel_dim = channel_dim
         self.min_positive = min_positive

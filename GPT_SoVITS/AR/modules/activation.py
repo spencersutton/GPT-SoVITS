@@ -91,7 +91,7 @@ class MultiheadAttention(Module):
         dtype=None,
     ) -> None:
         factory_kwargs = {"device": device, "dtype": dtype}
-        super(MultiheadAttention, self).__init__()
+        super().__init__()
         self.embed_dim = embed_dim
         self.kdim = kdim if kdim is not None else embed_dim
         self.vdim = vdim if vdim is not None else embed_dim
@@ -202,7 +202,7 @@ class MultiheadAttention(Module):
         if "_qkv_same_embed_dim" not in state:
             state["_qkv_same_embed_dim"] = True
 
-        super(MultiheadAttention, self).__setstate__(state)
+        super().__setstate__(state)
 
     def forward(
         self,
@@ -329,14 +329,11 @@ class MultiheadAttention(Module):
             if torch.overrides.has_torch_function(tensor_args):
                 why_not_fast_path = "some Tensor argument has_torch_function"
             elif not all(
-                [
-                    (x is None or x.is_cuda or "cpu" in str(x.device))
-                    for x in tensor_args
-                ]
+                (x is None or x.is_cuda or "cpu" in str(x.device)) for x in tensor_args
             ):
                 why_not_fast_path = "some Tensor argument is neither CUDA nor CPU"
             elif torch.is_grad_enabled() and any(
-                [x is not None and x.requires_grad for x in tensor_args]
+                x is not None and x.requires_grad for x in tensor_args
             ):
                 why_not_fast_path = "grad is enabled and at least one of query or the input/output projection weights or biases requires_grad"
             if not why_not_fast_path:

@@ -147,7 +147,7 @@ import sys
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)
-sys.path.append("%s/GPT_SoVITS" % (now_dir))
+sys.path.append(f"{now_dir}/GPT_SoVITS")
 
 import logging
 import signal
@@ -241,15 +241,14 @@ def init_bigvgan():
     from BigVGAN import bigvgan
 
     bigvgan_model = bigvgan.BigVGAN.from_pretrained(
-        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
-        % (now_dir,),
+        f"{now_dir}/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x",
         use_cuda_kernel=False,
     )  # if True, RuntimeError: Ninja is required to load C++ extensions
     # remove weight norm in the model and set to eval mode
     bigvgan_model.remove_weight_norm()
     bigvgan_model = bigvgan_model.eval()
 
-    if is_half == True:
+    if is_half:
         bigvgan_model = bigvgan_model.half().to(device)
     else:
         bigvgan_model = bigvgan_model.to(device)
@@ -271,12 +270,12 @@ def init_hifigan():
     hifigan_model.eval()
     hifigan_model.remove_weight_norm()
     state_dict_g = torch.load(
-        "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth" % (now_dir,),
+        f"{now_dir}/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth",
         map_location="cpu",
         weights_only=False,
     )
     print("loading vocoder", hifigan_model.load_state_dict(state_dict_g))
-    if is_half == True:
+    if is_half:
         hifigan_model = hifigan_model.half().to(device)
     else:
         hifigan_model = hifigan_model.to(device)
@@ -295,7 +294,7 @@ resample_transform_dict = {}
 
 def resample(audio_tensor, sr0, sr1, device):
     global resample_transform_dict
-    key = "%s-%s-%s" % (sr0, sr1, str(device))
+    key = f"{sr0}-{sr1}-{device!s}"
     if key not in resample_transform_dict:
         resample_transform_dict[key] = torchaudio.transforms.Resample(sr0, sr1).to(
             device
@@ -317,28 +316,32 @@ def denorm_spec(x):
     return (x + 1) / 2 * (spec_max - spec_min) + spec_min
 
 
-mel_fn = lambda x: mel_spectrogram_torch(
-    x,
-    n_fft=1024,
-    win_size=1024,
-    hop_size=256,
-    num_mels=100,
-    sampling_rate=24000,
-    fmin=0,
-    fmax=None,
-    center=False,
-)
-mel_fn_v4 = lambda x: mel_spectrogram_torch(
-    x,
-    n_fft=1280,
-    win_size=1280,
-    hop_size=320,
-    num_mels=100,
-    sampling_rate=32000,
-    fmin=0,
-    fmax=None,
-    center=False,
-)
+def mel_fn(x):
+    return mel_spectrogram_torch(
+        x,
+        n_fft=1024,
+        win_size=1024,
+        hop_size=256,
+        num_mels=100,
+        sampling_rate=24000,
+        fmin=0,
+        fmax=None,
+        center=False,
+    )
+
+
+def mel_fn_v4(x):
+    return mel_spectrogram_torch(
+        x,
+        n_fft=1280,
+        win_size=1280,
+        hop_size=320,
+        num_mels=100,
+        sampling_rate=32000,
+        fmin=0,
+        fmax=None,
+        center=False,
+    )
 
 
 sr_model = None
@@ -346,7 +349,7 @@ sr_model = None
 
 def audio_sr(audio, sr):
     global sr_model
-    if sr_model == None:
+    if sr_model is None:
         from tools.audio_sr import AP_BWE
 
         try:
@@ -378,6 +381,9 @@ class Sovits:
         self.hps = hps
 
 
+import functools
+import operator
+
 from process_ckpt import get_sovits_version_from_path_fast, load_sovits_new
 
 
@@ -389,12 +395,12 @@ def get_sovits_weights(sovits_path):
     is_exist_s2gv3 = os.path.exists(path_sovits_v3)
     is_exist_s2gv4 = os.path.exists(path_sovits_v4)
 
-    version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(sovits_path)
+    _version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(sovits_path)
     is_exist = is_exist_s2gv3 if model_version == "v3" else is_exist_s2gv4
     path_sovits = path_sovits_v3 if model_version == "v3" else path_sovits_v4
 
-    if if_lora_v3 == True and is_exist == False:
-        logger.info("SoVITS %s 底模缺失，无法加载相应 LoRA 权重" % model_version)
+    if if_lora_v3 and not is_exist:
+        logger.info(f"SoVITS {model_version} 底模缺失，无法加载相应 LoRA 权重")
 
     dict_s2 = load_sovits_new(sovits_path)
     hps = dict_s2["config"]
@@ -411,7 +417,7 @@ def get_sovits_weights(sovits_path):
     if model_version not in {"v3", "v4"}:
         if "Pro" in model_version:
             hps.model.version = model_version
-            if sv_cn_model == None:
+            if sv_cn_model is None:
                 init_sv_cn()
 
         vq_model = SynthesizerTrn(
@@ -440,12 +446,12 @@ def get_sovits_weights(sovits_path):
             del vq_model.enc_q
         except:
             pass
-    if is_half == True:
+    if is_half:
         vq_model = vq_model.half().to(device)
     else:
         vq_model = vq_model.to(device)
     vq_model.eval()
-    if if_lora_v3 == False:
+    if not if_lora_v3:
         vq_model.load_state_dict(dict_s2["weight"], strict=False)
     else:
         path_sovits = path_sovits_v3 if model_version == "v3" else path_sovits_v4
@@ -483,7 +489,7 @@ def get_gpt_weights(gpt_path):
     max_sec = config["data"]["max_sec"]
     t2s_model = Text2SemanticLightningModule(config, "****", is_train=False)
     t2s_model.load_state_dict(dict_s1["weight"])
-    if is_half == True:
+    if is_half:
         t2s_model = t2s_model.half()
     t2s_model = t2s_model.to(device)
     t2s_model.eval()
@@ -538,7 +544,7 @@ def get_bert_inf(phones, word2ph, norm_text, language):
     else:
         bert = torch.zeros(
             (1024, len(phones)),
-            dtype=torch.float16 if is_half == True else torch.float32,
+            dtype=torch.float16 if is_half else torch.float32,
         ).to(device)
 
     return bert
@@ -604,7 +610,7 @@ def get_phones_and_bert(text, language, version, final=False):
         norm_text_list.append(norm_text)
         bert_list.append(bert)
     bert = torch.cat(bert_list, dim=1)
-    phones = sum(phones_list, [])
+    phones = functools.reduce(operator.iadd, phones_list, [])
     norm_text = "".join(norm_text_list)
 
     if not final and len(phones) < 6:
@@ -612,7 +618,7 @@ def get_phones_and_bert(text, language, version, final=False):
 
     return (
         phones,
-        bert.to(torch.float16 if is_half == True else torch.float32),
+        bert.to(torch.float16 if is_half else torch.float32),
         norm_text,
     )
 
@@ -635,7 +641,7 @@ class DictToAttrRecursive(dict):
     def __setattr__(self, key, value):
         if isinstance(value, dict):
             value = DictToAttrRecursive(value)
-        super(DictToAttrRecursive, self).__setitem__(key, value)
+        super().__setitem__(key, value)
         super().__setattr__(key, value)
 
     def __delattr__(self, item):
@@ -670,7 +676,7 @@ def get_spepc(hps, filename, dtype, device, is_v2pro=False):
         center=False,
     )
     spec = spec.to(dtype)
-    if is_v2pro == True:
+    if is_v2pro:
         audio = resample(audio, sr1, 16000, device).to(dtype)
     return spec, audio
 
@@ -880,16 +886,16 @@ def get_tts_wav(
     if prompt_text[-1] not in splits:
         prompt_text += "。" if prompt_language != "en" else "."
     prompt_language, text = prompt_language, text.strip("\n")
-    dtype = torch.float16 if is_half == True else torch.float32
+    dtype = torch.float16 if is_half else torch.float32
     zero_wav = np.zeros(
         int(hps.data.sampling_rate * 0.3),
-        dtype=np.float16 if is_half == True else np.float32,
+        dtype=np.float16 if is_half else np.float32,
     )
     with torch.no_grad():
         wav16k, sr = librosa.load(ref_wav_path, sr=16000)
         wav16k = torch.from_numpy(wav16k)
         zero_wav_torch = torch.from_numpy(zero_wav)
-        if is_half == True:
+        if is_half:
             wav16k = wav16k.half().to(device)
             zero_wav_torch = zero_wav_torch.half().to(device)
         else:
@@ -908,7 +914,7 @@ def get_tts_wav(
             refers = []
             if is_v2pro:
                 sv_emb = []
-                if sv_cn_model == None:
+                if sv_cn_model is None:
                     init_sv_cn()
             if inp_refs:
                 for path in inp_refs:
@@ -935,7 +941,7 @@ def get_tts_wav(
     # os.environ['version'] = version
     prompt_language = dict_language[prompt_language.lower()]
     text_language = dict_language[text_language.lower()]
-    phones1, bert1, norm_text1 = get_phones_and_bert(
+    phones1, bert1, _norm_text1 = get_phones_and_bert(
         prompt_text, prompt_language, version
     )
     texts = text.split("\n")
@@ -949,7 +955,7 @@ def get_tts_wav(
         audio_opt = []
         if text[-1] not in splits:
             text += "。" if text_language != "en" else "."
-        phones2, bert2, norm_text2 = get_phones_and_bert(text, text_language, version)
+        phones2, bert2, _norm_text2 = get_phones_and_bert(text, text_language, version)
         bert = torch.cat([bert1, bert2], 1)
 
         all_phoneme_ids = torch.LongTensor(phones1 + phones2).to(device).unsqueeze(0)
@@ -1048,9 +1054,9 @@ def get_tts_wav(
             cfm_res = torch.cat(cfm_resss, 2)
             cfm_res = denorm_spec(cfm_res)
             if version == "v3":
-                if bigvgan_model == None:
+                if bigvgan_model is None:
                     init_bigvgan()
-            elif hifigan_model == None:
+            elif hifigan_model is None:
                 init_hifigan()
             vocoder_model = bigvgan_model if version == "v3" else hifigan_model
             with torch.inference_mode():
@@ -1110,7 +1116,7 @@ def handle_control(command):
         os.execl(g_config.python_exec, g_config.python_exec, *sys.argv)
     elif command == "exit":
         os.kill(os.getpid(), signal.SIGTERM)
-        exit(0)
+        sys.exit(0)
 
 
 def handle_change(path, text, language):
@@ -1171,7 +1177,7 @@ def handle(
                 {"code": 400, "message": "未指定参考音频且接口无预设"}, status_code=400
             )
 
-    if cut_punc == None:
+    if cut_punc is None:
         text = cut_text(text, default_cut_punc)
     else:
         text = cut_text(text, cut_punc)
@@ -1406,8 +1412,8 @@ async def set_model(request: Request):
 
 @app.get("/set_model")
 async def set_model(
-    gpt_model_path: str = None,
-    sovits_model_path: str = None,
+    gpt_model_path: str | None = None,
+    sovits_model_path: str | None = None,
 ):
     return change_gpt_sovits_weights(
         gpt_path=gpt_model_path, sovits_path=sovits_model_path
@@ -1421,7 +1427,7 @@ async def control(request: Request):
 
 
 @app.get("/control")
-async def control(command: str = None):
+async def control(command: str | None = None):
     return handle_control(command)
 
 
@@ -1437,7 +1443,9 @@ async def change_refer(request: Request):
 
 @app.get("/change_refer")
 async def change_refer(
-    refer_wav_path: str = None, prompt_text: str = None, prompt_language: str = None
+    refer_wav_path: str | None = None,
+    prompt_text: str | None = None,
+    prompt_language: str | None = None,
 ):
     return handle_change(refer_wav_path, prompt_text, prompt_language)
 
@@ -1464,12 +1472,12 @@ async def tts_endpoint(request: Request):
 
 @app.get("/")
 async def tts_endpoint(
-    refer_wav_path: str = None,
-    prompt_text: str = None,
-    prompt_language: str = None,
-    text: str = None,
-    text_language: str = None,
-    cut_punc: str = None,
+    refer_wav_path: str | None = None,
+    prompt_text: str | None = None,
+    prompt_language: str | None = None,
+    text: str | None = None,
+    text_language: str | None = None,
+    cut_punc: str | None = None,
     top_k: int = 15,
     top_p: float = 1.0,
     temperature: float = 1.0,

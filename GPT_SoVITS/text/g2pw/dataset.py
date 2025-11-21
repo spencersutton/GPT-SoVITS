@@ -31,7 +31,7 @@ def prepare_onnx_input(
     texts: list[str],
     query_ids: list[int],
     use_mask: bool = False,
-    window_size: int = None,
+    window_size: int | None = None,
     max_len: int = 512,
 ) -> dict[str, np.array]:
     if window_size is not None:
@@ -66,7 +66,7 @@ def prepare_onnx_input(
             token2text=token2text,
         )
 
-        processed_tokens = ["[CLS]"] + tokens + ["[SEP]"]
+        processed_tokens = ["[CLS]", *tokens, "[SEP]"]
 
         input_id = list(np.array(tokenizer.convert_tokens_to_ids(processed_tokens)))
         token_type_id = list(np.zeros((len(processed_tokens),), dtype=int))
@@ -155,7 +155,7 @@ def _truncate(
 def get_phoneme_labels(
     polyphonic_chars: list[list[str]],
 ) -> tuple[list[str], dict[str, list[int]]]:
-    labels = sorted(list(set([phoneme for char, phoneme in polyphonic_chars])))
+    labels = sorted({phoneme for char, phoneme in polyphonic_chars})
     char2phonemes = {}
     for char, phoneme in polyphonic_chars:
         if char not in char2phonemes:
@@ -167,9 +167,7 @@ def get_phoneme_labels(
 def get_char_phoneme_labels(
     polyphonic_chars: list[list[str]],
 ) -> tuple[list[str], dict[str, list[int]]]:
-    labels = sorted(
-        list(set([f"{char} {phoneme}" for char, phoneme in polyphonic_chars]))
-    )
+    labels = sorted({f"{char} {phoneme}" for char, phoneme in polyphonic_chars})
     char2phonemes = {}
     for char, phoneme in polyphonic_chars:
         if char not in char2phonemes:

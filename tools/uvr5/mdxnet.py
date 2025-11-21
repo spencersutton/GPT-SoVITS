@@ -16,7 +16,7 @@ class ConvTDFNetTrim:
     def __init__(
         self, device, model_name, target_name, L, dim_f, dim_t, n_fft, hop=1024
     ):
-        super(ConvTDFNetTrim, self).__init__()
+        super().__init__()
 
         self.dim_f = dim_f
         self.dim_t = 2**dim_t
@@ -206,30 +206,24 @@ class Predictor:
         sources = self.demix(mix.T)
         opt = sources[0].T
         if format in ["wav", "flac"]:
-            sf.write(
-                "%s/%s_main_vocal.%s" % (vocal_root, basename, format), mix - opt, rate
-            )
-            sf.write("%s/%s_others.%s" % (others_root, basename, format), opt, rate)
+            sf.write(f"{vocal_root}/{basename}_main_vocal.{format}", mix - opt, rate)
+            sf.write(f"{others_root}/{basename}_others.{format}", opt, rate)
         else:
-            path_vocal = "%s/%s_main_vocal.wav" % (vocal_root, basename)
-            path_other = "%s/%s_others.wav" % (others_root, basename)
+            path_vocal = f"{vocal_root}/{basename}_main_vocal.wav"
+            path_other = f"{others_root}/{basename}_others.wav"
             sf.write(path_vocal, mix - opt, rate)
             sf.write(path_other, opt, rate)
-            opt_path_vocal = path_vocal[:-4] + ".%s" % format
-            opt_path_other = path_other[:-4] + ".%s" % format
+            opt_path_vocal = path_vocal[:-4] + f".{format}"
+            opt_path_other = path_other[:-4] + f".{format}"
             if os.path.exists(path_vocal):
-                os.system(
-                    'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path_vocal, opt_path_vocal)
-                )
+                os.system(f'ffmpeg -i "{path_vocal}" -vn "{opt_path_vocal}" -q:a 2 -y')
                 if os.path.exists(opt_path_vocal):
                     try:
                         os.remove(path_vocal)
                     except:
                         pass
             if os.path.exists(path_other):
-                os.system(
-                    'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path_other, opt_path_other)
-                )
+                os.system(f'ffmpeg -i "{path_other}" -vn "{opt_path_other}" -q:a 2 -y')
                 if os.path.exists(opt_path_other):
                     try:
                         os.remove(path_other)
@@ -239,8 +233,8 @@ class Predictor:
 
 class MDXNetDereverb:
     def __init__(self, chunks):
-        self.onnx = "%s/uvr5_weights/onnx_dereverb_By_FoxJoy" % os.path.dirname(
-            os.path.abspath(__file__)
+        self.onnx = "{}/uvr5_weights/onnx_dereverb_By_FoxJoy".format(
+            os.path.dirname(os.path.abspath(__file__))
         )
         self.shifts = 10  # 'Predict with randomised equivariant stabilisation'
         self.mixing = "min_mag"  # ['default','min_mag','max_mag']

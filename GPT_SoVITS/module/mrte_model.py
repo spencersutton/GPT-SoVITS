@@ -17,20 +17,20 @@ class MRTE(nn.Module):
         n_heads=4,
         ge_layer=2,
     ):
-        super(MRTE, self).__init__()
+        super().__init__()
         self.cross_attention = MultiHeadAttention(hidden_size, hidden_size, n_heads)
         self.c_pre = nn.Conv1d(content_enc_channels, hidden_size, 1)
         self.text_pre = nn.Conv1d(content_enc_channels, hidden_size, 1)
         self.c_post = nn.Conv1d(hidden_size, out_channels, 1)
 
     def forward(self, ssl_enc, ssl_mask, text, text_mask, ge, test=None):
-        if ge == None:
+        if ge is None:
             ge = 0
         attn_mask = text_mask.unsqueeze(2) * ssl_mask.unsqueeze(-1)
 
         ssl_enc = self.c_pre(ssl_enc * ssl_mask)
         text_enc = self.text_pre(text * text_mask)
-        if test != None:
+        if test is not None:
             if test == 0:
                 x = (
                     self.cross_attention(
@@ -70,7 +70,7 @@ class SpeakerEncoder(torch.nn.Module):
         model_hidden_size=256,
         model_embedding_size=256,
     ):
-        super(SpeakerEncoder, self).__init__()
+        super().__init__()
         self.lstm = nn.LSTM(
             mel_n_channels, model_hidden_size, model_num_layers, batch_first=True
         )
@@ -116,7 +116,7 @@ class MELEncoder(nn.Module):
 
 class WN(torch.nn.Module):
     def __init__(self, hidden_channels, kernel_size, dilation_rate, n_layers):
-        super(WN, self).__init__()
+        super().__init__()
         assert kernel_size % 2 == 1
         self.hidden_channels = hidden_channels
         self.kernel_size = kernel_size

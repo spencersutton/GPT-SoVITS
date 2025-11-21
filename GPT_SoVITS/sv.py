@@ -16,7 +16,7 @@ class SV:
         embedding_model.load_state_dict(pretrained_state)
         embedding_model.eval()
         self.embedding_model = embedding_model
-        if is_half == False:
+        if not is_half:
             self.embedding_model = self.embedding_model.to(device)
         else:
             self.embedding_model = self.embedding_model.half().to(device)
@@ -24,7 +24,7 @@ class SV:
 
     def compute_embedding3(self, wav):
         with torch.no_grad():
-            if self.is_half == True:
+            if self.is_half:
                 wav = wav.half()
             feat = torch.stack(
                 [

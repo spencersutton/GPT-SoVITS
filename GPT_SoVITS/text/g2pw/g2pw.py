@@ -54,7 +54,7 @@ class Converter(UltimateConverter):
         tone_sandhi=False,
         **kwargs,
     ):
-        super(Converter, self).__init__(
+        super().__init__(
             v_to_u=v_to_u,
             neutral_tone_with_five=neutral_tone_with_five,
             tone_sandhi=tone_sandhi,
@@ -90,13 +90,11 @@ class Converter(UltimateConverter):
         g2pw_pinyin = self._g2pw(han)
 
         if not g2pw_pinyin:  # g2pw 不支持的汉字改为使用 pypinyin 原有逻辑
-            return super(Converter, self).convert(
-                han, Style.TONE, heteronym, errors, strict, **kwargs
-            )
+            return super().convert(han, Style.TONE, heteronym, errors, strict, **kwargs)
 
         for i, item in enumerate(g2pw_pinyin[0]):
             if item is None:  # g2pw 不支持的汉字改为使用 pypinyin 原有逻辑
-                py = super(Converter, self).convert(
+                py = super().convert(
                     han[i], Style.TONE, heteronym, errors, strict, **kwargs
                 )
                 pinyins.extend(py)

@@ -1,7 +1,7 @@
 # punctuation = ['!', '?', '…', ",", ".","@"]#@是SP停顿
 punctuation = ["!", "?", "…", ",", "."]  # @是SP停顿
 punctuation.append("-")
-pu_symbols = punctuation + ["SP", "SP2", "SP3", "UNK"]
+pu_symbols = [*punctuation, "SP", "SP2", "SP3", "UNK"]
 # pu_symbols = punctuation + ["SP", 'SP2', 'SP3','SP4', "UNK"]
 pad = "_"
 
@@ -780,13 +780,13 @@ yue_symbols = {
 }
 
 # symbols = [pad] + c + v + ja_symbols + pu_symbols + list(arpa)+list(ko_symbols)#+list(yue_symbols)###直接这么加yue顺序乱了
-symbols = [pad] + c + v + ja_symbols + pu_symbols + list(arpa)
+symbols = [pad, *c, *v, *ja_symbols, *pu_symbols, *list(arpa)]
 symbols = sorted(set(symbols))
 # print(len(symbols))
 symbols += ["[", "]"]  ##日文新增上升下降调型
-symbols += sorted(list(ko_symbols))
+symbols += sorted(ko_symbols)
 symbols += sorted(
-    list(yue_symbols)
+    yue_symbols
 )  ##新加的yue统一摆在后头#已查过开头加Y后没有重复，韩文显然不会重复
 # print(len(symbols))
 if __name__ == "__main__":

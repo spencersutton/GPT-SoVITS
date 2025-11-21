@@ -35,13 +35,13 @@ def my_save(fea, path):  #####fix issue: torch.save doesn't support chinese path
     dir = os.path.dirname(path)
     name = os.path.basename(path)
     # tmp_path="%s/%s%s.pth"%(dir,ttime(),i_part)
-    tmp_path = "%s%s.pth" % (ttime(), i_part)
+    tmp_path = f"{ttime()}{i_part}.pth"
     torch.save(fea, tmp_path)
-    shutil.move(tmp_path, "%s/%s" % (dir, name))
+    shutil.move(tmp_path, f"{dir}/{name}")
 
 
-sv_cn_dir = "%s/7-sv_cn" % (opt_dir)
-wav32dir = "%s/5-wav32k" % (opt_dir)
+sv_cn_dir = f"{opt_dir}/7-sv_cn"
+wav32dir = f"{opt_dir}/5-wav32k"
 os.makedirs(opt_dir, exist_ok=True)
 os.makedirs(sv_cn_dir, exist_ok=True)
 os.makedirs(wav32dir, exist_ok=True)
@@ -64,7 +64,7 @@ class SV:
         embedding_model.eval()
         self.embedding_model = embedding_model
         self.res = torchaudio.transforms.Resample(32000, 16000).to(device)
-        if is_half == False:
+        if not is_half:
             self.embedding_model = self.embedding_model.to(device)
         else:
             self.embedding_model = self.embedding_model.half().to(device)
@@ -73,7 +73,7 @@ class SV:
     def compute_embedding3(self, wav):  # (1,x)#-1~1
         with torch.no_grad():
             wav = self.res(wav)
-            if self.is_half == True:
+            if self.is_half:
                 wav = wav.half()
             feat = torch.stack(
                 [
@@ -94,10 +94,10 @@ sv = SV(device, is_half)
 
 
 def name2go(wav_name, wav_path):
-    sv_cn_path = "%s/%s.pt" % (sv_cn_dir, wav_name)
+    sv_cn_path = f"{sv_cn_dir}/{wav_name}.pt"
     if os.path.exists(sv_cn_path):
         return
-    wav_path = "%s/%s" % (wav32dir, wav_name)
+    wav_path = f"{wav32dir}/{wav_name}"
     wav32k, sr0 = torchaudio.load(wav_path)
     assert sr0 == 32000
     wav32k = wav32k.to(device)
@@ -112,9 +112,9 @@ for line in lines[int(i_part) :: int(all_parts)]:
     try:
         wav_name, spk_name, language, text = line.split("|")
         wav_name = clean_path(wav_name)
-        if inp_wav_dir != "" and inp_wav_dir != None:
+        if inp_wav_dir not in {"", None}:
             wav_name = os.path.basename(wav_name)
-            wav_path = "%s/%s" % (inp_wav_dir, wav_name)
+            wav_path = f"{inp_wav_dir}/{wav_name}"
 
         else:
             wav_path = wav_name

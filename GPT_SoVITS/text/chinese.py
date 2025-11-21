@@ -8,7 +8,10 @@ from text.symbols import punctuation
 from text.tone_sandhi import ToneSandhi
 from text.zh_normalization.text_normlization import TextNormalizer
 
-normalizer = lambda x: cn2an.transform(x, "an2cn")
+
+def normalizer(x):
+    return cn2an.transform(x, "an2cn")
+
 
 current_file_path = os.path.dirname(__file__)
 pinyin_to_symbol_map = {
@@ -21,6 +24,9 @@ import logging
 import jieba_fast
 
 jieba_fast.setLogLevel(logging.CRITICAL)
+import functools
+import operator
+
 import jieba_fast.posseg as psg
 
 rep_map = {
@@ -78,7 +84,7 @@ def replace_consecutive_punctuation(text):
 
 
 def g2p(text):
-    pattern = r"(?<=[{0}])\s*".format("".join(punctuation))
+    pattern = r"(?<=[{}])\s*".format("".join(punctuation))
     sentences = [i for i in re.split(pattern, text) if i.strip() != ""]
     phones, word2ph = _g2p(sentences)
     return phones, word2ph
@@ -117,8 +123,8 @@ def _g2p(segments):
             finals.append(sub_finals)
 
             # assert len(sub_initials) == len(sub_finals) == len(word)
-        initials = sum(initials, [])
-        finals = sum(finals, [])
+        initials = functools.reduce(operator.iadd, initials, [])
+        finals = functools.reduce(operator.iadd, finals, [])
         for c, v in zip(initials, finals):
             raw_pinyin = c + v
             # NOTE: post process for pypinyin outputs

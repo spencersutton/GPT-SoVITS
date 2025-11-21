@@ -1,5 +1,6 @@
-from collections.abc import Callable
+import itertools
 from functools import partial
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn.functional as F
@@ -14,6 +15,9 @@ from torch.nn import Module, ModuleList
 from torch.utils.checkpoint import checkpoint
 
 from bs_roformer.attend import Attend
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # helper functions
 
@@ -236,7 +240,7 @@ def MLP(dim_in, dim_out, dim_hidden=None, depth=1, activation=nn.Tanh):
     net = []
     dims = (dim_in, *((dim_hidden,) * (depth - 1)), dim_out)
 
-    for ind, (layer_dim_in, layer_dim_out) in enumerate(zip(dims[:-1], dims[1:])):
+    for ind, (layer_dim_in, layer_dim_out) in enumerate(itertools.pairwise(dims)):
         is_last = ind == (len(dims) - 2)
 
         net.append(nn.Linear(layer_dim_in, layer_dim_out))
@@ -398,15 +402,15 @@ class BSRoformer(Module):
 
         self.layers = ModuleList([])
 
-        transformer_kwargs = dict(
-            dim=dim,
-            heads=heads,
-            dim_head=dim_head,
-            attn_dropout=attn_dropout,
-            ff_dropout=ff_dropout,
-            flash_attn=flash_attn,
-            norm_output=False,
-        )
+        transformer_kwargs = {
+            "dim": dim,
+            "heads": heads,
+            "dim_head": dim_head,
+            "attn_dropout": attn_dropout,
+            "ff_dropout": ff_dropout,
+            "flash_attn": flash_attn,
+            "norm_output": False,
+        }
 
         time_rotary_embed = RotaryEmbedding(dim=dim_head)
         freq_rotary_embed = RotaryEmbedding(dim=dim_head)
@@ -439,12 +443,12 @@ class BSRoformer(Module):
 
         self.final_norm = RMSNorm(dim)
 
-        self.stft_kwargs = dict(
-            n_fft=stft_n_fft,
-            hop_length=stft_hop_length,
-            win_length=stft_win_length,
-            normalized=stft_normalized,
-        )
+        self.stft_kwargs = {
+            "n_fft": stft_n_fft,
+            "hop_length": stft_hop_length,
+            "win_length": stft_win_length,
+            "normalized": stft_normalized,
+        }
 
         self.stft_window_fn = partial(
             default(stft_window_fn, torch.hann_window), stft_win_length
@@ -487,9 +491,10 @@ class BSRoformer(Module):
         self.multi_stft_n_fft = stft_n_fft
         self.multi_stft_window_fn = multi_stft_window_fn
 
-        self.multi_stft_kwargs = dict(
-            hop_length=multi_stft_hop_size, normalized=multi_stft_normalized
-        )
+        self.multi_stft_kwargs = {
+            "hop_length": multi_stft_hop_size,
+            "normalized": multi_stft_normalized,
+        }
 
     def forward(self, raw_audio, target=None, return_loss_breakdown=False):
         """

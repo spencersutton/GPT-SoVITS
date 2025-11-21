@@ -394,7 +394,7 @@ class MRTE(nn.Module):
         n_heads=4,
         ge_layer=2,
     ):
-        super(MRTE, self).__init__()
+        super().__init__()
         self.cross_attention = MultiHeadAttention(hidden_size, hidden_size, n_heads)
         self.c_pre = nn.Conv1d(content_enc_channels, hidden_size, 1)
         self.text_pre = nn.Conv1d(content_enc_channels, hidden_size, 1)

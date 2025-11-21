@@ -12,6 +12,8 @@ from tqdm import tqdm
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)
+import functools
+import operator
 import os
 
 import ffmpeg
@@ -40,7 +42,7 @@ resample_transform_dict = {}
 
 def resample(audio_tensor, sr0, sr1, device):
     global resample_transform_dict
-    key = "%s-%s-%s" % (sr0, sr1, str(device))
+    key = f"{sr0}-{sr1}-{device!s}"
     if key not in resample_transform_dict:
         resample_transform_dict[key] = torchaudio.transforms.Resample(sr0, sr1).to(
             device
@@ -65,29 +67,32 @@ def denorm_spec(x):
     return (x + 1) / 2 * (spec_max - spec_min) + spec_min
 
 
-mel_fn = lambda x: mel_spectrogram_torch(
-    x,
-    n_fft=1024,
-    win_size=1024,
-    hop_size=256,
-    num_mels=100,
-    sampling_rate=24000,
-    fmin=0,
-    fmax=None,
-    center=False,
-)
+def mel_fn(x):
+    return mel_spectrogram_torch(
+        x,
+        n_fft=1024,
+        win_size=1024,
+        hop_size=256,
+        num_mels=100,
+        sampling_rate=24000,
+        fmin=0,
+        fmax=None,
+        center=False,
+    )
 
-mel_fn_v4 = lambda x: mel_spectrogram_torch(
-    x,
-    n_fft=1280,
-    win_size=1280,
-    hop_size=320,
-    num_mels=100,
-    sampling_rate=32000,
-    fmin=0,
-    fmax=None,
-    center=False,
-)
+
+def mel_fn_v4(x):
+    return mel_spectrogram_torch(
+        x,
+        n_fft=1280,
+        win_size=1280,
+        hop_size=320,
+        num_mels=100,
+        sampling_rate=32000,
+        fmin=0,
+        fmax=None,
+        center=False,
+    )
 
 
 def speed_change(input_audio: np.ndarray, speed: float, sr: int):
@@ -131,7 +136,7 @@ class DictToAttrRecursive(dict):
     def __setattr__(self, key, value):
         if isinstance(value, dict):
             value = DictToAttrRecursive(value)
-        super(DictToAttrRecursive, self).__setitem__(key, value)
+        super().__setitem__(key, value)
         super().__setattr__(key, value)
 
     def __delattr__(self, item):
@@ -298,7 +303,7 @@ class TTS_Config:
     # "auto",#多语种启动切分识别语种
     # "auto_yue",#多语种启动切分识别语种
 
-    def __init__(self, configs: dict | str = None):
+    def __init__(self, configs: dict | str | None = None):
         # 设置默认配置文件路径
         configs_base_path: str = "GPT_SoVITS/configs/"
         os.makedirs(configs_base_path, exist_ok=True)
@@ -394,7 +399,7 @@ class TTS_Config:
 
         return configs
 
-    def save_configs(self, configs_path: str = None) -> None:
+    def save_configs(self, configs_path: str | None = None) -> None:
         configs = deepcopy(self.default_configs)
         if self.configs is not None:
             configs["custom"] = self.update_configs()
@@ -523,9 +528,9 @@ class TTS:
             self.init_sv_model()
         path_sovits = self.configs.default_configs[model_version]["vits_weights_path"]
 
-        if if_lora_v3 == True and os.path.exists(path_sovits) == False:
+        if if_lora_v3 and not os.path.exists(path_sovits):
             info = path_sovits + i18n(
-                "SoVITS %s 底模缺失，无法加载相应 LoRA 权重" % model_version
+                f"SoVITS {model_version} 底模缺失，无法加载相应 LoRA 权重"
             )
             raise FileExistsError(info)
 
@@ -586,7 +591,7 @@ class TTS:
 
         self.is_v2pro = model_version in {"v2Pro", "v2ProPlus"}
 
-        if if_lora_v3 == False:
+        if not if_lora_v3:
             print(
                 f"Loading VITS weights from {weights_path}. {vits_model.load_state_dict(dict_s2['weight'], strict=False)}"
             )
@@ -648,8 +653,7 @@ class TTS:
                 self.empty_cache()
 
             self.vocoder = BigVGAN.from_pretrained(
-                "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
-                % (now_dir,),
+                f"{now_dir}/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x",
                 use_cuda_kernel=False,
             )  # if True, RuntimeError: Ninja is required to load C++ extensions
             # remove weight norm in the model and set to eval mode
@@ -685,8 +689,7 @@ class TTS:
             )
             self.vocoder.remove_weight_norm()
             state_dict_g = torch.load(
-                "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth"
-                % (now_dir,),
+                f"{now_dir}/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth",
                 map_location="cpu",
                 weights_only=False,
             )
@@ -699,7 +702,7 @@ class TTS:
             self.vocoder_configs["overlapped_len"] = 12
 
         self.vocoder = self.vocoder.eval()
-        if self.configs.is_half == True:
+        if self.configs.is_half:
             self.vocoder = self.vocoder.half().to(self.configs.device)
         else:
             self.vocoder = self.vocoder.to(self.configs.device)
@@ -835,7 +838,7 @@ class TTS:
         )
         if self.configs.is_half:
             spec = spec.half()
-        if self.is_v2pro == True:
+        if self.is_v2pro:
             audio = resample(
                 audio, self.configs.sampling_rate, 16000, self.configs.device
             )
@@ -851,7 +854,7 @@ class TTS:
             dtype=np.float16 if self.configs.is_half else np.float32,
         )
         with torch.no_grad():
-            wav16k, sr = librosa.load(ref_wav_path, sr=16000)
+            wav16k, _sr = librosa.load(ref_wav_path, sr=16000)
             if wav16k.shape[0] > 160000 or wav16k.shape[0] < 48000:
                 raise OSError(i18n("参考音频在3~10秒范围外，请更换！"))
             wav16k = torch.from_numpy(wav16k)
@@ -876,7 +879,7 @@ class TTS:
         sequences: list[torch.Tensor],
         axis: int = 0,
         pad_value: int = 0,
-        max_length: int = None,
+        max_length: int | None = None,
     ):
         seq = sequences[0]
         ndim = seq.dim()
@@ -888,7 +891,7 @@ class TTS:
         if max_length is None:
             max_length = max(seq_lengths)
         else:
-            max_length = max(max_length, max(seq_lengths))
+            max_length = max(max_length, *seq_lengths)
 
         padded_sequences = []
         for seq, length in zip(sequences, seq_lengths):
@@ -901,7 +904,7 @@ class TTS:
     def to_batch(
         self,
         data: list,
-        prompt_data: dict = None,
+        prompt_data: dict | None = None,
         batch_size: int = 5,
         threshold: float = 0.75,
         split_bucket: bool = True,
@@ -1028,7 +1031,7 @@ class TTS:
         Returns:
             list (List[torch.Tensor]): the data in the original order.
         """
-        length = len(sum(batch_index_list, []))
+        length = len(functools.reduce(operator.iadd, batch_index_list, []))
         _data = [None] * length
         for i, index_list in enumerate(batch_index_list):
             for j, index in enumerate(index_list):
@@ -1374,7 +1377,7 @@ class TTS:
                         _batch_phones = (
                             torch.cat(batch_phones).unsqueeze(0).to(self.configs.device)
                         )
-                        if self.is_v2pro != True:
+                        if not self.is_v2pro:
                             _batch_audio_fragment = self.vits_model.decode(
                                 all_pred_semantic,
                                 _batch_phones,
@@ -1405,7 +1408,7 @@ class TTS:
                             _pred_semantic = (
                                 pred_semantic_list[i][-idx:].unsqueeze(0).unsqueeze(0)
                             )  # .unsqueeze(0)#mq要多unsqueeze一次
-                            if self.is_v2pro != True:
+                            if not self.is_v2pro:
                                 audio_fragment = self.vits_model.decode(
                                     _pred_semantic,
                                     phones,
@@ -1450,9 +1453,7 @@ class TTS:
                 t5 = time.perf_counter()
                 t_45 += t5 - t4
                 if return_fragment:
-                    print(
-                        "%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t4 - t3, t5 - t4)
-                    )
+                    print(f"{t1 - t0:.3f}\t{t2 - t1:.3f}\t{t4 - t3:.3f}\t{t5 - t4:.3f}")
                     yield self.audio_postprocess(
                         [batch_audio_fragment],
                         output_sr,
@@ -1472,7 +1473,7 @@ class TTS:
                     return
 
             if not return_fragment:
-                print("%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t_34, t_45))
+                print(f"{t1 - t0:.3f}\t{t2 - t1:.3f}\t{t_34:.3f}\t{t_45:.3f}")
                 if len(audio) == 0:
                     yield 16000, np.zeros(16000, dtype=np.int16)
                     return
@@ -1517,7 +1518,7 @@ class TTS:
         self,
         audio: list[torch.Tensor],
         sr: int,
-        batch_index_list: list = None,
+        batch_index_list: list | None = None,
         speed_factor: float = 1.0,
         split_bucket: bool = True,
         fragment_interval: float = 0.3,
@@ -1543,7 +1544,7 @@ class TTS:
             audio = self.recovery_order(audio, batch_index_list)
         else:
             # audio = [item for batch in audio for item in batch]
-            audio = sum(audio, [])
+            audio = functools.reduce(operator.iadd, audio, [])
 
         audio = torch.cat(audio, dim=0)
 

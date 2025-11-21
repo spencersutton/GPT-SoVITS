@@ -97,7 +97,7 @@ def get_weights_names():
             continue
         for name in os.listdir(path):
             if name.endswith(".pth"):
-                SoVITS_names.append("%s/%s" % (path, name))
+                SoVITS_names.append(f"{path}/{name}")
     if not SoVITS_names:
         SoVITS_names = [""]
     GPT_names = []
@@ -109,7 +109,7 @@ def get_weights_names():
             continue
         for name in os.listdir(path):
             if name.endswith(".ckpt"):
-                GPT_names.append("%s/%s" % (path, name))
+                GPT_names.append(f"{path}/{name}")
     SoVITS_names = sorted(SoVITS_names, key=custom_sort_key)
     GPT_names = sorted(GPT_names, key=custom_sort_key)
     if not GPT_names:
@@ -167,7 +167,7 @@ def get_device_dtype_sm(idx: int) -> tuple[torch.device, torch.dtype, float, flo
     is_16_series = bool(re.search(r"16\d{2}", name)) and sm_version == 7.5
     if mem_gb < 4 or sm_version < 5.3:
         return cpu, torch.float32, 0.0, 0.0
-    if sm_version == 6.1 or is_16_series == True:
+    if sm_version == 6.1 or is_16_series:
         return cuda, torch.float32, sm_version, mem_gb
     if sm_version > 6.1:
         return cuda, torch.float16, sm_version, mem_gb

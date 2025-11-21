@@ -3,13 +3,15 @@
 import itertools
 import math
 import random
-from collections.abc import Iterator
 from random import shuffle
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import torch
 import torch.distributed as dist
 from torch.utils.data import Dataset, Sampler
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 __all__ = [
     "DistributedBucketSampler",
@@ -111,7 +113,7 @@ class DistributedBucketSampler(Sampler[T_co]):
                 shuffled_bucket.append(buc_copy)
             grouped_batch_size = self.batch_size * self.num_replicas
             shuffled_bucket = list(itertools.chain(*shuffled_bucket))
-            n_batch = int(math.ceil(len(shuffled_bucket) / grouped_batch_size))
+            n_batch = math.ceil(len(shuffled_bucket) / grouped_batch_size)
             batches = [
                 shuffled_bucket[b * grouped_batch_size : (b + 1) * grouped_batch_size]
                 for b in range(n_batch)

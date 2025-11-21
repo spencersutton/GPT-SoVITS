@@ -20,8 +20,8 @@ def execute_denoise(input_folder, output_folder):
     for name in tqdm(os.listdir(input_folder)):
         try:
             ans(
-                "%s/%s" % (input_folder, name),
-                output_path="%s/%s" % (output_folder, name),
+                f"{input_folder}/{name}",
+                output_path=f"{output_folder}/{name}",
             )
         except:
             traceback.print_exc()

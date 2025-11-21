@@ -101,19 +101,18 @@ RESP:
 import os
 import sys
 import traceback
-from collections.abc import Generator
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)
-sys.path.append("%s/GPT_SoVITS" % (now_dir))
+sys.path.append(f"{now_dir}/GPT_SoVITS")
 
 import argparse
 import signal
 import subprocess
 import wave
 from io import BytesIO
+from typing import TYPE_CHECKING
 
-import numpy as np
 import soundfile as sf
 import uvicorn
 from fastapi import FastAPI, Response
@@ -125,6 +124,11 @@ from GPT_SoVITS.TTS_infer_pack.text_segmentation_method import (
 )
 from GPT_SoVITS.TTS_infer_pack.TTS import TTS, TTS_Config
 from tools.i18n.i18n import I18nAuto
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    import numpy as np
 
 # print(sys.path)
 i18n = I18nAuto()
@@ -268,7 +272,7 @@ def handle_control(command: str):
         os.execl(sys.executable, sys.executable, *argv)
     elif command == "exit":
         os.kill(os.getpid(), signal.SIGTERM)
-        exit(0)
+        sys.exit(0)
 
 
 def check_params(req: dict):
@@ -409,7 +413,7 @@ async def tts_handle(req: dict):
 
 
 @APP.get("/control")
-async def control(command: str = None):
+async def control(command: str | None = None):
     if command is None:
         return JSONResponse(status_code=400, content={"message": "command is required"})
     handle_control(command)
@@ -417,11 +421,11 @@ async def control(command: str = None):
 
 @APP.get("/tts")
 async def tts_get_endpoint(
-    text: str = None,
-    text_lang: str = None,
-    ref_audio_path: str = None,
-    aux_ref_audio_paths: list = None,
-    prompt_lang: str = None,
+    text: str | None = None,
+    text_lang: str | None = None,
+    ref_audio_path: str | None = None,
+    aux_ref_audio_paths: list | None = None,
+    prompt_lang: str | None = None,
     prompt_text: str = "",
     top_k: int = 5,
     top_p: float = 1,
@@ -474,7 +478,7 @@ async def tts_post_endpoint(request: TTS_Request):
 
 
 @APP.get("/set_refer_audio")
-async def set_refer_aduio(refer_audio_path: str = None):
+async def set_refer_aduio(refer_audio_path: str | None = None):
     try:
         tts_pipeline.set_ref_audio(refer_audio_path)
     except Exception as e:
@@ -505,7 +509,7 @@ async def set_refer_aduio(refer_audio_path: str = None):
 
 
 @APP.get("/set_gpt_weights")
-async def set_gpt_weights(weights_path: str = None):
+async def set_gpt_weights(weights_path: str | None = None):
     try:
         if weights_path in ["", None]:
             return JSONResponse(
@@ -522,7 +526,7 @@ async def set_gpt_weights(weights_path: str = None):
 
 
 @APP.get("/set_sovits_weights")
-async def set_sovits_weights(weights_path: str = None):
+async def set_sovits_weights(weights_path: str | None = None):
     try:
         if weights_path in ["", None]:
             return JSONResponse(
@@ -545,4 +549,4 @@ if __name__ == "__main__":
     except Exception:
         traceback.print_exc()
         os.kill(os.getpid(), signal.SIGTERM)
-        exit(0)
+        sys.exit(0)

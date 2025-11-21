@@ -12,6 +12,7 @@ import argparse
 import itertools
 import json
 import os
+import sys
 import time
 
 import auraloss
@@ -449,7 +450,7 @@ def train(rank, a, h):
             )
     # Exit the script if --evaluate is set to True
     if a.evaluate:
-        exit()
+        sys.exit()
 
     # Main training loop
     generator.train()
@@ -489,13 +490,13 @@ def train(rank, a, h):
 
             # MPD
             y_df_hat_r, y_df_hat_g, _, _ = mpd(y, y_g_hat.detach())
-            loss_disc_f, losses_disc_f_r, losses_disc_f_g = discriminator_loss(
+            loss_disc_f, _losses_disc_f_r, _losses_disc_f_g = discriminator_loss(
                 y_df_hat_r, y_df_hat_g
             )
 
             # MRD
             y_ds_hat_r, y_ds_hat_g, _, _ = mrd(y, y_g_hat.detach())
-            loss_disc_s, losses_disc_s_r, losses_disc_s_g = discriminator_loss(
+            loss_disc_s, _losses_disc_s_r, _losses_disc_s_g = discriminator_loss(
                 y_ds_hat_r, y_ds_hat_g
             )
 
@@ -536,12 +537,12 @@ def train(rank, a, h):
             # MPD loss
             y_df_hat_r, y_df_hat_g, fmap_f_r, fmap_f_g = mpd(y, y_g_hat)
             loss_fm_f = feature_loss(fmap_f_r, fmap_f_g)
-            loss_gen_f, losses_gen_f = generator_loss(y_df_hat_g)
+            loss_gen_f, _losses_gen_f = generator_loss(y_df_hat_g)
 
             # MRD loss
             y_ds_hat_r, y_ds_hat_g, fmap_s_r, fmap_s_g = mrd(y, y_g_hat)
             loss_fm_s = feature_loss(fmap_s_r, fmap_s_g)
-            loss_gen_s, losses_gen_s = generator_loss(y_ds_hat_g)
+            loss_gen_s, _losses_gen_s = generator_loss(y_ds_hat_g)
 
             if steps >= a.freeze_step:
                 loss_gen_all = (

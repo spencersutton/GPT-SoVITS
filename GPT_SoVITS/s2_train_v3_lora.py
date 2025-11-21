@@ -138,10 +138,8 @@ def run(rank, n_gpus, hps):
         persistent_workers=True,
         prefetch_factor=4,
     )
-    save_root = "%s/logs_s2_%s_lora_%s" % (
-        hps.data.exp_dir,
-        hps.model.version,
-        hps.train.lora_rank,
+    save_root = (
+        f"{hps.data.exp_dir}/logs_s2_{hps.model.version}_lora_{hps.train.lora_rank}"
     )
     os.makedirs(save_root, exist_ok=True)
     lora_rank = int(hps.train.lora_rank)
@@ -195,15 +193,13 @@ def run(rank, n_gpus, hps):
         epoch_str = 1
         global_step = 0
         net_g = get_model(hps)
-        if (
-            hps.train.pretrained_s2G != ""
-            and hps.train.pretrained_s2G != None
-            and os.path.exists(hps.train.pretrained_s2G)
+        if hps.train.pretrained_s2G not in {"", None} and os.path.exists(
+            hps.train.pretrained_s2G
         ):
             if rank == 0:
-                logger.info("loaded pretrained %s" % hps.train.pretrained_s2G)
+                logger.info(f"loaded pretrained {hps.train.pretrained_s2G}")
             print(
-                "loaded pretrained %s" % hps.train.pretrained_s2G,
+                f"loaded pretrained {hps.train.pretrained_s2G}",
                 net_g.load_state_dict(
                     torch.load(
                         hps.train.pretrained_s2G, map_location="cpu", weights_only=False
@@ -232,7 +228,7 @@ def run(rank, n_gpus, hps):
     scaler = GradScaler(enabled=hps.train.fp16_run)
 
     net_d = optim_d = scheduler_d = None
-    print("start training from epoch %s" % epoch_str)
+    print(f"start training from epoch {epoch_str}")
     for epoch in range(epoch_str, hps.train.epochs + 1):
         if rank == 0:
             train_and_evaluate(
@@ -268,12 +264,12 @@ def run(rank, n_gpus, hps):
 def train_and_evaluate(
     rank, epoch, hps, nets, optims, schedulers, scaler, loaders, logger, writers
 ):
-    net_g, net_d = nets
-    optim_g, optim_d = optims
+    net_g, _net_d = nets
+    optim_g, _optim_d = optims
     # scheduler_g, scheduler_d = schedulers
-    train_loader, eval_loader = loaders
+    train_loader, _eval_loader = loaders
     if writers is not None:
-        writer, writer_eval = writers
+        writer, _writer_eval = writers
 
     train_loader.batch_sampler.set_epoch(epoch)
     global global_step
@@ -381,7 +377,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(save_root, f"G_{233333333333}.pth"),
             )
-        if rank == 0 and hps.train.if_save_every_weights == True:
+        if rank == 0 and hps.train.if_save_every_weights:
             if hasattr(net_g, "module"):
                 ckpt = net_g.module.state_dict()
             else:
@@ -393,13 +389,12 @@ def train_and_evaluate(
                 if key not in no_grad_names:
                     sim_ckpt[key] = ckpt[key].half().cpu()
             logger.info(
-                "saving ckpt %s_e%s:%s"
-                % (
+                "saving ckpt {}_e{}:{}".format(
                     hps.name,
                     epoch,
                     savee(
                         sim_ckpt,
-                        hps.name + "_e%s_s%s_l%s" % (epoch, global_step, lora_rank),
+                        hps.name + f"_e{epoch}_s{global_step}_l{lora_rank}",
                         epoch,
                         global_step,
                         hps,

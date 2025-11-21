@@ -45,7 +45,7 @@ class Text2SemanticDataset(Dataset):
         self,
         phoneme_path: str,
         semantic_path: str,
-        max_sample: int = None,
+        max_sample: int | None = None,
         max_sec: int = 100,
         pad_val: int = 1024,
         # min value of phoneme/sec
@@ -62,7 +62,7 @@ class Text2SemanticDataset(Dataset):
         )
         # get dict
         self.path2 = phoneme_path  # "%s/2-name2text.txt"%exp_dir#phoneme_path
-        self.path3 = "%s/3-bert" % (
+        self.path3 = "{}/3-bert".format(
             os.path.dirname(
                 phoneme_path,
             )
@@ -129,7 +129,7 @@ class Text2SemanticDataset(Dataset):
             item_name = self.semantic_data.iloc[i, 0]
             # print(self.phoneme_data)
             try:
-                phoneme, word2ph, text = self.phoneme_data[item_name]
+                phoneme, _word2ph, _text = self.phoneme_data[item_name]
             except Exception:
                 traceback.print_exc()
                 # print(f"{item_name} not in self.phoneme_data !")
@@ -224,8 +224,8 @@ class Text2SemanticDataset(Dataset):
         semantic_ids_len = len(semantic_ids)
 
         flag = 0
-        path_bert = "%s/%s.pt" % (self.path3, item_name)
-        if os.path.exists(path_bert) == True:
+        path_bert = f"{self.path3}/{item_name}.pt"
+        if os.path.exists(path_bert):
             bert_feature = torch.load(path_bert, map_location="cpu")
         else:
             flag = 1
@@ -277,7 +277,7 @@ class Text2SemanticDataset(Dataset):
 
         for idx, item in enumerate(examples):
             bert = item["bert_feature"]
-            if bert != None:
+            if bert is not None:
                 bert_padded[idx, :, : bert.shape[-1]] = bert
 
         return {

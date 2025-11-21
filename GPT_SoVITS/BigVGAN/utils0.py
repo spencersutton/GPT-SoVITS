@@ -4,11 +4,11 @@
 import glob
 import os
 
-import matplotlib
+import matplotlib as mpl
 import torch
 from torch.nn.utils import weight_norm
 
-matplotlib.use("Agg")
+mpl.use("Agg")
 import matplotlib.pylab as plt
 from scipy.io.wavfile import write
 

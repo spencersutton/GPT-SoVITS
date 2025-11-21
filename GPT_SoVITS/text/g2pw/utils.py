@@ -16,8 +16,11 @@ Credits
     This code is modified from https://github.com/GitYCC/g2pW
 """
 
-import os
 import re
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import os
 
 
 def wordize_and_map(text: str):

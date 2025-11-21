@@ -51,18 +51,16 @@ class my_model_ckpt(ModelCheckpoint):
                 self._every_n_epochs >= 1
                 and (trainer.current_epoch + 1) % self._every_n_epochs == 0
             ):
-                if (
-                    self.if_save_latest == True
-                ):  ####如果设置只保存最后一个ckpt，在保存下一个ckpt后要清理掉之前的所有ckpt
+                if self.if_save_latest:  ####如果设置只保存最后一个ckpt，在保存下一个ckpt后要清理掉之前的所有ckpt
                     to_clean = list(os.listdir(self.dirpath))
                 self._save_topk_checkpoint(trainer, monitor_candidates)
-                if self.if_save_latest == True:
+                if self.if_save_latest:
                     for name in to_clean:
                         try:
-                            os.remove("%s/%s" % (self.dirpath, name))
+                            os.remove(f"{self.dirpath}/{name}")
                         except:
                             pass
-                if self.if_save_every_weights == True:
+                if self.if_save_every_weights:
                     to_save_od = OrderedDict()
                     to_save_od["weight"] = OrderedDict()
                     dictt = trainer.strategy._lightning_module.state_dict()
@@ -75,12 +73,7 @@ class my_model_ckpt(ModelCheckpoint):
                     if os.environ.get("LOCAL_RANK", "0") == "0":
                         my_save(
                             to_save_od,
-                            "%s/%s-e%s.ckpt"
-                            % (
-                                self.half_weights_save_dir,
-                                self.exp_name,
-                                trainer.current_epoch + 1,
-                            ),
+                            f"{self.half_weights_save_dir}/{self.exp_name}-e{trainer.current_epoch + 1}.ckpt",
                         )
             self._save_last_checkpoint(trainer, monitor_candidates)
 

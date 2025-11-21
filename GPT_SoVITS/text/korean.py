@@ -80,7 +80,7 @@ _korean_classifiers = "군데 권 개 그루 닢 대 두 마리 모 모금 뭇 �
 
 # List of (hangul, hangul divided) pairs:
 _hangul_divided = [
-    (re.compile("%s" % x[0]), x[1])
+    (re.compile(f"{x[0]}"), x[1])
     for x in [
         # ('ㄳ', 'ㄱㅅ'),   # g2pk2, A Syllable-ending Rule
         # ('ㄵ', 'ㄴㅈ'),
@@ -111,7 +111,7 @@ _hangul_divided = [
 
 # List of (Latin alphabet, hangul) pairs:
 _latin_to_hangul = [
-    (re.compile("%s" % x[0], re.IGNORECASE), x[1])
+    (re.compile(f"{x[0]}", re.IGNORECASE), x[1])
     for x in [
         ("a", "에이"),
         ("b", "비"),
@@ -144,7 +144,7 @@ _latin_to_hangul = [
 
 # List of (ipa, lazy ipa) pairs:
 _ipa_to_lazy_ipa = [
-    (re.compile("%s" % x[0], re.IGNORECASE), x[1])
+    (re.compile(f"{x[0]}", re.IGNORECASE), x[1])
     for x in [
         ("t͡ɕ", "ʧ"),
         ("d͡ʑ", "ʥ"),
@@ -210,12 +210,12 @@ def hangul_number(num, sino=True):
 
     digits = "123456789"
     names = "일이삼사오육칠팔구"
-    digit2name = {d: n for d, n in zip(digits, names)}
+    digit2name = dict(zip(digits, names))
 
     modifiers = "한 두 세 네 다섯 여섯 일곱 여덟 아홉"
     decimals = "열 스물 서른 마흔 쉰 예순 일흔 여든 아흔"
-    digit2mod = {d: mod for d, mod in zip(digits, modifiers.split())}
-    digit2dec = {d: dec for d, dec in zip(digits, decimals.split())}
+    digit2mod = dict(zip(digits, modifiers.split()))
+    digit2dec = dict(zip(digits, decimals.split()))
 
     spelledout = []
     for i, digit in enumerate(num):

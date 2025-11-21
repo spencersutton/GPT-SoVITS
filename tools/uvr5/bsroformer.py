@@ -143,11 +143,12 @@ class Roformer_Loader:
         with torch.amp.autocast("cuda"):
             with torch.inference_mode():
                 if self.config["training"]["target_instrument"] is None:
-                    req_shape = (len(self.config["training"]["instruments"]),) + tuple(
-                        mix.shape
+                    req_shape = (
+                        len(self.config["training"]["instruments"]),
+                        *tuple(mix.shape),
                     )
                 else:
-                    req_shape = (1,) + tuple(mix.shape)
+                    req_shape = (1, *tuple(mix.shape))
 
                 result = torch.zeros(req_shape, dtype=torch.float32)
                 counter = torch.zeros(req_shape, dtype=torch.float32)
@@ -208,19 +209,11 @@ class Roformer_Loader:
         progress_bar.close()
 
         if self.config["training"]["target_instrument"] is None:
-            return {
-                k: v
-                for k, v in zip(
-                    self.config["training"]["instruments"], estimated_sources
-                )
-            }
+            return dict(zip(self.config["training"]["instruments"], estimated_sources))
         else:
-            return {
-                k: v
-                for k, v in zip(
-                    [self.config["training"]["target_instrument"]], estimated_sources
-                )
-            }
+            return dict(
+                zip([self.config["training"]["target_instrument"]], estimated_sources)
+            )
 
     def run_folder(self, input, vocal_root, others_root, format):
         self.model.eval()
@@ -332,7 +325,7 @@ class Roformer_Loader:
         state_dict = torch.load(model_path, map_location="cpu")
         model.load_state_dict(state_dict)
 
-        if is_half == False:
+        if not is_half:
             self.model = model.to(device)
         else:
             self.model = model.half().to(device)

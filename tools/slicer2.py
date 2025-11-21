@@ -13,11 +13,11 @@ def get_rms(
 
     axis = -1
     # put our new within-frame axis at the end for now
-    out_strides = y.strides + tuple([y.strides[axis]])
+    out_strides = (*y.strides, y.strides[axis])
     # Reduce the shape on the framing axis
     x_shape_trimmed = list(y.shape)
     x_shape_trimmed[axis] -= frame_length - 1
-    out_shape = tuple(x_shape_trimmed) + tuple([frame_length])
+    out_shape = (*tuple(x_shape_trimmed), frame_length)
     xw = np.lib.stride_tricks.as_strided(y, shape=out_shape, strides=out_strides)
     if axis < 0:
         target_axis = axis - 1

@@ -10,7 +10,7 @@ both the model parameters and its computational cost.
 
 import math
 
-import pooling_layers as pooling_layers
+import pooling_layers
 import torch
 import torch.nn.functional as F
 from fusion import AFF
@@ -19,7 +19,7 @@ from torch import nn
 
 class ReLU(nn.Hardtanh):
     def __init__(self, inplace=False):
-        super(ReLU, self).__init__(0, 20, inplace)
+        super().__init__(0, 20, inplace)
 
     def __repr__(self):
         inplace_str = "inplace" if self.inplace else ""
@@ -28,8 +28,8 @@ class ReLU(nn.Hardtanh):
 
 class BasicBlockERes2NetV2(nn.Module):
     def __init__(self, in_planes, planes, stride=1, baseWidth=26, scale=2, expansion=2):
-        super(BasicBlockERes2NetV2, self).__init__()
-        width = int(math.floor(planes * (baseWidth / 64.0)))
+        super().__init__()
+        width = math.floor(planes * (baseWidth / 64.0))
         self.conv1 = nn.Conv2d(
             in_planes, width * scale, kernel_size=1, stride=stride, bias=False
         )
@@ -97,8 +97,8 @@ class BasicBlockERes2NetV2(nn.Module):
 
 class BasicBlockERes2NetV2AFF(nn.Module):
     def __init__(self, in_planes, planes, stride=1, baseWidth=26, scale=2, expansion=2):
-        super(BasicBlockERes2NetV2AFF, self).__init__()
-        width = int(math.floor(planes * (baseWidth / 64.0)))
+        super().__init__()
+        width = math.floor(planes * (baseWidth / 64.0))
         self.conv1 = nn.Conv2d(
             in_planes, width * scale, kernel_size=1, stride=stride, bias=False
         )
@@ -185,7 +185,7 @@ class ERes2NetV2(nn.Module):
         pooling_func="TSTP",
         two_emb_layer=False,
     ):
-        super(ERes2NetV2, self).__init__()
+        super().__init__()
         self.in_planes = m_channels
         self.feat_dim = feat_dim
         self.embedding_size = embedding_size
@@ -221,7 +221,7 @@ class ERes2NetV2(nn.Module):
         # Bottom-up fusion module
         self.fuse34 = AFF(channels=m_channels * 8 * self.expansion, r=4)
 
-        self.n_stats = 1 if pooling_func == "TAP" or pooling_func == "TSDP" else 2
+        self.n_stats = 1 if pooling_func in {"TAP", "TSDP"} else 2
         self.pool = getattr(pooling_layers, pooling_func)(
             in_dim=self.stats_dim * self.expansion
         )

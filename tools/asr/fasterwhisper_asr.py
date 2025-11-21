@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import time
 import traceback
 
@@ -74,11 +75,11 @@ def download_model(model_size: str):
             else:
                 print("[ERROR] LocalEntryNotFoundError and no fallback.")
                 traceback.print_exc()
-                exit(1)
+                sys.exit(1)
         except Exception as e:
             print(f"[ERROR] Unexpected error on attempt {attempt + 1}: {e}")
             traceback.print_exc()
-            exit(1)
+            sys.exit(1)
 
     return model_path
 
@@ -103,7 +104,7 @@ def execute_asr(input_folder, output_folder, model_path, language, precision):
                 audio=file_path,
                 beam_size=5,
                 vad_filter=True,
-                vad_parameters=dict(min_silence_duration_ms=700),
+                vad_parameters={"min_silence_duration_ms": 700},
                 language=language,
             )
             text = ""

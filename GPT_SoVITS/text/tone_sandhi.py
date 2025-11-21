@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
+import operator
+
 import jieba_fast as jieba
 from pypinyin import Style, lazy_pinyin
 
@@ -544,7 +547,7 @@ class ToneSandhi:
                 or word[-2:] in self.must_neural_tone_words
             ):
                 finals_list[i][-1] = finals_list[i][-1][:-1] + "5"
-        finals = sum(finals_list, [])
+        finals = functools.reduce(operator.iadd, finals_list, [])
         return finals
 
     def _bu_sandhi(self, word: str, finals: list[str]) -> list[str]:
@@ -561,7 +564,7 @@ class ToneSandhi:
     def _yi_sandhi(self, word: str, finals: list[str]) -> list[str]:
         # "一" in number sequences, e.g. 一零零, 二一零
         if word.find("一") != -1 and all(
-            [item.isnumeric() for item in word if item != "一"]
+            item.isnumeric() for item in word if item != "一"
         ):
             return finals
         # "一" between reduplication words shold be yi5, e.g. 看一看
@@ -623,7 +626,7 @@ class ToneSandhi:
                             and finals_list[0][-1][-1] == "3"
                         ):
                             finals_list[0][-1] = finals_list[0][-1][:-1] + "2"
-                        finals = sum(finals_list, [])
+                        finals = functools.reduce(operator.iadd, finals_list, [])
         # split idiom into two words who's length is 2
         elif len(word) == 4:
             finals_list = [finals[:2], finals[2:]]

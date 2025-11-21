@@ -5,14 +5,18 @@
 #   LICENSE is in incl_licenses directory.
 
 
+from typing import TYPE_CHECKING
+
 import torch
 import torch.nn.functional as F
-from env import AttrDict
 from torch import nn
 from torch.nn import Conv2d
 from torch.nn.utils import spectral_norm, weight_norm
 from torchaudio.transforms import Resample, Spectrogram
 from utils import get_padding
+
+if TYPE_CHECKING:
+    from env import AttrDict
 
 
 class DiscriminatorP(torch.nn.Module):
@@ -149,14 +153,12 @@ class DiscriminatorR(nn.Module):
         )
         self.lrelu_slope = 0.1
 
-        norm_f = weight_norm if cfg.use_spectral_norm == False else spectral_norm
+        norm_f = weight_norm if not cfg.use_spectral_norm else spectral_norm
         if hasattr(cfg, "mrd_use_spectral_norm"):
             print(
                 f"[INFO] overriding MRD use_spectral_norm as {cfg.mrd_use_spectral_norm}"
             )
-            norm_f = (
-                weight_norm if cfg.mrd_use_spectral_norm == False else spectral_norm
-            )
+            norm_f = weight_norm if not cfg.mrd_use_spectral_norm else spectral_norm
         self.d_mult = cfg.discriminator_channel_mult
         if hasattr(cfg, "mrd_channel_mult"):
             print(f"[INFO] overriding mrd channel multiplier as {cfg.mrd_channel_mult}")
@@ -307,23 +309,26 @@ class DiscriminatorB(nn.Module):
         n_fft = window_length // 2 + 1
         bands = [(int(b[0] * n_fft), int(b[1] * n_fft)) for b in bands]
         self.bands = bands
-        convs = lambda: nn.ModuleList(
-            [
-                weight_norm(nn.Conv2d(2, channels, (3, 9), (1, 1), padding=(1, 4))),
-                weight_norm(
-                    nn.Conv2d(channels, channels, (3, 9), (1, 2), padding=(1, 4))
-                ),
-                weight_norm(
-                    nn.Conv2d(channels, channels, (3, 9), (1, 2), padding=(1, 4))
-                ),
-                weight_norm(
-                    nn.Conv2d(channels, channels, (3, 9), (1, 2), padding=(1, 4))
-                ),
-                weight_norm(
-                    nn.Conv2d(channels, channels, (3, 3), (1, 1), padding=(1, 1))
-                ),
-            ]
-        )
+
+        def convs():
+            return nn.ModuleList(
+                [
+                    weight_norm(nn.Conv2d(2, channels, (3, 9), (1, 1), padding=(1, 4))),
+                    weight_norm(
+                        nn.Conv2d(channels, channels, (3, 9), (1, 2), padding=(1, 4))
+                    ),
+                    weight_norm(
+                        nn.Conv2d(channels, channels, (3, 9), (1, 2), padding=(1, 4))
+                    ),
+                    weight_norm(
+                        nn.Conv2d(channels, channels, (3, 9), (1, 2), padding=(1, 4))
+                    ),
+                    weight_norm(
+                        nn.Conv2d(channels, channels, (3, 3), (1, 1), padding=(1, 1))
+                    ),
+                ]
+            )
+
         self.band_convs = nn.ModuleList([convs() for _ in range(len(self.bands))])
 
         self.conv_post = weight_norm(

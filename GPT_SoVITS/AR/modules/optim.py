@@ -34,7 +34,7 @@ class BatchedOptimizer(Optimizer):
     """
 
     def __init__(self, params, defaults):
-        super(BatchedOptimizer, self).__init__(params, defaults)
+        super().__init__(params, defaults)
 
     @contextlib.contextmanager
     def batched_params(self, param_group, group_params_names):
@@ -89,7 +89,7 @@ class BatchedOptimizer(Optimizer):
         batches_names = [batches_names[batches_names_keys[idx]] for idx in sorted_idx]
         batches = [batches[batches_names_keys[idx]] for idx in sorted_idx]
 
-        stacked_params_dict = dict()
+        stacked_params_dict = {}
 
         # turn batches into a list, in deterministic order.
         # tuples will contain tuples of (stacked_param, state, stacked_params_names),
@@ -179,26 +179,26 @@ class ScaledAdam(BatchedOptimizer):
         assert parameters_names is not None, (
             "Please prepare parameters_names,which is a List[List[str]]. Each List[str] is for a groupand each str is for a parameter"
         )
-        defaults = dict(
-            lr=lr,
-            clipping_scale=clipping_scale,
-            betas=betas,
-            scalar_lr_scale=scalar_lr_scale,
-            eps=eps,
-            param_min_rms=param_min_rms,
-            param_max_rms=param_max_rms,
-            scalar_max=scalar_max,
-            size_update_period=size_update_period,
-            clipping_update_period=clipping_update_period,
-        )
+        defaults = {
+            "lr": lr,
+            "clipping_scale": clipping_scale,
+            "betas": betas,
+            "scalar_lr_scale": scalar_lr_scale,
+            "eps": eps,
+            "param_min_rms": param_min_rms,
+            "param_max_rms": param_max_rms,
+            "scalar_max": scalar_max,
+            "size_update_period": size_update_period,
+            "clipping_update_period": clipping_update_period,
+        }
 
-        super(ScaledAdam, self).__init__(params, defaults)
+        super().__init__(params, defaults)
         assert len(self.param_groups) == len(parameters_names)
         self.parameters_names = parameters_names
         self.show_dominant_parameters = show_dominant_parameters
 
     def __setstate__(self, state):
-        super(ScaledAdam, self).__setstate__(state)
+        super().__setstate__(state)
 
     @torch.no_grad()
     def step(self, closure=None):
@@ -356,7 +356,7 @@ class ScaledAdam(BatchedOptimizer):
                 else 0.0
             )
             first_state["num_clipped"] = 0
-            quartiles = " ".join(["%.3e" % x for x in quartiles])
+            quartiles = " ".join([f"{x:.3e}" for x in quartiles])
             logging.info(
                 f"Clipping_scale={clipping_scale}, grad-norm quartiles {quartiles}, threshold={threshold:.3e}, percent-clipped={percent_clipped:.1f}"
             )
@@ -426,14 +426,13 @@ class ScaledAdam(BatchedOptimizer):
             sum([value[0] for value in all_sumsq_orig.values()]).cpu(),
             torch.tensor(1.0),
         )
-        sorted_by_proportion = {
-            k: v
-            for k, v in sorted(
+        sorted_by_proportion = dict(
+            sorted(
                 all_sumsq_orig.items(),
                 key=lambda item: item[1][0],
                 reverse=True,
             )
-        }
+        )
         dominant_param_name = next(iter(sorted_by_proportion))
         (
             dominant_proportion,

@@ -182,7 +182,7 @@ class DictToAttrRecursive(dict):
     def __setattr__(self, key, value):
         if isinstance(value, dict):
             value = DictToAttrRecursive(value)
-        super(DictToAttrRecursive, self).__setitem__(key, value)
+        super().__setitem__(key, value)
         super().__setattr__(key, value)
 
     def __delattr__(self, item):
@@ -443,7 +443,7 @@ class VitsModel(nn.Module):
 
 class T2SModel(nn.Module):
     def __init__(self, raw_t2s: Text2SemanticLightningModule):
-        super(T2SModel, self).__init__()
+        super().__init__()
         self.model_dim = raw_t2s.model.model_dim
         self.embedding_dim = raw_t2s.model.embedding_dim
         self.num_head = raw_t2s.model.num_head
@@ -650,7 +650,7 @@ def build_phone_level_feature(res: Tensor, word2ph: IntTensor):
 
 class MyBertModel(torch.nn.Module):
     def __init__(self, bert_model):
-        super(MyBertModel, self).__init__()
+        super().__init__()
         self.bert = bert_model
 
     def forward(
@@ -760,12 +760,12 @@ def export(
 
     print(f"device: {device}")
 
-    ref_seq_id, ref_bert_T, ref_norm_text = get_phones_and_bert(
+    ref_seq_id, ref_bert_T, _ref_norm_text = get_phones_and_bert(
         ref_text, "all_zh", "v2"
     )
     ref_seq = torch.LongTensor([ref_seq_id]).to(device)
     ref_bert = ref_bert_T.T.to(ref_seq.device)
-    text_seq_id, text_bert_T, norm_text = get_phones_and_bert(
+    text_seq_id, text_bert_T, _norm_text = get_phones_and_bert(
         "这是一个简单的示例，真没想到这么简单就完成了。The King and His Stories.Once there was a king. He likes to write stories, but his stories were not good. As people were afraid of him, they all said his stories were good.After reading them, the writer at once turned to the soldiers and said: Take me back to prison, please.",
         "auto",
         "v2",
@@ -835,7 +835,7 @@ def export_prov2(
     device="cpu",
     is_half=True,
 ):
-    if sv_cn_model == None:
+    if sv_cn_model is None:
         init_sv_cn(device, is_half)
 
     if not os.path.exists(output_path):
@@ -857,7 +857,7 @@ def export_prov2(
 
     print(f"device: {device}")
 
-    ref_seq_id, ref_bert_T, ref_norm_text = get_phones_and_bert(
+    ref_seq_id, ref_bert_T, _ref_norm_text = get_phones_and_bert(
         ref_text, "all_zh", "v2"
     )
     ref_seq = torch.LongTensor([ref_seq_id]).to(device)
@@ -866,7 +866,7 @@ def export_prov2(
         ref_bert = ref_bert.half()
     ref_bert = ref_bert.to(ref_seq.device)
 
-    text_seq_id, text_bert_T, norm_text = get_phones_and_bert(
+    text_seq_id, text_bert_T, _norm_text = get_phones_and_bert(
         "这是一个简单的示例，真没想到这么简单就完成了。The King and His Stories.Once there was a king. He likes to write stories, but his stories were not good. As people were afraid of him, they all said his stories were good.After reading them, the writer at once turned to the soldiers and said: Take me back to prison, please.",
         "auto",
         "v2",
@@ -990,7 +990,7 @@ class GPT_SoVITS(nn.Module):
 
 class ExportERes2NetV2(nn.Module):
     def __init__(self, sv_cn_model: SV):
-        super(ExportERes2NetV2, self).__init__()
+        super().__init__()
         self.bn1 = sv_cn_model.embedding_model.bn1
         self.conv1 = sv_cn_model.embedding_model.conv1
         self.layer1 = sv_cn_model.embedding_model.layer1
@@ -1093,7 +1093,7 @@ def test():
     # gpt_sovits = GPT_SoVITS(t2s,vits)
     gpt_sovits = torch.jit.load("onnx/by/gpt_sovits_model.pt", map_location="cuda")
 
-    ref_seq_id, ref_bert_T, ref_norm_text = get_phones_and_bert(
+    ref_seq_id, ref_bert_T, _ref_norm_text = get_phones_and_bert(
         ref_text, "all_zh", "v2"
     )
     ref_seq = torch.LongTensor([ref_seq_id])
@@ -1101,7 +1101,7 @@ def test():
     # text_seq_id,text_bert_T,norm_text = get_phones_and_bert("昨天晚上看见征兵文书,知道君主在大规模征兵,那么多卷征兵文册,每一卷上都有父亲的名字.","all_zh",'v2')
     text = "昨天晚上看见征兵文书,知道君主在大规模征兵,那么多卷征兵文册,每一卷上都有父亲的名字."
 
-    text_seq_id, text_bert_T, norm_text = get_phones_and_bert(text, "all_zh", "v2")
+    text_seq_id, text_bert_T, _norm_text = get_phones_and_bert(text, "all_zh", "v2")
 
     test_bert = tokenizer(text, return_tensors="pt")
     word2ph = []

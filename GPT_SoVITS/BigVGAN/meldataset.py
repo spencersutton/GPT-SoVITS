@@ -8,6 +8,7 @@ import math
 import os
 import pathlib
 import random
+from typing import TYPE_CHECKING
 
 import librosa
 import numpy as np
@@ -16,7 +17,8 @@ import torch.utils.data
 from librosa.filters import mel as librosa_mel_fn
 from tqdm import tqdm
 
-from .env import AttrDict
+if TYPE_CHECKING:
+    from .env import AttrDict
 
 MAX_WAV_VALUE = 32767.0  # NOTE: 32768.0 -1 to prevent int16 overflow (results in popping sound in corner cases)
 
@@ -57,7 +59,7 @@ def mel_spectrogram(
     hop_size: int,
     win_size: int,
     fmin: int,
-    fmax: int = None,
+    fmax: int | None = None,
     center: bool = False,
 ) -> torch.Tensor:
     """
@@ -195,10 +197,10 @@ class MelDataset(torch.utils.data.Dataset):
         fmax: int | None,
         split: bool = True,
         shuffle: bool = True,
-        device: str = None,
+        device: str | None = None,
         fmax_loss: int | None = None,
         fine_tuning: bool = False,
-        base_mels_path: str = None,
+        base_mels_path: str | None = None,
         is_seen: bool = True,
     ):
         self.audio_files = training_files

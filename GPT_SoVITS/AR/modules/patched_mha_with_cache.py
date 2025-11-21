@@ -265,7 +265,7 @@ def multi_head_attention_forward_patched(
             b_k,
             b_v,
         )
-    if cache != None:
+    if cache is not None:
         if cache["first_infer"] == 1:
             cache["k"][cache["stage"]] = k
             # print(0,cache["k"].shape)
@@ -401,7 +401,7 @@ def multi_head_attention_forward_patched(
     #
 
     if need_weights:
-        B, Nt, E = q.shape
+        _B, _Nt, E = q.shape
         q_scaled = q / math.sqrt(E)
 
         assert not (is_causal and attn_mask is None), (

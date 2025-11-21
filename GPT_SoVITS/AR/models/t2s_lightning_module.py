@@ -43,7 +43,7 @@ class Text2SemanticLightningModule(LightningModule):
         scheduler = self.lr_schedulers()
         forward = (
             self.model.forward
-            if self.config["train"].get("if_dpo", False) == True
+            if self.config["train"].get("if_dpo", False)
             else self.model.forward_old
         )
         loss, acc = forward(

@@ -34,7 +34,7 @@ def inference(a, h):
     with torch.no_grad():
         for i, filname in enumerate(filelist):
             # Load the ground truth audio and resample if necessary
-            wav, sr = librosa.load(
+            wav, _sr = librosa.load(
                 os.path.join(a.input_wavs_dir, filname), sr=h.sampling_rate, mono=True
             )
             wav = torch.FloatTensor(wav).to(device)

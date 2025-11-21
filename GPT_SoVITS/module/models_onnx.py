@@ -327,7 +327,7 @@ class PosteriorEncoder(nn.Module):
         self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
     def forward(self, x, x_lengths, g=None):
-        if g != None:
+        if g is not None:
             g = g.detach()
         x_mask = torch.unsqueeze(commons.sequence_mask(x_lengths, x.size(2)), 1).to(
             x.dtype
@@ -371,7 +371,7 @@ class Encoder(nn.Module):
         self.proj = nn.Conv1d(hidden_channels, out_channels, 1)
 
     def forward(self, x, x_lengths, g=None):
-        if g != None:
+        if g is not None:
             g = g.detach()
         x_mask = torch.unsqueeze(commons.sequence_mask(x_lengths, x.size(2)), 1).to(
             x.dtype
@@ -437,7 +437,7 @@ class Generator(torch.nn.Module):
         gin_channels=0,
         is_bias=False,
     ):
-        super(Generator, self).__init__()
+        super().__init__()
         self.num_kernels = len(resblock_kernel_sizes)
         self.num_upsamples = len(upsample_rates)
         self.conv_pre = Conv1d(
@@ -504,10 +504,10 @@ class Generator(torch.nn.Module):
 
 class DiscriminatorP(torch.nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
-        super(DiscriminatorP, self).__init__()
+        super().__init__()
         self.period = period
         self.use_spectral_norm = use_spectral_norm
-        norm_f = weight_norm if use_spectral_norm == False else spectral_norm
+        norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList(
             [
                 norm_f(
@@ -583,8 +583,8 @@ class DiscriminatorP(torch.nn.Module):
 
 class DiscriminatorS(torch.nn.Module):
     def __init__(self, use_spectral_norm=False):
-        super(DiscriminatorS, self).__init__()
-        norm_f = weight_norm if use_spectral_norm == False else spectral_norm
+        super().__init__()
+        norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList(
             [
                 norm_f(Conv1d(1, 16, 15, 1, padding=7)),
@@ -613,7 +613,7 @@ class DiscriminatorS(torch.nn.Module):
 
 class MultiPeriodDiscriminator(torch.nn.Module):
     def __init__(self, use_spectral_norm=False):
-        super(MultiPeriodDiscriminator, self).__init__()
+        super().__init__()
         periods = [2, 3, 5, 7, 11]
 
         discs = [DiscriminatorS(use_spectral_norm=use_spectral_norm)]
@@ -649,7 +649,7 @@ class ReferenceEncoder(nn.Module):
         self.spec_channels = spec_channels
         ref_enc_filters = [32, 32, 64, 64, 128, 128]
         K = len(ref_enc_filters)
-        filters = [1] + ref_enc_filters
+        filters = [1, *ref_enc_filters]
         convs = [
             weight_norm(
                 nn.Conv2d(
@@ -687,7 +687,7 @@ class ReferenceEncoder(nn.Module):
         out = out.contiguous().view(N, T, -1)  # [N, Ty//2^K, 128*n_mels//2^K]
 
         self.gru.flatten_parameters()
-        memory, out = self.gru(out)  # out --- [1, N, 128]
+        _memory, out = self.gru(out)  # out --- [1, N, 128]
 
         return self.proj(out.squeeze(0)).unsqueeze(-1)
 
@@ -699,7 +699,7 @@ class ReferenceEncoder(nn.Module):
 
 class Quantizer_module(torch.nn.Module):
     def __init__(self, n_e, e_dim):
-        super(Quantizer_module, self).__init__()
+        super().__init__()
         self.embedding = nn.Embedding(n_e, e_dim)
         self.embedding.weight.data.uniform_(-1.0 / n_e, 1.0 / n_e)
 
@@ -716,7 +716,7 @@ class Quantizer_module(torch.nn.Module):
 
 class Quantizer(torch.nn.Module):
     def __init__(self, embed_dim=512, n_code_groups=4, n_codes=160):
-        super(Quantizer, self).__init__()
+        super().__init__()
         assert embed_dim % n_code_groups == 0
         self.quantizer_modules = nn.ModuleList(
             [
@@ -729,7 +729,7 @@ class Quantizer(torch.nn.Module):
 
     def forward(self, xin):
         # B, C, T
-        B, C, T = xin.shape
+        B, _C, T = xin.shape
         xin = xin.transpose(1, 2)
         x = xin.reshape(-1, self.embed_dim)
         x = torch.split(x, self.embed_dim // self.n_code_groups, dim=-1)
@@ -961,7 +961,7 @@ class SynthesizerTrn(nn.Module):
             ge_ = self.ge_to512(ge.transpose(2, 1)).transpose(2, 1)
             x, m_p, logs_p, y_mask = self.enc_p(quantized, text, ge_, speed)
         else:
-            x, m_p, logs_p, y_mask = self.enc_p(quantized, text, ge, speed)
+            _x, m_p, logs_p, y_mask = self.enc_p(quantized, text, ge, speed)
 
         z_p = m_p + torch.randn_like(m_p) * torch.exp(logs_p) * noise_scale
 
@@ -972,7 +972,7 @@ class SynthesizerTrn(nn.Module):
 
     def extract_latent(self, x):
         ssl = self.ssl_proj(x)
-        quantized, codes, commit_loss, quantized_list = self.quantizer(ssl)
+        _quantized, codes, _commit_loss, _quantized_list = self.quantizer(ssl)
         return codes.transpose(0, 1)
 
 
@@ -1141,17 +1141,15 @@ class SynthesizerTrnV3(nn.Module):
         self.cfm = CFM(
             100,
             DiT(
-                **dict(
-                    dim=1024,
-                    depth=22,
-                    heads=16,
-                    ff_mult=2,
-                    text_dim=inter_channels2,
-                    conv_layers=4,
-                )
+                dim=1024,
+                depth=22,
+                heads=16,
+                ff_mult=2,
+                text_dim=inter_channels2,
+                conv_layers=4,
             ),
         )  # text_dim is condition feature dim
-        if freeze_quantizer == True:
+        if freeze_quantizer:
             set_no_grad(self.ssl_proj)
             set_no_grad(self.quantizer)
             set_no_grad(self.enc_p)
@@ -1170,7 +1168,7 @@ class SynthesizerTrnV3(nn.Module):
         quantized = self.quantizer.decode(codes)
         if self.semantic_frame_rate == "25hz":
             quantized = F.interpolate(quantized, scale_factor=2, mode="nearest")  ##BCT
-        x, m_p, logs_p, y_mask = self.enc_p(quantized, text, ge, speed)
+        x, _m_p, _logs_p, _y_mask = self.enc_p(quantized, text, ge, speed)
         fea = self.bridge(x)
         fea = F.interpolate(fea, scale_factor=1.875, mode="nearest")  ##BCT
         ####more wn paramter to learn mel
@@ -1179,5 +1177,5 @@ class SynthesizerTrnV3(nn.Module):
 
     def extract_latent(self, x):
         ssl = self.ssl_proj(x)
-        quantized, codes, commit_loss, quantized_list = self.quantizer(ssl)
+        _quantized, codes, _commit_loss, _quantized_list = self.quantizer(ssl)
         return codes.transpose(0, 1)

@@ -262,7 +262,7 @@ class TextEncoder(nn.Module):
 
     def extract_latent(self, x):
         x = self.ssl_proj(x)
-        quantized, codes, commit_loss, quantized_list = self.quantizer(x)
+        _quantized, codes, _commit_loss, _quantized_list = self.quantizer(x)
         return codes.transpose(0, 1)
 
     def decode_latent(self, codes, y_mask, refer, refer_mask, ge):
@@ -356,7 +356,7 @@ class PosteriorEncoder(nn.Module):
         self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
     def forward(self, x, x_lengths, g=None):
-        if g != None:
+        if g is not None:
             g = g.detach()
         x_mask = torch.unsqueeze(commons.sequence_mask(x_lengths, x.size(2)), 1).to(
             x.dtype
@@ -400,7 +400,7 @@ class Encoder(nn.Module):
         self.proj = nn.Conv1d(hidden_channels, out_channels, 1)
 
     def forward(self, x, x_lengths, g=None):
-        if g != None:
+        if g is not None:
             g = g.detach()
         x_mask = torch.unsqueeze(commons.sequence_mask(x_lengths, x.size(2)), 1).to(
             x.dtype
@@ -466,7 +466,7 @@ class Generator(torch.nn.Module):
         gin_channels=0,
         is_bias=False,
     ):
-        super(Generator, self).__init__()
+        super().__init__()
         self.num_kernels = len(resblock_kernel_sizes)
         self.num_upsamples = len(upsample_rates)
         self.conv_pre = Conv1d(
@@ -533,10 +533,10 @@ class Generator(torch.nn.Module):
 
 class DiscriminatorP(torch.nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
-        super(DiscriminatorP, self).__init__()
+        super().__init__()
         self.period = period
         self.use_spectral_norm = use_spectral_norm
-        norm_f = weight_norm if use_spectral_norm == False else spectral_norm
+        norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList(
             [
                 norm_f(
@@ -612,8 +612,8 @@ class DiscriminatorP(torch.nn.Module):
 
 class DiscriminatorS(torch.nn.Module):
     def __init__(self, use_spectral_norm=False):
-        super(DiscriminatorS, self).__init__()
-        norm_f = weight_norm if use_spectral_norm == False else spectral_norm
+        super().__init__()
+        norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList(
             [
                 norm_f(Conv1d(1, 16, 15, 1, padding=7)),
@@ -645,7 +645,7 @@ v2pro_set = {"v2Pro", "v2ProPlus"}
 
 class MultiPeriodDiscriminator(torch.nn.Module):
     def __init__(self, use_spectral_norm=False, version=None):
-        super(MultiPeriodDiscriminator, self).__init__()
+        super().__init__()
         if version in v2pro_set:
             periods = [2, 3, 5, 7, 11, 17, 23]
         else:
@@ -684,7 +684,7 @@ class ReferenceEncoder(nn.Module):
         self.spec_channels = spec_channels
         ref_enc_filters = [32, 32, 64, 64, 128, 128]
         K = len(ref_enc_filters)
-        filters = [1] + ref_enc_filters
+        filters = [1, *ref_enc_filters]
         convs = [
             weight_norm(
                 nn.Conv2d(
@@ -722,7 +722,7 @@ class ReferenceEncoder(nn.Module):
         out = out.contiguous().view(N, T, -1)  # [N, Ty//2^K, 128*n_mels//2^K]
 
         self.gru.flatten_parameters()
-        memory, out = self.gru(out)  # out --- [1, N, 128]
+        _memory, out = self.gru(out)  # out --- [1, N, 128]
 
         return self.proj(out.squeeze(0)).unsqueeze(-1)
 
@@ -734,7 +734,7 @@ class ReferenceEncoder(nn.Module):
 
 class Quantizer_module(torch.nn.Module):
     def __init__(self, n_e, e_dim):
-        super(Quantizer_module, self).__init__()
+        super().__init__()
         self.embedding = nn.Embedding(n_e, e_dim)
         self.embedding.weight.data.uniform_(-1.0 / n_e, 1.0 / n_e)
 
@@ -751,7 +751,7 @@ class Quantizer_module(torch.nn.Module):
 
 class Quantizer(torch.nn.Module):
     def __init__(self, embed_dim=512, n_code_groups=4, n_codes=160):
-        super(Quantizer, self).__init__()
+        super().__init__()
         assert embed_dim % n_code_groups == 0
         self.quantizer_modules = nn.ModuleList(
             [
@@ -764,7 +764,7 @@ class Quantizer(torch.nn.Module):
 
     def forward(self, xin):
         # B, C, T
-        B, C, T = xin.shape
+        B, _C, T = xin.shape
         xin = xin.transpose(1, 2)
         x = xin.reshape(-1, self.embed_dim)
         x = torch.split(x, self.embed_dim // self.n_code_groups, dim=-1)
@@ -990,7 +990,7 @@ class SynthesizerTrn(nn.Module):
                     self.ssl_proj.eval()
                     self.quantizer.eval()
             ssl = self.ssl_proj(ssl)
-            quantized, codes, commit_loss, quantized_list = self.quantizer(
+            quantized, _codes, commit_loss, _quantized_list = self.quantizer(
                 ssl, layers=[0]
             )
 
@@ -999,7 +999,7 @@ class SynthesizerTrn(nn.Module):
                 quantized, size=int(quantized.shape[-1] * 2), mode="nearest"
             )
 
-        x, m_p, logs_p, y_mask = self.enc_p(
+        _x, m_p, logs_p, y_mask = self.enc_p(
             quantized, y_lengths, text, text_lengths, ge512 if self.is_v2pro else ge
         )
         z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=ge)
@@ -1029,13 +1029,13 @@ class SynthesizerTrn(nn.Module):
             ge = self.ref_enc(y[:, :704] * y_mask, y_mask)
 
         ssl = self.ssl_proj(ssl)
-        quantized, codes, commit_loss, _ = self.quantizer(ssl, layers=[0])
+        quantized, _codes, _commit_loss, _ = self.quantizer(ssl, layers=[0])
         if self.semantic_frame_rate == "25hz":
             quantized = F.interpolate(
                 quantized, size=int(quantized.shape[-1] * 2), mode="nearest"
             )
 
-        x, m_p, logs_p, y_mask = self.enc_p(
+        _x, m_p, logs_p, y_mask = self.enc_p(
             quantized, y_lengths, text, text_lengths, ge, test=test
         )
         z_p = m_p + torch.randn_like(m_p) * torch.exp(logs_p) * noise_scale
@@ -1081,7 +1081,7 @@ class SynthesizerTrn(nn.Module):
             quantized = F.interpolate(
                 quantized, size=int(quantized.shape[-1] * 2), mode="nearest"
             )
-        x, m_p, logs_p, y_mask = self.enc_p(
+        _x, m_p, logs_p, y_mask = self.enc_p(
             quantized,
             y_lengths,
             text,
@@ -1098,7 +1098,7 @@ class SynthesizerTrn(nn.Module):
 
     def extract_latent(self, x):
         ssl = self.ssl_proj(x)
-        quantized, codes, commit_loss, quantized_list = self.quantizer(ssl)
+        _quantized, codes, _commit_loss, _quantized_list = self.quantizer(ssl)
         return codes.transpose(0, 1)
 
 
@@ -1333,17 +1333,15 @@ class SynthesizerTrnV3(nn.Module):
         self.cfm = CFM(
             100,
             DiT(
-                **dict(
-                    dim=1024,
-                    depth=22,
-                    heads=16,
-                    ff_mult=2,
-                    text_dim=inter_channels2,
-                    conv_layers=4,
-                )
+                dim=1024,
+                depth=22,
+                heads=16,
+                ff_mult=2,
+                text_dim=inter_channels2,
+                conv_layers=4,
             ),
         )  # text_dim is condition feature dim
-        if self.freeze_quantizer == True:
+        if self.freeze_quantizer:
             set_no_grad(self.ssl_proj)
             set_no_grad(self.quantizer)
             set_no_grad(self.enc_p)
@@ -1374,13 +1372,13 @@ class SynthesizerTrnV3(nn.Module):
                     self.quantizer.eval()
                     self.enc_p.eval()
                 ssl = self.ssl_proj(ssl)
-                quantized, codes, commit_loss, quantized_list = self.quantizer(
+                quantized, _codes, _commit_loss, _quantized_list = self.quantizer(
                     ssl, layers=[0]
                 )
                 quantized = F.interpolate(
                     quantized, scale_factor=2, mode="nearest"
                 )  ##BCT
-                x, m_p, logs_p, y_mask = self.enc_p(
+                x, _m_p, _logs_p, y_mask = self.enc_p(
                     quantized, y_lengths, text, text_lengths, ge
                 )
         fea = self.bridge(x)
@@ -1407,7 +1405,7 @@ class SynthesizerTrnV3(nn.Module):
     def decode_encp(self, codes, text, refer, ge=None, speed=1):
         # print(2333333,refer.shape)
         # ge=None
-        if ge == None:
+        if ge is None:
             refer_lengths = torch.LongTensor([refer.size(2)]).to(refer.device)
             refer_mask = torch.unsqueeze(
                 commons.sequence_mask(refer_lengths, refer.size(2)), 1
@@ -1426,7 +1424,7 @@ class SynthesizerTrnV3(nn.Module):
         quantized = self.quantizer.decode(codes)
         if self.semantic_frame_rate == "25hz":
             quantized = F.interpolate(quantized, scale_factor=2, mode="nearest")  ##BCT
-        x, m_p, logs_p, y_mask = self.enc_p(
+        x, _m_p, _logs_p, _y_mask = self.enc_p(
             quantized, y_lengths, text, text_lengths, ge, speed
         )
         fea = self.bridge(x)
@@ -1439,7 +1437,7 @@ class SynthesizerTrnV3(nn.Module):
 
     def extract_latent(self, x):
         ssl = self.ssl_proj(x)
-        quantized, codes, commit_loss, quantized_list = self.quantizer(ssl)
+        _quantized, codes, _commit_loss, _quantized_list = self.quantizer(ssl)
         return codes.transpose(0, 1)
 
 
@@ -1557,14 +1555,12 @@ class SynthesizerTrnV3b(nn.Module):
         self.cfm = CFM(
             100,
             DiT(
-                **dict(
-                    dim=1024,
-                    depth=22,
-                    heads=16,
-                    ff_mult=2,
-                    text_dim=inter_channels2,
-                    conv_layers=4,
-                )
+                dim=1024,
+                depth=22,
+                heads=16,
+                ff_mult=2,
+                text_dim=inter_channels2,
+                conv_layers=4,
             ),
         )  # text_dim is condition feature dim
 
@@ -1586,7 +1582,7 @@ class SynthesizerTrnV3b(nn.Module):
                     self.ssl_proj.eval()
                     self.quantizer.eval()
                 ssl = self.ssl_proj(ssl)
-                quantized, codes, commit_loss, quantized_list = self.quantizer(
+                quantized, _codes, commit_loss, _quantized_list = self.quantizer(
                     ssl, layers=[0]
                 )
                 quantized = F.interpolate(
@@ -1634,7 +1630,7 @@ class SynthesizerTrnV3b(nn.Module):
     def decode_encp(self, codes, text, refer, ge=None):
         # print(2333333,refer.shape)
         # ge=None
-        if ge == None:
+        if ge is None:
             refer_lengths = torch.LongTensor([refer.size(2)]).to(refer.device)
             refer_mask = torch.unsqueeze(
                 commons.sequence_mask(refer_lengths, refer.size(2)), 1
@@ -1647,7 +1643,7 @@ class SynthesizerTrnV3b(nn.Module):
         quantized = self.quantizer.decode(codes)
         if self.semantic_frame_rate == "25hz":
             quantized = F.interpolate(quantized, scale_factor=2, mode="nearest")  ##BCT
-        x, m_p, logs_p, y_mask = self.enc_p(
+        x, _m_p, _logs_p, _y_mask = self.enc_p(
             quantized, y_lengths, text, text_lengths, ge
         )
         fea = self.bridge(x)
@@ -1658,5 +1654,5 @@ class SynthesizerTrnV3b(nn.Module):
 
     def extract_latent(self, x):
         ssl = self.ssl_proj(x)
-        quantized, codes, commit_loss, quantized_list = self.quantizer(ssl)
+        _quantized, codes, _commit_loss, _quantized_list = self.quantizer(ssl)
         return codes.transpose(0, 1)

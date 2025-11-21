@@ -270,7 +270,7 @@ class T2STransformer:
 
 class Text2SemanticDecoder(nn.Module):
     def __init__(self, config, norm_first=False, top_k=3):
-        super(Text2SemanticDecoder, self).__init__()
+        super().__init__()
         self.model_dim = config["model"]["hidden_dim"]
         self.embedding_dim = config["model"]["embedding_dim"]
         self.num_head = config["model"]["head"]
@@ -769,8 +769,8 @@ class Text2SemanticDecoder(nn.Module):
                 l1 = samples[:, 0] == self.EOS
                 l2 = tokens == self.EOS
                 l = l1.logical_or(l2)
-                removed_idx_of_batch_for_y = torch.where(l == True)[0].tolist()
-                reserved_idx_of_batch_for_y = torch.where(l == False)[0]
+                removed_idx_of_batch_for_y = torch.where(l)[0].tolist()
+                reserved_idx_of_batch_for_y = torch.where(not l)[0]
                 # batch_indexs = torch.tensor(batch_idx_map, device=y.device)[removed_idx_of_batch_for_y]
                 for i in removed_idx_of_batch_for_y:
                     batch_index = batch_idx_map[i]

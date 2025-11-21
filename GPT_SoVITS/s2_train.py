@@ -212,7 +212,7 @@ def run(rank, n_gpus, hps):
     try:  # 如果能加载自动resume
         _, _, _, epoch_str = utils.load_checkpoint(
             utils.latest_checkpoint_path(
-                "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "D_*.pth"
+                f"{hps.data.exp_dir}/logs_s2_{hps.model.version}", "D_*.pth"
             ),
             net_d,
             optim_d,
@@ -222,7 +222,7 @@ def run(rank, n_gpus, hps):
         # _, _, _, epoch_str = utils.load_checkpoint(utils.latest_checkpoint_path(hps.model_dir, "G_*.pth"), net_g, optim_g,load_opt=0)
         _, _, _, epoch_str = utils.load_checkpoint(
             utils.latest_checkpoint_path(
-                "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "G_*.pth"
+                f"{hps.data.exp_dir}/logs_s2_{hps.model.version}", "G_*.pth"
             ),
             net_g,
             optim_g,
@@ -235,15 +235,13 @@ def run(rank, n_gpus, hps):
         # traceback.print_exc()
         epoch_str = 1
         global_step = 0
-        if (
-            hps.train.pretrained_s2G != ""
-            and hps.train.pretrained_s2G != None
-            and os.path.exists(hps.train.pretrained_s2G)
+        if hps.train.pretrained_s2G not in {"", None} and os.path.exists(
+            hps.train.pretrained_s2G
         ):
             if rank == 0:
-                logger.info("loaded pretrained %s" % hps.train.pretrained_s2G)
+                logger.info(f"loaded pretrained {hps.train.pretrained_s2G}")
             print(
-                "loaded pretrained %s" % hps.train.pretrained_s2G,
+                f"loaded pretrained {hps.train.pretrained_s2G}",
                 net_g.module.load_state_dict(
                     torch.load(
                         hps.train.pretrained_s2G, map_location="cpu", weights_only=False
@@ -258,15 +256,13 @@ def run(rank, n_gpus, hps):
                     strict=False,
                 ),
             )  ##测试不加载优化器
-        if (
-            hps.train.pretrained_s2D != ""
-            and hps.train.pretrained_s2D != None
-            and os.path.exists(hps.train.pretrained_s2D)
+        if hps.train.pretrained_s2D not in {"", None} and os.path.exists(
+            hps.train.pretrained_s2D
         ):
             if rank == 0:
-                logger.info("loaded pretrained %s" % hps.train.pretrained_s2D)
+                logger.info(f"loaded pretrained {hps.train.pretrained_s2D}")
             print(
-                "loaded pretrained %s" % hps.train.pretrained_s2D,
+                f"loaded pretrained {hps.train.pretrained_s2D}",
                 net_d.module.load_state_dict(
                     torch.load(
                         hps.train.pretrained_s2D, map_location="cpu", weights_only=False
@@ -300,7 +296,7 @@ def run(rank, n_gpus, hps):
 
     scaler = GradScaler(enabled=hps.train.fp16_run)
 
-    print("start training from epoch %s" % epoch_str)
+    print(f"start training from epoch {epoch_str}")
     for epoch in range(epoch_str, hps.train.epochs + 1):
         if rank == 0:
             train_and_evaluate(
@@ -340,9 +336,9 @@ def train_and_evaluate(
     net_g, net_d = nets
     optim_g, optim_d = optims
     # scheduler_g, scheduler_d = schedulers
-    train_loader, eval_loader = loaders
+    train_loader, _eval_loader = loaders
     if writers is not None:
-        writer, writer_eval = writers
+        writer, _writer_eval = writers
 
     train_loader.batch_sampler.set_epoch(epoch)
     global global_step
@@ -363,7 +359,7 @@ def train_and_evaluate(
                 sv_emb,
             ) = data
         else:
-            ssl, ssl_lengths, spec, spec_lengths, y, y_lengths, text, text_lengths = (
+            ssl, _ssl_lengths, spec, spec_lengths, y, y_lengths, text, text_lengths = (
                 data
             )
         if torch.cuda.is_available():
@@ -427,9 +423,9 @@ def train_and_evaluate(
                     y_hat,
                     kl_ssl,
                     ids_slice,
-                    x_mask,
+                    _x_mask,
                     z_mask,
-                    (z, z_p, m_p, logs_p, m_q, logs_q),
+                    (_z, z_p, m_p, logs_p, _m_q, logs_q),
                     stats_ssl,
                 ) = net_g(ssl, spec, spec_lengths, text, text_lengths)
 
@@ -462,7 +458,7 @@ def train_and_evaluate(
             # Discriminator
             y_d_hat_r, y_d_hat_g, _, _ = net_d(y, y_hat.detach())
             with autocast(enabled=False):
-                loss_disc, losses_disc_r, losses_disc_g = discriminator_loss(
+                loss_disc, _losses_disc_r, _losses_disc_g = discriminator_loss(
                     y_d_hat_r,
                     y_d_hat_g,
                 )
@@ -481,7 +477,7 @@ def train_and_evaluate(
                 loss_kl = kl_loss(z_p, logs_q, m_p, logs_p, z_mask) * hps.train.c_kl
 
                 loss_fm = feature_loss(fmap_r, fmap_g)
-                loss_gen, losses_gen = generator_loss(y_d_hat_g)
+                loss_gen, _losses_gen = generator_loss(y_d_hat_g)
                 loss_gen_all = loss_gen + loss_fm + loss_mel + kl_ssl * 1 + loss_kl
 
         optim_g.zero_grad()
@@ -559,7 +555,7 @@ def train_and_evaluate(
                 hps.train.learning_rate,
                 epoch,
                 os.path.join(
-                    "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
+                    f"{hps.data.exp_dir}/logs_s2_{hps.model.version}",
                     f"G_{global_step}.pth",
                 ),
             )
@@ -569,7 +565,7 @@ def train_and_evaluate(
                 hps.train.learning_rate,
                 epoch,
                 os.path.join(
-                    "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
+                    f"{hps.data.exp_dir}/logs_s2_{hps.model.version}",
                     f"D_{global_step}.pth",
                 ),
             )
@@ -580,7 +576,7 @@ def train_and_evaluate(
                 hps.train.learning_rate,
                 epoch,
                 os.path.join(
-                    "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
+                    f"{hps.data.exp_dir}/logs_s2_{hps.model.version}",
                     f"G_{233333333333}.pth",
                 ),
             )
@@ -590,23 +586,22 @@ def train_and_evaluate(
                 hps.train.learning_rate,
                 epoch,
                 os.path.join(
-                    "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
+                    f"{hps.data.exp_dir}/logs_s2_{hps.model.version}",
                     f"D_{233333333333}.pth",
                 ),
             )
-        if rank == 0 and hps.train.if_save_every_weights == True:
+        if rank == 0 and hps.train.if_save_every_weights:
             if hasattr(net_g, "module"):
                 ckpt = net_g.module.state_dict()
             else:
                 ckpt = net_g.state_dict()
             logger.info(
-                "saving ckpt %s_e%s:%s"
-                % (
+                "saving ckpt {}_e{}:{}".format(
                     hps.name,
                     epoch,
                     savee(
                         ckpt,
-                        hps.name + "_e%s_s%s" % (epoch, global_step),
+                        hps.name + f"_e{epoch}_s{global_step}",
                         epoch,
                         global_step,
                         hps,

@@ -11,7 +11,7 @@ recognition performance. Parameters expansion, baseWidth, and scale can be modif
 
 import math
 
-import pooling_layers as pooling_layers
+import pooling_layers
 import torch
 import torch.nn.functional as F
 from fusion import AFF
@@ -20,7 +20,7 @@ from torch import nn
 
 class ReLU(nn.Hardtanh):
     def __init__(self, inplace=False):
-        super(ReLU, self).__init__(0, 20, inplace)
+        super().__init__(0, 20, inplace)
 
     def __repr__(self):
         inplace_str = "inplace" if self.inplace else ""
@@ -31,8 +31,8 @@ class BasicBlockERes2Net(nn.Module):
     expansion = 4
 
     def __init__(self, in_planes, planes, stride=1, baseWidth=24, scale=3):
-        super(BasicBlockERes2Net, self).__init__()
-        width = int(math.floor(planes * (baseWidth / 64.0)))
+        super().__init__()
+        width = math.floor(planes * (baseWidth / 64.0))
         self.conv1 = nn.Conv2d(
             in_planes, width * scale, kernel_size=1, stride=stride, bias=False
         )
@@ -101,8 +101,8 @@ class BasicBlockERes2Net_diff_AFF(nn.Module):
     expansion = 4
 
     def __init__(self, in_planes, planes, stride=1, baseWidth=24, scale=3):
-        super(BasicBlockERes2Net_diff_AFF, self).__init__()
-        width = int(math.floor(planes * (baseWidth / 64.0)))
+        super().__init__()
+        width = math.floor(planes * (baseWidth / 64.0))
         self.conv1 = nn.Conv2d(
             in_planes, width * scale, kernel_size=1, stride=stride, bias=False
         )
@@ -185,7 +185,7 @@ class ERes2Net(nn.Module):
         pooling_func="TSTP",
         two_emb_layer=False,
     ):
-        super(ERes2Net, self).__init__()
+        super().__init__()
         self.in_planes = m_channels
         self.feat_dim = feat_dim
         self.embedding_size = embedding_size
@@ -235,7 +235,7 @@ class ERes2Net(nn.Module):
         self.fuse_mode123 = AFF(channels=m_channels * 16)
         self.fuse_mode1234 = AFF(channels=m_channels * 32)
 
-        self.n_stats = 1 if pooling_func == "TAP" or pooling_func == "TSDP" else 2
+        self.n_stats = 1 if pooling_func in {"TAP", "TSDP"} else 2
         self.pool = getattr(pooling_layers, pooling_func)(
             in_dim=self.stats_dim * block.expansion
         )
@@ -300,7 +300,7 @@ class ERes2Net(nn.Module):
         fuse_out1234 = self.fuse_mode1234(out4, fuse_out123_downsample).flatten(
             start_dim=1, end_dim=2
         )  # bs,20480,T
-        if if_mean == False:
+        if not if_mean:
             mean = fuse_out1234[0].transpose(1, 0)  # (T,20480),bs=T
         else:
             mean = fuse_out1234.mean(2)  # bs,20480

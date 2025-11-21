@@ -120,7 +120,7 @@ def b_delete_audio(*checkbox_list):
     change = False
     for i, checkbox in reversed(list(enumerate(checkbox_list))):
         if g_index + i < len(g_data_json):
-            if checkbox == True:
+            if checkbox:
                 g_data_json.pop(g_index + i)
                 change = True
 
@@ -157,7 +157,7 @@ def b_audio_split(audio_breakpoint, *checkbox_list):
     global g_data_json, g_max_json_index
     checked_index = []
     for i, checkbox in enumerate(checkbox_list):
-        if checkbox == True and g_index + i < len(g_data_json):
+        if checkbox and g_index + i < len(g_data_json):
             checked_index.append(g_index + i)
     if len(checked_index) == 1:
         index = checked_index[0]
@@ -193,7 +193,7 @@ def b_merge_audio(interval_r, *checkbox_list):
     audios_path = []
     audios_text = []
     for i, checkbox in enumerate(checkbox_list):
-        if checkbox == True and g_index + i < len(g_data_json):
+        if checkbox and g_index + i < len(g_data_json):
             checked_index.append(g_index + i)
 
     if len(checked_index) > 1:

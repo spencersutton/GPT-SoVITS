@@ -6,7 +6,7 @@
 
 import json
 import os
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import torch
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
@@ -18,6 +18,9 @@ from . import activations
 from .alias_free_activation.torch.act import Activation1d as TorchActivation1d
 from .env import AttrDict
 from .utils0 import get_padding, init_weights
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def load_hparams_from_json(path) -> AttrDict:
@@ -45,7 +48,7 @@ class AMPBlock1(torch.nn.Module):
         channels: int,
         kernel_size: int = 3,
         dilation: tuple = (1, 3, 5),
-        activation: str = None,
+        activation: str | None = None,
     ):
         super().__init__()
 
@@ -164,7 +167,7 @@ class AMPBlock2(torch.nn.Module):
         channels: int,
         kernel_size: int = 3,
         dilation: tuple = (1, 3, 5),
-        activation: str = None,
+        activation: str | None = None,
     ):
         super().__init__()
 

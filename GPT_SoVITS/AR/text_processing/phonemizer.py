@@ -2,12 +2,15 @@
 # reference: https://github.com/lifeiteng/vall-e
 import itertools
 import re
+from typing import TYPE_CHECKING
 
 import regex
 from gruut import sentences
-from gruut.const import Sentence, Word
 
 from AR.text_processing.symbols import SYMBOL_TO_ID
+
+if TYPE_CHECKING:
+    from gruut.const import Sentence, Word
 
 
 class GruutPhonemizer:
@@ -51,10 +54,9 @@ class GruutPhonemizer:
 
     def phonemize(self, text: str, espeak: bool = False) -> str:
         text_to_phonemize: str = self._normalize_punctuation(text)
-        sents: list[Sentence] = [
-            sent
-            for sent in self._phonemizer(text_to_phonemize, lang="en-us", espeak=espeak)
-        ]
+        sents: list[Sentence] = list(
+            self._phonemizer(text_to_phonemize, lang="en-us", espeak=espeak)
+        )
         words: list[str] = [
             self._convert_punctuation(word) for word in itertools.chain(*sents)
         ]

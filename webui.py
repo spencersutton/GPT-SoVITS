@@ -25,7 +25,7 @@ if os.path.exists(tmp):
     for name in os.listdir(tmp):
         if name == "jieba.cache":
             continue
-        path = "%s/%s" % (tmp, name)
+        path = f"{tmp}/{name}"
         delete = os.remove if os.path.isfile(path) else shutil.rmtree
         try:
             delete(path)
@@ -39,18 +39,17 @@ for path in site.getsitepackages():
     if "packages" in path:
         site_packages_roots.append(path)
 if site_packages_roots == []:
-    site_packages_roots = ["%s/runtime/Lib/site-packages" % now_dir]
+    site_packages_roots = [f"{now_dir}/runtime/Lib/site-packages"]
 # os.environ["OPENBLAS_NUM_THREADS"] = "4"
 os.environ["no_proxy"] = "localhost, 127.0.0.1, ::1"
 os.environ["all_proxy"] = ""
 for site_packages_root in site_packages_roots:
     if os.path.exists(site_packages_root):
         try:
-            with open("%s/users.pth" % (site_packages_root), "w") as f:
+            with open(f"{site_packages_root}/users.pth", "w") as f:
                 f.write(
                     # "%s\n%s/runtime\n%s/tools\n%s/tools/asr\n%s/GPT_SoVITS\n%s/tools/uvr5"
-                    "%s\n%s/GPT_SoVITS/BigVGAN\n%s/tools\n%s/tools/asr\n%s/GPT_SoVITS\n%s/tools/uvr5"
-                    % (now_dir, now_dir, now_dir, now_dir, now_dir, now_dir)
+                    f"{now_dir}\n{now_dir}/GPT_SoVITS/BigVGAN\n{now_dir}/tools\n{now_dir}/tools/asr\n{now_dir}/GPT_SoVITS\n{now_dir}/tools/uvr5"
                 )
             break
         except PermissionError:
@@ -176,7 +175,7 @@ def check_pretrained_is_exist(version):
     )
     _ = ""
     for i in pretrained_model_list:
-        if "s2Dv3" not in i and "s2Dv4" not in i and os.path.exists(i) == False:
+        if "s2Dv3" not in i and "s2Dv4" not in i and not os.path.exists(i):
             _ += f"\n    {i}"
     if _:
         print("warning: ", i18n("以下模型不存在:") + _)
@@ -184,10 +183,10 @@ def check_pretrained_is_exist(version):
 
 check_pretrained_is_exist(version)
 for key in pretrained_sovits_name.keys():
-    if os.path.exists(pretrained_sovits_name[key]) == False:
+    if not os.path.exists(pretrained_sovits_name[key]):
         pretrained_sovits_name[key] = ""
 for key in pretrained_gpt_name.keys():
-    if os.path.exists(pretrained_gpt_name[key]) == False:
+    if not os.path.exists(pretrained_gpt_name[key]):
         pretrained_gpt_name[key] = ""
 
 from config import (
@@ -235,7 +234,7 @@ system = platform.system()
 
 def kill_process(pid, process_name=""):
     if system == "Windows":
-        cmd = "taskkill /t /f /pid %s" % pid
+        cmd = f"taskkill /t /f /pid {pid}"
         # os.system(cmd)
         subprocess.run(
             cmd,
@@ -280,15 +279,7 @@ def change_label(path_list):
     if p_label is None:
         check_for_existance([path_list])
         path_list = my_utils.clean_path(path_list)
-        cmd = (
-            '"%s" -s tools/subfix_webui.py --load_list "%s" --webui_port %s --is_share %s'
-            % (
-                python_exec,
-                path_list,
-                webui_port_subfix,
-                is_share,
-            )
-        )
+        cmd = f'"{python_exec}" -s tools/subfix_webui.py --load_list "{path_list}" --webui_port {webui_port_subfix} --is_share {is_share}'
         yield (
             process_info(process_name_subfix, "opened"),
             {"__type__": "update", "visible": False},
@@ -312,13 +303,7 @@ process_name_uvr5 = i18n("人声分离WebUI")
 def change_uvr5():
     global p_uvr5
     if p_uvr5 is None:
-        cmd = '"%s" -s tools/uvr5/webui.py "%s" %s %s %s' % (
-            python_exec,
-            infer_device,
-            is_half,
-            webui_port_uvr5,
-            is_share,
-        )
+        cmd = f'"{python_exec}" -s tools/uvr5/webui.py "{infer_device}" {is_half} {webui_port_uvr5} {is_share}'
         yield (
             process_info(process_name_uvr5, "opened"),
             {"__type__": "update", "visible": False},
@@ -349,12 +334,9 @@ def change_tts_inference(
 ):
     global p_tts_inference
     if batched_infer_enabled:
-        cmd = '"%s" -s GPT_SoVITS/inference_webui_fast.py "%s"' % (
-            python_exec,
-            language,
-        )
+        cmd = f'"{python_exec}" -s GPT_SoVITS/inference_webui_fast.py "{language}"'
     else:
-        cmd = '"%s" -s GPT_SoVITS/inference_webui.py "%s"' % (python_exec, language)
+        cmd = f'"{python_exec}" -s GPT_SoVITS/inference_webui.py "{language}"'
     # #####v3暂不支持加速推理
     # if version=="v3":
     #     cmd = '"%s" GPT_SoVITS/inference_webui.py "%s"'%(python_exec, language)
@@ -454,15 +436,15 @@ process_name_denoise = i18n("语音降噪")
 
 def open_denoise(denoise_inp_dir, denoise_opt_dir):
     global p_denoise
-    if p_denoise == None:
+    if p_denoise is None:
         denoise_inp_dir = my_utils.clean_path(denoise_inp_dir)
         denoise_opt_dir = my_utils.clean_path(denoise_opt_dir)
         check_for_existance([denoise_inp_dir])
-        cmd = '"%s" -s tools/cmd-denoise.py -i "%s" -o "%s" -p %s' % (
+        cmd = '"{}" -s tools/cmd-denoise.py -i "{}" -o "{}" -p {}'.format(
             python_exec,
             denoise_inp_dir,
             denoise_opt_dir,
-            "float16" if is_half == True else "float32",
+            "float16" if is_half else "float32",
         )
 
         yield (
@@ -525,7 +507,7 @@ def open1Ba(
     lora_rank,
 ):
     global p_train_SoVITS
-    if p_train_SoVITS == None:
+    if p_train_SoVITS is None:
         exp_name = exp_name.rstrip(" ")
         config_file = (
             "GPT_SoVITS/configs/s2.json"
@@ -535,11 +517,11 @@ def open1Ba(
         with open(config_file) as f:
             data = f.read()
             data = json.loads(data)
-        s2_dir = "%s/%s" % (exp_root, exp_name)
-        os.makedirs("%s/logs_s2_%s" % (s2_dir, version), exist_ok=True)
+        s2_dir = f"{exp_root}/{exp_name}"
+        os.makedirs(f"{s2_dir}/logs_s2_{version}", exist_ok=True)
         if check_for_existance([s2_dir], is_train=True):
             check_details([s2_dir], is_train=True)
-        if is_half == False:
+        if not is_half:
             data["train"]["fp16_run"] = False
             batch_size = max(1, batch_size // 2)
         data["train"]["batch_size"] = batch_size
@@ -558,19 +540,13 @@ def open1Ba(
         data["save_weight_dir"] = SoVITS_weight_version2root[version]
         data["name"] = exp_name
         data["version"] = version
-        tmp_config_path = "%s/tmp_s2.json" % tmp
+        tmp_config_path = f"{tmp}/tmp_s2.json"
         with open(tmp_config_path, "w") as f:
             f.write(json.dumps(data))
         if version in ["v1", "v2", "v2Pro", "v2ProPlus"]:
-            cmd = '"%s" -s GPT_SoVITS/s2_train.py --config "%s"' % (
-                python_exec,
-                tmp_config_path,
-            )
+            cmd = f'"{python_exec}" -s GPT_SoVITS/s2_train.py --config "{tmp_config_path}"'
         else:
-            cmd = '"%s" -s GPT_SoVITS/s2_train_v3_lora.py --config "%s"' % (
-                python_exec,
-                tmp_config_path,
-            )
+            cmd = f'"{python_exec}" -s GPT_SoVITS/s2_train_v3_lora.py --config "{tmp_config_path}"'
         yield (
             process_info(process_name_sovits, "opened"),
             {"__type__": "update", "visible": False},
@@ -628,7 +604,7 @@ def open1Bb(
     pretrained_s1,
 ):
     global p_train_GPT
-    if p_train_GPT == None:
+    if p_train_GPT is None:
         exp_name = exp_name.rstrip(" ")
         with open(
             "GPT_SoVITS/configs/s1longer.yaml"
@@ -637,11 +613,11 @@ def open1Bb(
         ) as f:
             data = f.read()
             data = yaml.load(data, Loader=yaml.FullLoader)
-        s1_dir = "%s/%s" % (exp_root, exp_name)
-        os.makedirs("%s/logs_s1" % (s1_dir), exist_ok=True)
+        s1_dir = f"{exp_root}/{exp_name}"
+        os.makedirs(f"{s1_dir}/logs_s1", exist_ok=True)
         if check_for_existance([s1_dir], is_train=True):
             check_details([s1_dir], is_train=True)
-        if is_half == False:
+        if not is_half:
             data["train"]["precision"] = "32"
             batch_size = max(1, batch_size // 2)
         data["train"]["batch_size"] = batch_size
@@ -653,23 +629,20 @@ def open1Bb(
         data["train"]["if_dpo"] = if_dpo
         data["train"]["half_weights_save_dir"] = GPT_weight_version2root[version]
         data["train"]["exp_name"] = exp_name
-        data["train_semantic_path"] = "%s/6-name2semantic.tsv" % s1_dir
-        data["train_phoneme_path"] = "%s/2-name2text.txt" % s1_dir
-        data["output_dir"] = "%s/logs_s1_%s" % (s1_dir, version)
+        data["train_semantic_path"] = f"{s1_dir}/6-name2semantic.tsv"
+        data["train_phoneme_path"] = f"{s1_dir}/2-name2text.txt"
+        data["output_dir"] = f"{s1_dir}/logs_s1_{version}"
         # data["version"]=version
 
         os.environ["_CUDA_VISIBLE_DEVICES"] = str(
             fix_gpu_numbers(gpu_numbers.replace("-", ","))
         )
         os.environ["hz"] = "25hz"
-        tmp_config_path = "%s/tmp_s1.yaml" % tmp
+        tmp_config_path = f"{tmp}/tmp_s1.yaml"
         with open(tmp_config_path, "w") as f:
             f.write(yaml.dump(data, default_flow_style=False))
         # cmd = '"%s" GPT_SoVITS/s1_train.py --config_file "%s" --train_semantic_path "%s/6-name2semantic.tsv" --train_phoneme_path "%s/2-name2text.txt" --output_dir "%s/logs_s1"'%(python_exec,tmp_config_path,s1_dir,s1_dir,s1_dir)
-        cmd = '"%s" -s GPT_SoVITS/s1_train.py --config_file "%s" ' % (
-            python_exec,
-            tmp_config_path,
-        )
+        cmd = f'"{python_exec}" -s GPT_SoVITS/s1_train.py --config_file "{tmp_config_path}" '
         yield (
             process_info(process_name_gpt, "opened"),
             {"__type__": "update", "visible": False},
@@ -731,7 +704,7 @@ def open_slice(
     inp = my_utils.clean_path(inp)
     opt_root = my_utils.clean_path(opt_root)
     check_for_existance([inp])
-    if os.path.exists(inp) == False:
+    if not os.path.exists(inp):
         yield (
             i18n("输入路径不存在"),
             {"__type__": "update", "visible": True},
@@ -757,23 +730,7 @@ def open_slice(
         return
     if ps_slice == []:
         for i_part in range(n_parts):
-            cmd = (
-                '"%s" -s tools/slice_audio.py "%s" "%s" %s %s %s %s %s %s %s %s %s'
-                % (
-                    python_exec,
-                    inp,
-                    opt_root,
-                    threshold,
-                    min_length,
-                    min_interval,
-                    hop_size,
-                    max_sil_kept,
-                    _max,
-                    alpha,
-                    i_part,
-                    n_parts,
-                )
-            )
+            cmd = f'"{python_exec}" -s tools/slice_audio.py "{inp}" "{opt_root}" {threshold} {min_length} {min_interval} {hop_size} {max_sil_kept} {_max} {alpha} {i_part} {n_parts}'
             print(cmd)
             p = Popen(cmd, shell=True)
             ps_slice.append(p)
@@ -835,7 +792,7 @@ def open1a(inp_text, inp_wav_dir, exp_name, gpu_numbers, bert_pretrained_dir):
         check_details([inp_text, inp_wav_dir], is_dataset_processing=True)
     exp_name = exp_name.rstrip(" ")
     if ps1a == []:
-        opt_dir = "%s/%s" % (exp_root, exp_name)
+        opt_dir = f"{exp_root}/{exp_name}"
         config = {
             "inp_text": inp_text,
             "inp_wav_dir": inp_wav_dir,
@@ -855,7 +812,7 @@ def open1a(inp_text, inp_wav_dir, exp_name, gpu_numbers, bert_pretrained_dir):
                 }
             )
             os.environ.update(config)
-            cmd = '"%s" -s GPT_SoVITS/prepare_datasets/1-get-text.py' % python_exec
+            cmd = f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/1-get-text.py'
             print(cmd)
             p = Popen(cmd, shell=True)
             ps1a.append(p)
@@ -868,11 +825,11 @@ def open1a(inp_text, inp_wav_dir, exp_name, gpu_numbers, bert_pretrained_dir):
             p.wait()
         opt = []
         for i_part in range(all_parts):
-            txt_path = "%s/2-name2text-%s.txt" % (opt_dir, i_part)
+            txt_path = f"{opt_dir}/2-name2text-{i_part}.txt"
             with open(txt_path, encoding="utf8") as f:
                 opt += f.read().strip("\n").split("\n")
             os.remove(txt_path)
-        path_text = "%s/2-name2text.txt" % opt_dir
+        path_text = f"{opt_dir}/2-name2text.txt"
         with open(path_text, "w", encoding="utf8") as f:
             f.write("\n".join(opt) + "\n")
         ps1a = []
@@ -929,7 +886,7 @@ def open1b(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, ssl_pretrained
             "inp_text": inp_text,
             "inp_wav_dir": inp_wav_dir,
             "exp_name": exp_name,
-            "opt_dir": "%s/%s" % (exp_root, exp_name),
+            "opt_dir": f"{exp_root}/{exp_name}",
             "cnhubert_base_dir": ssl_pretrained_dir,
             "sv_path": sv_path,
             "is_half": str(is_half),
@@ -946,8 +903,7 @@ def open1b(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, ssl_pretrained
             )
             os.environ.update(config)
             cmd = (
-                '"%s" -s GPT_SoVITS/prepare_datasets/2-get-hubert-wav32k.py'
-                % python_exec
+                f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/2-get-hubert-wav32k.py'
             )
             print(cmd)
             p = Popen(cmd, shell=True)
@@ -970,7 +926,7 @@ def open1b(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, ssl_pretrained
                     }
                 )
                 os.environ.update(config)
-                cmd = '"%s" -s GPT_SoVITS/prepare_datasets/2-get-sv.py' % python_exec
+                cmd = f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/2-get-sv.py'
                 print(cmd)
                 p = Popen(cmd, shell=True)
                 ps1b.append(p)
@@ -1017,7 +973,7 @@ def open1c(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, pretrained_s2G
         check_details([inp_text, inp_wav_dir], is_dataset_processing=True)
     exp_name = exp_name.rstrip(" ")
     if ps1c == []:
-        opt_dir = "%s/%s" % (exp_root, exp_name)
+        opt_dir = f"{exp_root}/{exp_name}"
         config_file = (
             "GPT_SoVITS/configs/s2.json"
             if version not in {"v2Pro", "v2ProPlus"}
@@ -1042,7 +998,7 @@ def open1c(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, pretrained_s2G
                 }
             )
             os.environ.update(config)
-            cmd = '"%s" -s GPT_SoVITS/prepare_datasets/3-get-semantic.py' % python_exec
+            cmd = f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/3-get-semantic.py'
             print(cmd)
             p = Popen(cmd, shell=True)
             ps1c.append(p)
@@ -1054,9 +1010,9 @@ def open1c(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, pretrained_s2G
         for p in ps1c:
             p.wait()
         opt = ["item_name\tsemantic_audio"]
-        path_semantic = "%s/6-name2semantic.tsv" % opt_dir
+        path_semantic = f"{opt_dir}/6-name2semantic.tsv"
         for i_part in range(all_parts):
-            semantic_path = "%s/6-name2semantic-%s.tsv" % (opt_dir, i_part)
+            semantic_path = f"{opt_dir}/6-name2semantic-{i_part}.tsv"
             with open(semantic_path, encoding="utf8") as f:
                 opt += f.read().strip("\n").split("\n")
             os.remove(semantic_path)
@@ -1115,12 +1071,12 @@ def open1abc(
         check_details([inp_text, inp_wav_dir], is_dataset_processing=True)
     exp_name = exp_name.rstrip(" ")
     if ps1abc == []:
-        opt_dir = "%s/%s" % (exp_root, exp_name)
+        opt_dir = f"{exp_root}/{exp_name}"
         try:
             #############################1a
-            path_text = "%s/2-name2text.txt" % opt_dir
-            if os.path.exists(path_text) == False or (
-                os.path.exists(path_text) == True
+            path_text = f"{opt_dir}/2-name2text.txt"
+            if not os.path.exists(path_text) or (
+                os.path.exists(path_text)
                 and len(open(path_text, encoding="utf8").read().strip("\n").split("\n"))
                 < 2
             ):
@@ -1146,8 +1102,7 @@ def open1abc(
                     )
                     os.environ.update(config)
                     cmd = (
-                        '"%s" -s GPT_SoVITS/prepare_datasets/1-get-text.py'
-                        % python_exec
+                        f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/1-get-text.py'
                     )
                     print(cmd)
                     p = Popen(cmd, shell=True)
@@ -1164,7 +1119,7 @@ def open1abc(
                 for i_part in range(
                     all_parts
                 ):  # txt_path="%s/2-name2text-%s.txt"%(opt_dir,i_part)
-                    txt_path = "%s/2-name2text-%s.txt" % (opt_dir, i_part)
+                    txt_path = f"{opt_dir}/2-name2text-{i_part}.txt"
                     with open(txt_path, encoding="utf8") as f:
                         opt += f.read().strip("\n").split("\n")
                     os.remove(txt_path)
@@ -1197,10 +1152,7 @@ def open1abc(
                     }
                 )
                 os.environ.update(config)
-                cmd = (
-                    '"%s" -s GPT_SoVITS/prepare_datasets/2-get-hubert-wav32k.py'
-                    % python_exec
-                )
+                cmd = f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/2-get-hubert-wav32k.py'
                 print(cmd)
                 p = Popen(cmd, shell=True)
                 ps1abc.append(p)
@@ -1224,9 +1176,7 @@ def open1abc(
                         }
                     )
                     os.environ.update(config)
-                    cmd = (
-                        '"%s" -s GPT_SoVITS/prepare_datasets/2-get-sv.py' % python_exec
-                    )
+                    cmd = f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/2-get-sv.py'
                     print(cmd)
                     p = Popen(cmd, shell=True)
                     ps1abc.append(p)
@@ -1239,10 +1189,9 @@ def open1abc(
                 {"__type__": "update", "visible": True},
             )
             #############################1c
-            path_semantic = "%s/6-name2semantic.tsv" % opt_dir
-            if os.path.exists(path_semantic) == False or (
-                os.path.exists(path_semantic) == True
-                and os.path.getsize(path_semantic) < 31
+            path_semantic = f"{opt_dir}/6-name2semantic.tsv"
+            if not os.path.exists(path_semantic) or (
+                os.path.exists(path_semantic) and os.path.getsize(path_semantic) < 31
             ):
                 config_file = (
                     "GPT_SoVITS/configs/s2.json"
@@ -1269,10 +1218,7 @@ def open1abc(
                         }
                     )
                     os.environ.update(config)
-                    cmd = (
-                        '"%s" -s GPT_SoVITS/prepare_datasets/3-get-semantic.py'
-                        % python_exec
-                    )
+                    cmd = f'"{python_exec}" -s GPT_SoVITS/prepare_datasets/3-get-semantic.py'
                     print(cmd)
                     p = Popen(cmd, shell=True)
                     ps1abc.append(p)
@@ -1286,7 +1232,7 @@ def open1abc(
 
                 opt = ["item_name\tsemantic_audio"]
                 for i_part in range(all_parts):
-                    semantic_path = "%s/6-name2semantic-%s.tsv" % (opt_dir, i_part)
+                    semantic_path = f"{opt_dir}/6-name2semantic-{i_part}.tsv"
                     with open(semantic_path, encoding="utf8") as f:
                         opt += f.read().strip("\n").split("\n")
                     os.remove(semantic_path)
@@ -1382,7 +1328,7 @@ def switch_version(version_):
 if os.path.exists("GPT_SoVITS/text/G2PWModel"):
     ...
 else:
-    cmd = '"%s" -s GPT_SoVITS/download.py' % python_exec
+    cmd = f'"{python_exec}" -s GPT_SoVITS/download.py'
     p = Popen(cmd, shell=True)
     p.wait()
 
@@ -1730,7 +1676,7 @@ with gr.Blocks(
                         with gr.Row():
                             gpu_numbers1a = gr.Textbox(
                                 label=i18n("GPU卡号以-分割，每个卡号一个进程"),
-                                value="%s-%s" % (gpus, gpus),
+                                value=f"{gpus}-{gpus}",
                                 interactive=True,
                             )
                         with gr.Row():
@@ -1761,7 +1707,7 @@ with gr.Blocks(
                         with gr.Row():
                             gpu_numbers1Ba = gr.Textbox(
                                 label=i18n("GPU卡号以-分割，每个卡号一个进程"),
-                                value="%s-%s" % (gpus, gpus),
+                                value=f"{gpus}-{gpus}",
                                 interactive=True,
                             )
                         with gr.Row():
@@ -1792,7 +1738,7 @@ with gr.Blocks(
                         with gr.Row():
                             gpu_numbers1c = gr.Textbox(
                                 label=i18n("GPU卡号以-分割，每个卡号一个进程"),
-                                value="%s-%s" % (gpus, gpus),
+                                value=f"{gpus}-{gpus}",
                                 interactive=True,
                             )
                         with gr.Row():
@@ -2028,7 +1974,7 @@ with gr.Blocks(
                             with gr.Row():
                                 gpu_numbers1Ba = gr.Textbox(
                                     label=i18n("GPU卡号以-分割，每个卡号一个进程"),
-                                    value="%s" % (gpus),
+                                    value=f"{gpus}",
                                     interactive=True,
                                 )
                     with gr.Row():
@@ -2105,7 +2051,7 @@ with gr.Blocks(
                             with gr.Row():
                                 gpu_numbers1Bb = gr.Textbox(
                                     label=i18n("GPU卡号以-分割，每个卡号一个进程"),
-                                    value="%s" % (gpus),
+                                    value=f"{gpus}",
                                     interactive=True,
                                 )
                     with gr.Row():

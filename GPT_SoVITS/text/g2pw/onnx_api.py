@@ -15,7 +15,8 @@ from opencc import OpenCC
 from pypinyin import Style, pinyin
 from transformers.models.auto.tokenization_auto import AutoTokenizer
 
-from ..zh_normalization.char_convert import tranditional_to_simplified
+from text.zh_normalization.char_convert import tranditional_to_simplified
+
 from .dataset import get_char_phoneme_labels, get_phoneme_labels, prepare_onnx_input
 from .utils import load_config
 
@@ -86,7 +87,7 @@ class G2PWOnnxConverter:
         self,
         model_dir: str = "G2PWModel/",
         style: str = "bopomofo",
-        model_source: str = None,
+        model_source: str | None = None,
         enable_non_tradional_chinese: bool = False,
     ):
         uncompress_path = download_and_decompress(model_dir)
@@ -162,16 +163,14 @@ class G2PWOnnxConverter:
             else get_phoneme_labels(polyphonic_chars=self.polyphonic_chars)
         )
 
-        self.chars = sorted(list(self.char2phonemes.keys()))
+        self.chars = sorted(self.char2phonemes.keys())
 
         self.polyphonic_chars_new = set(self.chars)
         for char in self.non_polyphonic:
             if char in self.polyphonic_chars_new:
                 self.polyphonic_chars_new.remove(char)
 
-        self.monophonic_chars_dict = {
-            char: phoneme for char, phoneme in self.monophonic_chars
-        }
+        self.monophonic_chars_dict = dict(self.monophonic_chars)
         for char in self.non_monophonic:
             if char in self.monophonic_chars_dict:
                 self.monophonic_chars_dict.pop(char)
@@ -237,7 +236,7 @@ class G2PWOnnxConverter:
             window_size=None,
         )
 
-        preds, confidences = predict(
+        preds, _confidences = predict(
             session=self.session_g2pW, onnx_input=onnx_input, labels=self.labels
         )
         if self.config.use_char_phoneme:

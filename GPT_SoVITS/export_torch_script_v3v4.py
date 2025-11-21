@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import TYPE_CHECKING
 
 import librosa
 import numpy as np
@@ -14,7 +15,6 @@ from export_torch_script import (
     resamplex,
     spectrogram_torch,
 )
-from f5_tts.model.backbones.dit import DiT
 from inference_webui import (
     get_phones_and_bert,
     get_spepc,
@@ -26,6 +26,9 @@ from librosa.filters import mel as librosa_mel_fn
 from module import commons
 from module.mel_processing import mel_spectrogram_torch
 from module.models_onnx import CFM, Generator, SynthesizerTrnV3
+
+if TYPE_CHECKING:
+    from f5_tts.model.backbones.dit import DiT
 
 logging.config.dictConfig(uvicorn.config.LOGGING_CONFIG)
 logger = logging.getLogger("uvicorn")
@@ -140,7 +143,7 @@ class ExportDitEmbed(torch.nn.Module):
 class ExportDiT(torch.nn.Module):
     def __init__(self, dit: DiT):
         super().__init__()
-        if dit != None:
+        if dit is not None:
             self.embed = ExportDitEmbed(dit)
             self.blocks = ExportDitBlocks(dit)
         else:
@@ -184,28 +187,33 @@ class ExportCFM(torch.nn.Module):
         return cfm_res, fea_ref, mel2
 
 
-mel_fn = lambda x: mel_spectrogram_torch(
-    x,
-    n_fft=1024,
-    win_size=1024,
-    hop_size=256,
-    num_mels=100,
-    sampling_rate=24000,
-    fmin=0,
-    fmax=None,
-    center=False,
-)
-mel_fn_v4 = lambda x: mel_spectrogram_torch(
-    x,
-    n_fft=1280,
-    win_size=1280,
-    hop_size=320,
-    num_mels=100,
-    sampling_rate=32000,
-    fmin=0,
-    fmax=None,
-    center=False,
-)
+def mel_fn(x):
+    return mel_spectrogram_torch(
+        x,
+        n_fft=1024,
+        win_size=1024,
+        hop_size=256,
+        num_mels=100,
+        sampling_rate=24000,
+        fmin=0,
+        fmax=None,
+        center=False,
+    )
+
+
+def mel_fn_v4(x):
+    return mel_spectrogram_torch(
+        x,
+        n_fft=1280,
+        win_size=1280,
+        hop_size=320,
+        num_mels=100,
+        sampling_rate=32000,
+        fmin=0,
+        fmax=None,
+        center=False,
+    )
+
 
 spec_min = -12
 spec_max = 2
@@ -525,14 +533,13 @@ def init_bigvgan():
     from BigVGAN import bigvgan
 
     bigvgan_model = bigvgan.BigVGAN.from_pretrained(
-        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
-        % (now_dir,),
+        f"{now_dir}/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x",
         use_cuda_kernel=False,
     )  # if True, RuntimeError: Ninja is required to load C++ extensions
     # remove weight norm in the model and set to eval mode
     bigvgan_model.remove_weight_norm()
     bigvgan_model = bigvgan_model.eval()
-    if is_half == True:
+    if is_half:
         bigvgan_model = bigvgan_model.half().to(device)
     else:
         bigvgan_model = bigvgan_model.to(device)
@@ -554,11 +561,11 @@ def init_hifigan():
     hifigan_model.eval()
     hifigan_model.remove_weight_norm()
     state_dict_g = torch.load(
-        "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth" % (now_dir,),
+        f"{now_dir}/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth",
         map_location="cpu",
     )
     print("loading vocoder", hifigan_model.load_state_dict(state_dict_g))
-    if is_half == True:
+    if is_half:
         hifigan_model = hifigan_model.half().to(device)
     else:
         hifigan_model = hifigan_model.to(device)
@@ -590,7 +597,7 @@ class DictToAttrRecursive(dict):
     def __setattr__(self, key, value):
         if isinstance(value, dict):
             value = DictToAttrRecursive(value)
-        super(DictToAttrRecursive, self).__setitem__(key, value)
+        super().__setitem__(key, value)
         super().__setattr__(key, value)
 
     def __delattr__(self, item):
@@ -609,8 +616,8 @@ def get_sovits_weights(sovits_path):
     path_sovits_v3 = "GPT_SoVITS/pretrained_models/s2Gv3.pth"
     is_exist_s2gv3 = os.path.exists(path_sovits_v3)
 
-    version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(sovits_path)
-    if if_lora_v3 == True and is_exist_s2gv3 == False:
+    _version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(sovits_path)
+    if if_lora_v3 and not is_exist_s2gv3:
         logger.info("SoVITS V3 底模缺失，无法加载相应 LoRA 权重")
 
     dict_s2 = load_sovits_new(sovits_path)
@@ -639,7 +646,7 @@ def get_sovits_weights(sovits_path):
     model_version = hps.model.version
     logger.info(f"模型版本: {model_version}")
 
-    if is_half == True:
+    if is_half:
         vq_model = vq_model.half().to(device)
     else:
         vq_model = vq_model.to(device)
@@ -764,11 +771,11 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
     # ref_wav_path = "onnx/ad/ref.wav"
     speed = 1.0
     sample_steps = 8
-    dtype = torch.float16 if is_half == True else torch.float32
+    dtype = torch.float16 if is_half else torch.float32
     refer = get_spepc(hps, ref_wav_path).to(device).to(dtype)
     zero_wav = np.zeros(
         int(hps.data.sampling_rate * 0.3),
-        dtype=np.float16 if is_half == True else np.float32,
+        dtype=np.float16 if is_half else np.float32,
     )
 
     with torch.no_grad():
@@ -776,7 +783,7 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
         wav16k = torch.from_numpy(wav16k)
         zero_wav_torch = torch.from_numpy(zero_wav)
 
-        if is_half == True:
+        if is_half:
             wav16k = wav16k.half().to(device)
             zero_wav_torch = zero_wav_torch.half().to(device)
         else:
@@ -793,8 +800,8 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
     # phones1, bert1, norm_text1 = get_phones_and_bert(
     #     "你这老坏蛋，我找了你这么久，真没想到在这里找到你。他说。", "all_zh", "v3"
     # )
-    phones1, bert1, norm_text1 = get_phones_and_bert(ref_wav_text, "auto", "v3")
-    phones2, bert2, norm_text2 = get_phones_and_bert(
+    phones1, bert1, _norm_text1 = get_phones_and_bert(ref_wav_text, "auto", "v3")
+    phones2, bert2, _norm_text2 = get_phones_and_bert(
         "这是一个简单的示例，真没想到这么简单就完成了。The King and His Stories.Once there was a king. He likes to write stories, but his stories were not good. As people were afraid of him, they all said his stories were good.After reading them, the writer at once turned to the soldiers and said: Take me back to prison, please.",
         "auto",
         "v3",
@@ -983,11 +990,11 @@ def test_export(
     speed = 1.0
     sample_steps = 8
 
-    dtype = torch.float16 if is_half == True else torch.float32
+    dtype = torch.float16 if is_half else torch.float32
 
     zero_wav = np.zeros(
         int(16000 * 0.3),
-        dtype=np.float16 if is_half == True else np.float32,
+        dtype=np.float16 if is_half else np.float32,
     )
 
     with torch.no_grad():
@@ -995,7 +1002,7 @@ def test_export(
         wav16k = torch.from_numpy(wav16k)
         zero_wav_torch = torch.from_numpy(zero_wav)
 
-        if is_half == True:
+        if is_half:
             wav16k = wav16k.half().to(device)
             zero_wav_torch = zero_wav_torch.half().to(device)
         else:
@@ -1009,10 +1016,10 @@ def test_export(
     ref_audio_32k, _ = librosa.load(ref_wav_path, sr=32000)
     ref_audio_32k = torch.from_numpy(ref_audio_32k).unsqueeze(0).to(device).float()
 
-    phones1, bert1, norm_text1 = get_phones_and_bert(
+    phones1, bert1, _norm_text1 = get_phones_and_bert(
         "你这老坏蛋，我找了你这么久，真没想到在这里找到你。他说。", "all_zh", "v3"
     )
-    phones2, bert2, norm_text2 = get_phones_and_bert(
+    phones2, bert2, _norm_text2 = get_phones_and_bert(
         todo_text,
         "zh",
         "v3",
@@ -1109,19 +1116,19 @@ def test_export(
     speed = 1.0
     sample_steps = torch.LongTensor([16])
 
-    dtype = torch.float16 if is_half == True else torch.float32
+    dtype = torch.float16 if is_half else torch.float32
 
     zero_wav = np.zeros(
         int(out_sr * 0.3),
-        dtype=np.float16 if is_half == True else np.float32,
+        dtype=np.float16 if is_half else np.float32,
     )
 
     with torch.no_grad():
-        wav16k, sr = librosa.load(ref_wav_path, sr=16000)
+        wav16k, _sr = librosa.load(ref_wav_path, sr=16000)
         wav16k = torch.from_numpy(wav16k)
         zero_wav_torch = torch.from_numpy(zero_wav)
 
-        if is_half == True:
+        if is_half:
             wav16k = wav16k.half().to(device)
             zero_wav_torch = zero_wav_torch.half().to(device)
         else:
@@ -1136,10 +1143,10 @@ def test_export(
     ref_audio_32k, _ = librosa.load(ref_wav_path, sr=32000)
     ref_audio_32k = torch.from_numpy(ref_audio_32k).unsqueeze(0).to(device).float()
 
-    phones1, bert1, norm_text1 = get_phones_and_bert(
+    phones1, bert1, _norm_text1 = get_phones_and_bert(
         "你这老坏蛋，我找了你这么久，真没想到在这里找到你。他说。", "all_zh", "v3"
     )
-    phones2, bert2, norm_text2 = get_phones_and_bert(
+    phones2, bert2, _norm_text2 = get_phones_and_bert(
         todo_text,
         "zh",
         "v3",

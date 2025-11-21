@@ -49,10 +49,10 @@ def clean_path(path_str: str):
 
 
 def check_for_existance(
-    file_list: list = None, is_train=False, is_dataset_processing=False
+    file_list: list | None = None, is_train=False, is_dataset_processing=False
 ):
     files_status = []
-    if is_train == True and file_list:
+    if is_train and file_list:
         file_list.append(os.path.join(file_list[0], "2-name2text.txt"))
         file_list.append(os.path.join(file_list[0], "3-bert"))
         file_list.append(os.path.join(file_list[0], "4-cnhubert"))
@@ -105,9 +105,9 @@ def check_details(path_list=None, is_train=False, is_dataset_processing=False):
             line = f.readline().strip("\n").split("\n")
         wav_name, _, __, ___ = line[0].split("|")
         wav_name = clean_path(wav_name)
-        if audio_path != "" and audio_path != None:
+        if audio_path not in {"", None}:
             wav_name = os.path.basename(wav_name)
-            wav_path = "%s/%s" % (audio_path, wav_name)
+            wav_path = f"{audio_path}/{wav_name}"
         else:
             wav_path = wav_name
         if os.path.exists(wav_path):

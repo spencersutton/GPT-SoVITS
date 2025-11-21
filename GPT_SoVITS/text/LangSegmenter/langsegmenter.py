@@ -102,10 +102,10 @@ class LangSegmenter:
         "en": "en",
     }
 
-    def getTexts(text, default_lang=""):
+    def getTexts(self, default_lang=""):
         lang_splitter = LangSplitter(lang_map=LangSegmenter.DEFAULT_LANG_MAP)
         lang_splitter.merge_across_digit = False
-        substr = lang_splitter.split_by_lang(text=text)
+        substr = lang_splitter.split_by_lang(text=self)
 
         lang_list: list[dict] = []
 

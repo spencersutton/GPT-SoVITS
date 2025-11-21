@@ -7,13 +7,15 @@ from tqdm import tqdm
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 
+import functools
+import operator
 import re
+from typing import TYPE_CHECKING
 
 import torch
 from text import cleaned_text_to_sequence
 from text.cleaner import clean_text
 from text.LangSegmenter import LangSegmenter
-from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 from tools.i18n.i18n import I18nAuto, scan_language_list
 from TTS_infer_pack.text_segmentation_method import (
@@ -24,10 +26,13 @@ from TTS_infer_pack.text_segmentation_method import (
     splits,
 )
 
+if TYPE_CHECKING:
+    from transformers import AutoModelForMaskedLM, AutoTokenizer
+
 language = os.environ.get("language", "Auto")
 language = sys.argv[-1] if sys.argv[-1] in scan_language_list() else language
 i18n = I18nAuto(language=language)
-punctuation = set(["!", "?", "…", ",", ".", "-"])
+punctuation = {"!", "?", "…", ",", ".", "-"}
 
 
 def get_first(text: str) -> str:
@@ -200,7 +205,7 @@ class TextPreprocessor:
                 norm_text_list.append(norm_text)
                 bert_list.append(bert)
             bert = torch.cat(bert_list, dim=1)
-            phones = sum(phones_list, [])
+            phones = functools.reduce(operator.iadd, phones_list, [])
             norm_text = "".join(norm_text_list)
 
             if not final and len(phones) < 6:

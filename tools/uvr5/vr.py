@@ -29,9 +29,7 @@ class AudioPre:
             "agg": agg,
             "high_end_process": "mirroring",
         }
-        mp = ModelParameters(
-            "%s/lib/lib_v5/modelparams/4band_v2.json" % parent_directory
-        )
+        mp = ModelParameters(f"{parent_directory}/lib/lib_v5/modelparams/4band_v2.json")
         model = Nets.CascadedASPPNet(mp.param["bins"] * 2)
         cpk = torch.load(model_path, map_location="cpu")
         model.load_state_dict(cpk)
@@ -114,7 +112,7 @@ class AudioPre:
         y_spec_m = pred * X_phase
         v_spec_m = X_spec_m - y_spec_m
 
-        if is_hp3 == True:
+        if is_hp3:
             ins_root, vocal_root = vocal_root, ins_root
 
         if ins_root is not None:
@@ -127,8 +125,8 @@ class AudioPre:
                 )
             else:
                 wav_instrument = spec_utils.cmb_spectrogram_to_wave(y_spec_m, self.mp)
-            logger.info("%s instruments done" % name)
-            if is_hp3 == True:
+            logger.info(f"{name} instruments done")
+            if is_hp3:
                 head = "vocal_"
             else:
                 head = "instrument_"
@@ -151,8 +149,8 @@ class AudioPre:
                     self.mp.param["sr"],
                 )
                 if os.path.exists(path):
-                    opt_format_path = path[:-4] + ".%s" % format
-                    cmd = 'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path, opt_format_path)
+                    opt_format_path = path[:-4] + f".{format}"
+                    cmd = f'ffmpeg -i "{path}" -vn "{opt_format_path}" -q:a 2 -y'
                     print(cmd)
                     os.system(cmd)
                     if os.path.exists(opt_format_path):
@@ -161,7 +159,7 @@ class AudioPre:
                         except:
                             pass
         if vocal_root is not None:
-            if is_hp3 == True:
+            if is_hp3:
                 head = "instrument_"
             else:
                 head = "vocal_"
@@ -174,7 +172,7 @@ class AudioPre:
                 )
             else:
                 wav_vocals = spec_utils.cmb_spectrogram_to_wave(v_spec_m, self.mp)
-            logger.info("%s vocals done" % name)
+            logger.info(f"{name} vocals done")
             if format in ["wav", "flac"]:
                 sf.write(
                     os.path.join(
@@ -194,8 +192,8 @@ class AudioPre:
                     self.mp.param["sr"],
                 )
                 if os.path.exists(path):
-                    opt_format_path = path[:-4] + ".%s" % format
-                    cmd = 'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path, opt_format_path)
+                    opt_format_path = path[:-4] + f".{format}"
+                    cmd = f'ffmpeg -i "{path}" -vn "{opt_format_path}" -q:a 2 -y'
                     print(cmd)
                     os.system(cmd)
                     if os.path.exists(opt_format_path):
@@ -218,9 +216,7 @@ class AudioPreDeEcho:
             "agg": agg,
             "high_end_process": "mirroring",
         }
-        mp = ModelParameters(
-            "%s/lib/lib_v5/modelparams/4band_v3.json" % parent_directory
-        )
+        mp = ModelParameters(f"{parent_directory}/lib/lib_v5/modelparams/4band_v3.json")
         nout = 64 if "DeReverb" in model_path else 48
         model = CascadedNet(mp.param["bins"] * 2, nout)
         cpk = torch.load(model_path, map_location="cpu")
@@ -314,7 +310,7 @@ class AudioPreDeEcho:
                 )
             else:
                 wav_instrument = spec_utils.cmb_spectrogram_to_wave(y_spec_m, self.mp)
-            logger.info("%s instruments done" % name)
+            logger.info(f"{name} instruments done")
             if format in ["wav", "flac"]:
                 sf.write(
                     os.path.join(
@@ -334,8 +330,8 @@ class AudioPreDeEcho:
                     self.mp.param["sr"],
                 )
                 if os.path.exists(path):
-                    opt_format_path = path[:-4] + ".%s" % format
-                    cmd = 'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path, opt_format_path)
+                    opt_format_path = path[:-4] + f".{format}"
+                    cmd = f'ffmpeg -i "{path}" -vn "{opt_format_path}" -q:a 2 -y'
                     print(cmd)
                     os.system(cmd)
                     if os.path.exists(opt_format_path):
@@ -353,7 +349,7 @@ class AudioPreDeEcho:
                 )
             else:
                 wav_vocals = spec_utils.cmb_spectrogram_to_wave(v_spec_m, self.mp)
-            logger.info("%s vocals done" % name)
+            logger.info(f"{name} vocals done")
             if format in ["wav", "flac"]:
                 sf.write(
                     os.path.join(
@@ -373,8 +369,8 @@ class AudioPreDeEcho:
                     self.mp.param["sr"],
                 )
                 if os.path.exists(path):
-                    opt_format_path = path[:-4] + ".%s" % format
-                    cmd = 'ffmpeg -i "%s" -vn "%s" -q:a 2 -y' % (path, opt_format_path)
+                    opt_format_path = path[:-4] + f".{format}"
+                    cmd = f'ffmpeg -i "{path}" -vn "{opt_format_path}" -q:a 2 -y'
                     print(cmd)
                     os.system(cmd)
                     if os.path.exists(opt_format_path):

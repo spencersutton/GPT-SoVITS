@@ -78,7 +78,7 @@ class ConvNeXtBlock(nn.Module):
 
 class APNet_BWE_Model(torch.nn.Module):
     def __init__(self, h):
-        super(APNet_BWE_Model, self).__init__()
+        super().__init__()
         self.h = h
         self.adanorm_num_embeddings = None
         layer_scale_init_value = 1 / h.ConvNeXt_layers
@@ -159,9 +159,9 @@ class APNet_BWE_Model(torch.nn.Module):
 
 class DiscriminatorP(torch.nn.Module):
     def __init__(self, period, kernel_size=5, stride=3, use_spectral_norm=False):
-        super(DiscriminatorP, self).__init__()
+        super().__init__()
         self.period = period
-        norm_f = weight_norm if use_spectral_norm == False else spectral_norm
+        norm_f = weight_norm if not use_spectral_norm else spectral_norm
         self.convs = nn.ModuleList(
             [
                 norm_f(
@@ -230,7 +230,7 @@ class DiscriminatorP(torch.nn.Module):
 
 class MultiPeriodDiscriminator(torch.nn.Module):
     def __init__(self):
-        super(MultiPeriodDiscriminator, self).__init__()
+        super().__init__()
         self.discriminators = nn.ModuleList(
             [
                 DiscriminatorP(2),
@@ -265,7 +265,7 @@ class MultiResolutionAmplitudeDiscriminator(nn.Module):
             (1024, 256, 1024),
             (2048, 512, 2048),
         ),
-        num_embeddings: int = None,
+        num_embeddings: int | None = None,
     ):
         super().__init__()
         self.discriminators = nn.ModuleList(
@@ -305,7 +305,7 @@ class DiscriminatorAR(nn.Module):
         resolution: tuple[int, int, int],
         channels: int = 64,
         in_channels: int = 1,
-        num_embeddings: int = None,
+        num_embeddings: int | None = None,
     ):
         super().__init__()
         self.resolution = resolution
@@ -405,7 +405,7 @@ class MultiResolutionPhaseDiscriminator(nn.Module):
             (1024, 256, 1024),
             (2048, 512, 2048),
         ),
-        num_embeddings: int = None,
+        num_embeddings: int | None = None,
     ):
         super().__init__()
         self.discriminators = nn.ModuleList(
@@ -445,7 +445,7 @@ class DiscriminatorPR(nn.Module):
         resolution: tuple[int, int, int],
         channels: int = 64,
         in_channels: int = 1,
-        num_embeddings: int = None,
+        num_embeddings: int | None = None,
     ):
         super().__init__()
         self.resolution = resolution

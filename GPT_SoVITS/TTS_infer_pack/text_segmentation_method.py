@@ -1,8 +1,11 @@
 import re
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
-punctuation = set(["!", "?", "…", ",", ".", "-", " "])
-METHODS = dict()
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+punctuation = {"!", "?", "…", ",", ".", "-", " "}
+METHODS = {}
 
 
 def get_method(name: str) -> Callable:
@@ -143,7 +146,7 @@ def cut2(inp):
 @register_method("cut3")
 def cut3(inp):
     inp = inp.strip("\n")
-    opts = ["%s" % item for item in inp.strip("。").split("。")]
+    opts = [f"{item}" for item in inp.strip("。").split("。")]
     opts = [item for item in opts if not set(item).issubset(punctuation)]
     return "\n".join(opts)
 

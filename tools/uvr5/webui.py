@@ -21,7 +21,7 @@ from vr import AudioPre, AudioPreDeEcho
 weight_uvr5_root = "tools/uvr5/uvr5_weights"
 uvr5_names = []
 for name in os.listdir(weight_uvr5_root):
-    if name.endswith(".pth") or name.endswith(".ckpt") or "onnx" in name:
+    if name.endswith((".pth", ".ckpt")) or "onnx" in name:
         uvr5_names.append(name.replace(".pth", "").replace(".ckpt", ""))
 
 device = sys.argv[1]
@@ -78,7 +78,7 @@ def uvr(model_name, inp_root, save_root_vocal, paths, save_root_ins, agg, format
             paths = [path.name for path in paths]
         for path in paths:
             inp_path = os.path.join(inp_root, path)
-            if os.path.isfile(inp_path) == False:
+            if not os.path.isfile(inp_path):
                 continue
             need_reformat = 1
             done = 0
@@ -97,7 +97,7 @@ def uvr(model_name, inp_root, save_root_vocal, paths, save_root_ins, agg, format
                 need_reformat = 1
                 traceback.print_exc()
             if need_reformat == 1:
-                tmp_path = "%s/%s.reformatted.wav" % (
+                tmp_path = "{}/{}.reformatted.wav".format(
                     os.path.join(os.environ["TEMP"]),
                     os.path.basename(inp_path),
                 )
@@ -110,12 +110,10 @@ def uvr(model_name, inp_root, save_root_vocal, paths, save_root_ins, agg, format
                     pre_fun._path_audio_(
                         inp_path, save_root_ins, save_root_vocal, format0, is_hp3
                     )
-                infos.append("%s->Success" % (os.path.basename(inp_path)))
+                infos.append(f"{os.path.basename(inp_path)}->Success")
                 yield "\n".join(infos)
             except:
-                infos.append(
-                    "%s->%s" % (os.path.basename(inp_path), traceback.format_exc())
-                )
+                infos.append(f"{os.path.basename(inp_path)}->{traceback.format_exc()}")
                 yield "\n".join(infos)
     except:
         infos.append(traceback.format_exc())
