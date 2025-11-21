@@ -7,8 +7,9 @@
 全部按日文识别
 """
 
-import psutil
 import os
+
+import psutil
 
 
 def set_high_priority():

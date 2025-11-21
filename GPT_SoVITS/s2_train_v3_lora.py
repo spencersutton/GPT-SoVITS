@@ -28,8 +28,8 @@ from module import commons
 from module.data_utils import (
     DistributedBucketSampler,
     TextAudioSpeakerCollateV3,
-    TextAudioSpeakerLoaderV3,
     TextAudioSpeakerCollateV4,
+    TextAudioSpeakerLoaderV3,
     TextAudioSpeakerLoaderV4,
 )
 from module.models import (

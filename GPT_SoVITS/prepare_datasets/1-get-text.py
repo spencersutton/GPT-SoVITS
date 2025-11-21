@@ -15,11 +15,9 @@ import torch
 
 is_half = eval(os.environ.get("is_half", "True")) and torch.cuda.is_available()
 version = os.environ.get("version", None)
-import traceback
 import os.path
-from text.cleaner import clean_text
-from transformers import AutoModelForMaskedLM, AutoTokenizer
-from tools.my_utils import clean_path
+import shutil
+import traceback
 
 # inp_text=sys.argv[1]
 # inp_wav_dir=sys.argv[2]
@@ -29,9 +27,12 @@ from tools.my_utils import clean_path
 # os.environ["CUDA_VISIBLE_DEVICES"]=sys.argv[6]#i_gpu
 # opt_dir="/data/docker/liujing04/gpt-vits/fine_tune_dataset/%s"%exp_name
 # bert_pretrained_dir="/data/docker/liujing04/bert-vits2/Bert-VITS2-master20231106/bert/chinese-roberta-wwm-ext-large"
-
 from time import time as ttime
-import shutil
+
+from text.cleaner import clean_text
+from transformers import AutoModelForMaskedLM, AutoTokenizer
+
+from tools.my_utils import clean_path
 
 
 def my_save(fea, path):  #####fix issue: torch.save doesn't support chinese path

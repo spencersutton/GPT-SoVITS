@@ -25,16 +25,16 @@ from AR.models.t2s_lightning_module import Text2SemanticLightningModule
 from BigVGAN.bigvgan import BigVGAN
 from feature_extractor.cnhubert import CNHubert
 from module.mel_processing import mel_spectrogram_torch, spectrogram_torch
-from module.models import SynthesizerTrn, SynthesizerTrnV3, Generator
+from module.models import Generator, SynthesizerTrn, SynthesizerTrnV3
 from peft import LoraConfig, get_peft_model
 from process_ckpt import get_sovits_version_from_path_fast, load_sovits_new
+from sv import SV
 from transformers import AutoModelForMaskedLM, AutoTokenizer
 
 from tools.audio_sr import AP_BWE
 from tools.i18n.i18n import I18nAuto, scan_language_list
 from TTS_infer_pack.text_segmentation_method import splits
 from TTS_infer_pack.TextPreprocessor import TextPreprocessor
-from sv import SV
 
 resample_transform_dict = {}
 

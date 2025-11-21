@@ -8,11 +8,12 @@ The local feature fusion (LFF) fuses the features within one single residual blo
 The global feature fusion (GFF) takes acoustic features of different scales as input to aggregate global signal.
 """
 
-import torch
 import math
+
+import pooling_layers as pooling_layers
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pooling_layers as pooling_layers
 from fusion import AFF
 
 

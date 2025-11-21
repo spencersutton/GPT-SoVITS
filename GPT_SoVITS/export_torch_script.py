@@ -1,28 +1,23 @@
 # modified from https://github.com/yangdongchao/SoundStorm/blob/master/soundstorm/s1/AR/models/t2s_model.py
 # reference: https://github.com/lifeiteng/vall-e
 import argparse
+import os
 from io import BytesIO
 from typing import Optional
-from my_utils import load_audio
+
+import kaldi as Kaldi
+import soundfile
 import torch
 import torchaudio
-
+from AR.models.t2s_lightning_module import Text2SemanticLightningModule
+from feature_extractor import cnhubert
+from inference_webui import get_phones_and_bert
+from module.models_onnx import SynthesizerTrn
+from my_utils import load_audio
+from sv import SV
 from torch import IntTensor, LongTensor, Tensor, nn
 from torch.nn import functional as F
-
 from transformers import AutoModelForMaskedLM, AutoTokenizer
-from feature_extractor import cnhubert
-
-from AR.models.t2s_lightning_module import Text2SemanticLightningModule
-from module.models_onnx import SynthesizerTrn
-
-from inference_webui import get_phones_and_bert
-
-from sv import SV
-import kaldi as Kaldi
-
-import os
-import soundfile
 
 default_config = {
     "embedding_dim": 512,
@@ -1166,8 +1161,9 @@ def test():
     soundfile.write("out.wav", audio.detach().cpu().numpy(), 32000)
 
 
-import text
 import json
+
+import text
 
 
 def export_symbel(version="v2"):

@@ -1,13 +1,14 @@
 import os
 import sys
-import numpy as np
 import traceback
+
+import numpy as np
 from scipy.io import wavfile
+from slicer2 import Slicer
 
 # parent_directory = os.path.dirname(os.path.abspath(__file__))
 # sys.path.append(parent_directory)
 from tools.my_utils import load_audio
-from slicer2 import Slicer
 
 
 def slice(

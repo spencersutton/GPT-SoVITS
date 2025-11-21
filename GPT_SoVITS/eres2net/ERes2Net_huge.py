@@ -9,11 +9,12 @@ ERes2Net-huge is an upgraded version of ERes2Net that uses a larger number of pa
 recognition performance. Parameters expansion, baseWidth, and scale can be modified to obtain optimal performance.
 """
 
-import torch
 import math
+
+import pooling_layers as pooling_layers
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pooling_layers as pooling_layers
 from fusion import AFF
 
 

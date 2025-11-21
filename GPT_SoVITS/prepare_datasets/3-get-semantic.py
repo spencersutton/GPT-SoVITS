@@ -29,12 +29,13 @@ else:
 import torch
 
 is_half = eval(os.environ.get("is_half", "True")) and torch.cuda.is_available()
-import traceback
 import sys
+import traceback
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 import logging
+
 import utils
 
 if version != "v3":

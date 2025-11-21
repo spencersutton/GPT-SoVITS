@@ -149,29 +149,31 @@ now_dir = os.getcwd()
 sys.path.append(now_dir)
 sys.path.append("%s/GPT_SoVITS" % (now_dir))
 
+import logging
 import signal
-from text.LangSegmenter import LangSegmenter
+import subprocess
+from io import BytesIO
 from time import time as ttime
+
+import librosa
+import numpy as np
+import soundfile as sf
 import torch
 import torchaudio
-import librosa
-import soundfile as sf
-from fastapi import FastAPI, Request, Query
-from fastapi.responses import StreamingResponse, JSONResponse
 import uvicorn
-from transformers import AutoModelForMaskedLM, AutoTokenizer
-import numpy as np
+from AR.models.t2s_lightning_module import Text2SemanticLightningModule
+from fastapi import FastAPI, Query, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 from feature_extractor import cnhubert
-from io import BytesIO
+from module.mel_processing import spectrogram_torch
 from module.models import Generator, SynthesizerTrn, SynthesizerTrnV3
 from peft import LoraConfig, get_peft_model
-from AR.models.t2s_lightning_module import Text2SemanticLightningModule
 from text import cleaned_text_to_sequence
 from text.cleaner import clean_text
-from module.mel_processing import spectrogram_torch
+from text.LangSegmenter import LangSegmenter
+from transformers import AutoModelForMaskedLM, AutoTokenizer
+
 import config as global_config
-import logging
-import subprocess
 
 
 class DefaultRefer:

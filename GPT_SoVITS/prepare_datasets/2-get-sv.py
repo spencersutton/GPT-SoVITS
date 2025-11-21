@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import sys
 import os
+import sys
 
 inp_text = os.environ.get("inp_text")
 inp_wav_dir = os.environ.get("inp_wav_dir")
@@ -18,16 +18,19 @@ import torch
 is_half = eval(os.environ.get("is_half", "True")) and torch.cuda.is_available()
 
 import traceback
+
 import torchaudio
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 sys.path.append(f"{now_dir}/GPT_SoVITS/eres2net")
-from tools.my_utils import clean_path
-from time import time as ttime
 import shutil
-from ERes2NetV2 import ERes2NetV2
+from time import time as ttime
+
 import kaldi as Kaldi
+from ERes2NetV2 import ERes2NetV2
+
+from tools.my_utils import clean_path
 
 
 def my_save(fea, path):  #####fix issue: torch.save doesn't support chinese path

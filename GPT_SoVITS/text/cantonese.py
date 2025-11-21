@@ -1,6 +1,7 @@
 # reference: https://huggingface.co/spaces/Naozumi0512/Bert-VITS2-Cantonese-Yue/blob/main/text/chinese.py
 
 import re
+
 import cn2an
 import ToJyutping
 

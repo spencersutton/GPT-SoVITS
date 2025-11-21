@@ -8,11 +8,12 @@ To alleviate this problem, we propose an improved ERes2NetV2 by pruning redundan
 both the model parameters and its computational cost.
 """
 
-import torch
 import math
+
+import pooling_layers as pooling_layers
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pooling_layers as pooling_layers
 from fusion import AFF
 
 

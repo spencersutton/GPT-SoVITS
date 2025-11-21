@@ -1,4 +1,13 @@
+import logging
 import os
+
+import librosa
+import numpy as np
+import soundfile
+import torch
+import torch._dynamo.config
+import torchaudio
+import uvicorn
 from export_torch_script import (
     T2SModel,
     get_raw_t2s_model,
@@ -6,22 +15,17 @@ from export_torch_script import (
     spectrogram_torch,
 )
 from f5_tts.model.backbones.dit import DiT
-from inference_webui import get_phones_and_bert
-import librosa
+from inference_webui import (
+    get_phones_and_bert,
+    get_spepc,
+    norm_spec,
+    resample,
+    ssl_model,
+)
+from librosa.filters import mel as librosa_mel_fn
 from module import commons
 from module.mel_processing import mel_spectrogram_torch
 from module.models_onnx import CFM, Generator, SynthesizerTrnV3
-import numpy as np
-import torch._dynamo.config
-import torchaudio
-import logging
-import uvicorn
-import torch
-import soundfile
-from librosa.filters import mel as librosa_mel_fn
-
-
-from inference_webui import get_spepc, norm_spec, resample, ssl_model
 
 logging.config.dictConfig(uvicorn.config.LOGGING_CONFIG)
 logger = logging.getLogger("uvicorn")

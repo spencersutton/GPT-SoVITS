@@ -1,5 +1,5 @@
-import os
 import argparse
+import os
 import traceback
 
 from modelscope.pipelines import pipeline

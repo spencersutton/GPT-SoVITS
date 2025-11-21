@@ -1,12 +1,12 @@
 # reference: https://github.com/ORI-Muchim/MB-iSTFT-VITS-Korean/blob/main/text/korean.py
 
-import re
-from jamo import h2j, j2hcj
-import ko_pron
-from g2pk2 import G2p
-
 import importlib
 import os
+import re
+
+import ko_pron
+from g2pk2 import G2p
+from jamo import h2j, j2hcj
 
 # 防止win下无法读取模型
 if os.name == "nt":
@@ -22,6 +22,7 @@ if os.name == "nt":
                 installpath = spam_spec.submodule_search_locations[0]
                 if not (re.match(r"^[A-Za-z0-9_/\\:.\-]*$", installpath)):
                     import sys
+
                     from eunjeon import Mecab as _Mecab
 
                     class Mecab(_Mecab):

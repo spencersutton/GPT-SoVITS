@@ -19,5 +19,8 @@ dev = [
     "ruff>=0.14.5",
 ]
 
+[tool.ruff.lint]
+select = ["I"]
+
 [tool.uv]
 override-dependencies = ["pydantic>=2.12.4"]
