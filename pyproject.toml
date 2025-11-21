@@ -9,6 +9,7 @@ dependencies = [
     "gradio>=5.23.1",
     "psutil>=7.1.3",
     "pyyaml>=6.0.3",
+    "requests>=2.32.5",
     "torch>=2.9.1",
 ]
 
@@ -19,4 +20,4 @@ dev = [
 ]
 
 [tool.uv]
-override-dependencies = ["pydantic-core>=2.41"]
+override-dependencies = ["pydantic>=2.12.4"]
