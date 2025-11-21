@@ -54,13 +54,20 @@ def prepare_onnx_input(
         query_id = (truncated_query_ids if window_size else query_ids)[idx]
 
         try:
-            tokens, text2token, token2text = tokenize_and_map(tokenizer=tokenizer, text=text)
+            tokens, text2token, token2text = tokenize_and_map(
+                tokenizer=tokenizer, text=text
+            )
         except Exception:
             print(f'warning: text "{text}" is invalid')
             return {}
 
         text, query_id, tokens, text2token, token2text = _truncate(
-            max_len=max_len, text=text, query_id=query_id, tokens=tokens, text2token=text2token, token2text=token2text
+            max_len=max_len,
+            text=text,
+            query_id=query_id,
+            tokens=tokens,
+            text2token=text2token,
+            token2text=token2text,
         )
 
         processed_tokens = ["[CLS]"] + tokens + ["[SEP]"]
@@ -71,7 +78,9 @@ def prepare_onnx_input(
 
         query_char = text[query_id]
         phoneme_mask = (
-            [1 if i in char2phonemes[query_char] else 0 for i in range(len(labels))] if use_mask else [1] * len(labels)
+            [1 if i in char2phonemes[query_char] else 0 for i in range(len(labels))]
+            if use_mask
+            else [1] * len(labels)
         )
         char_id = chars.index(query_char)
         position_id = text2token[query_id] + 1  # [CLS] token locate at first place
@@ -94,7 +103,9 @@ def prepare_onnx_input(
     return outputs
 
 
-def _truncate_texts(window_size: int, texts: List[str], query_ids: List[int]) -> Tuple[List[str], List[int]]:
+def _truncate_texts(
+    window_size: int, texts: List[str], query_ids: List[int]
+) -> Tuple[List[str], List[int]]:
     truncated_texts = []
     truncated_query_ids = []
     for text, query_id in zip(texts, query_ids):
@@ -109,7 +120,12 @@ def _truncate_texts(window_size: int, texts: List[str], query_ids: List[int]) ->
 
 
 def _truncate(
-    max_len: int, text: str, query_id: int, tokens: List[str], text2token: List[int], token2text: List[Tuple[int]]
+    max_len: int,
+    text: str,
+    query_id: int,
+    tokens: List[str],
+    text2token: List[int],
+    token2text: List[Tuple[int]],
 ):
     truncate_len = max_len - 2
     if len(tokens) <= truncate_len:
@@ -140,7 +156,9 @@ def _truncate(
     )
 
 
-def get_phoneme_labels(polyphonic_chars: List[List[str]]) -> Tuple[List[str], Dict[str, List[int]]]:
+def get_phoneme_labels(
+    polyphonic_chars: List[List[str]],
+) -> Tuple[List[str], Dict[str, List[int]]]:
     labels = sorted(list(set([phoneme for char, phoneme in polyphonic_chars])))
     char2phonemes = {}
     for char, phoneme in polyphonic_chars:
@@ -150,8 +168,12 @@ def get_phoneme_labels(polyphonic_chars: List[List[str]]) -> Tuple[List[str], Di
     return labels, char2phonemes
 
 
-def get_char_phoneme_labels(polyphonic_chars: List[List[str]]) -> Tuple[List[str], Dict[str, List[int]]]:
-    labels = sorted(list(set([f"{char} {phoneme}" for char, phoneme in polyphonic_chars])))
+def get_char_phoneme_labels(
+    polyphonic_chars: List[List[str]],
+) -> Tuple[List[str], Dict[str, List[int]]]:
+    labels = sorted(
+        list(set([f"{char} {phoneme}" for char, phoneme in polyphonic_chars]))
+    )
     char2phonemes = {}
     for char, phoneme in polyphonic_chars:
         if char not in char2phonemes:

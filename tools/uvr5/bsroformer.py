@@ -88,7 +88,10 @@ class Roformer_Loader:
                     "multi_stft_hop_size": 147,
                     "multi_stft_normalized": False,
                 },
-                "training": {"instruments": ["vocals", "other"], "target_instrument": "vocals"},
+                "training": {
+                    "instruments": ["vocals", "other"],
+                    "target_instrument": "vocals",
+                },
                 "inference": {"batch_size": 2, "num_overlap": 2},
             }
 
@@ -117,7 +120,9 @@ class Roformer_Loader:
         batch_size = self.config["inference"]["batch_size"]
 
         length_init = mix.shape[-1]
-        progress_bar = tqdm(total=length_init // step + 1, desc="Processing", leave=False)
+        progress_bar = tqdm(
+            total=length_init // step + 1, desc="Processing", leave=False
+        )
 
         # Do pad from the beginning and end to account floating window results better
         if length_init > 2 * border and (border > 0):
@@ -138,7 +143,9 @@ class Roformer_Loader:
         with torch.amp.autocast("cuda"):
             with torch.inference_mode():
                 if self.config["training"]["target_instrument"] is None:
-                    req_shape = (len(self.config["training"]["instruments"]),) + tuple(mix.shape)
+                    req_shape = (len(self.config["training"]["instruments"]),) + tuple(
+                        mix.shape
+                    )
                 else:
                     req_shape = (1,) + tuple(mix.shape)
 
@@ -152,9 +159,16 @@ class Roformer_Loader:
                     length = part.shape[-1]
                     if length < C:
                         if length > C // 2 + 1:
-                            part = nn.functional.pad(input=part, pad=(0, C - length), mode="reflect")
+                            part = nn.functional.pad(
+                                input=part, pad=(0, C - length), mode="reflect"
+                            )
                         else:
-                            part = nn.functional.pad(input=part, pad=(0, C - length, 0, 0), mode="constant", value=0)
+                            part = nn.functional.pad(
+                                input=part,
+                                pad=(0, C - length, 0, 0),
+                                mode="constant",
+                                value=0,
+                            )
                     if self.is_half:
                         part = part.half()
                     batch_data.append(part)
@@ -175,7 +189,9 @@ class Roformer_Loader:
 
                         for j in range(len(batch_locations)):
                             start, l = batch_locations[j]
-                            result[..., start : start + l] += x[j][..., :l].cpu() * window[..., :l]
+                            result[..., start : start + l] += (
+                                x[j][..., :l].cpu() * window[..., :l]
+                            )
                             counter[..., start : start + l] += window[..., :l]
 
                         batch_data = []
@@ -192,9 +208,19 @@ class Roformer_Loader:
         progress_bar.close()
 
         if self.config["training"]["target_instrument"] is None:
-            return {k: v for k, v in zip(self.config["training"]["instruments"], estimated_sources)}
+            return {
+                k: v
+                for k, v in zip(
+                    self.config["training"]["instruments"], estimated_sources
+                )
+            }
         else:
-            return {k: v for k, v in zip([self.config["training"]["target_instrument"]], estimated_sources)}
+            return {
+                k: v
+                for k, v in zip(
+                    [self.config["training"]["target_instrument"]], estimated_sources
+                )
+            }
 
     def run_folder(self, input, vocal_root, others_root, format):
         self.model.eval()
@@ -218,7 +244,9 @@ class Roformer_Loader:
         isstereo = self.config["model"].get("stereo", True)
         if not isstereo and len(mix.shape) != 1:
             mix = np.mean(mix, axis=0)  # if more than 2 channels, take mean
-            print("Warning: Track has more than 1 channels, but model is mono, taking mean of all channels.")
+            print(
+                "Warning: Track has more than 1 channels, but model is mono, taking mean of all channels."
+            )
 
         mix_orig = mix.copy()
 
@@ -229,11 +257,19 @@ class Roformer_Loader:
             # if target instrument is specified, save target instrument as vocal and other instruments as others
             # other instruments are caculated by subtracting target instrument from mixture
             target_instrument = self.config["training"]["target_instrument"]
-            other_instruments = [i for i in self.config["training"]["instruments"] if i != target_instrument]
+            other_instruments = [
+                i
+                for i in self.config["training"]["instruments"]
+                if i != target_instrument
+            ]
             other = mix_orig - res[target_instrument]  # caculate other instruments
 
-            path_vocal = "{}/{}_{}.wav".format(vocal_root, file_base_name, target_instrument)
-            path_other = "{}/{}_{}.wav".format(others_root, file_base_name, other_instruments[0])
+            path_vocal = "{}/{}_{}.wav".format(
+                vocal_root, file_base_name, target_instrument
+            )
+            path_other = "{}/{}_{}.wav".format(
+                others_root, file_base_name, other_instruments[0]
+            )
             self.save_audio(path_vocal, res[target_instrument].T, sr, format)
             self.save_audio(path_other, other.T, sr, format)
         else:
@@ -241,7 +277,9 @@ class Roformer_Loader:
             vocal_inst = self.config["training"]["instruments"][0]
             path_vocal = "{}/{}_{}.wav".format(vocal_root, file_base_name, vocal_inst)
             self.save_audio(path_vocal, res[vocal_inst].T, sr, format)
-            for other in self.config["training"]["instruments"][1:]:  # save other instruments
+            for other in self.config["training"]["instruments"][
+                1:
+            ]:  # save other instruments
                 path_other = "{}/{}_{}.wav".format(others_root, file_base_name, other)
                 self.save_audio(path_other, res[other].T, sr, format)
 
@@ -253,7 +291,9 @@ class Roformer_Loader:
             sf.write(path, data, sr)
         else:
             sf.write(path, data, sr)
-            os.system('ffmpeg -i "{}" -vn "{}" -q:a 2 -y'.format(path, path[:-3] + format))
+            os.system(
+                'ffmpeg -i "{}" -vn "{}" -q:a 2 -y'.format(path, path[:-3] + format)
+            )
             try:
                 os.remove(path)
             except:
@@ -268,7 +308,10 @@ class Roformer_Loader:
         # get model_type, first try:
         if "bs_roformer" in model_path.lower() or "bsroformer" in model_path.lower():
             self.model_type = "bs_roformer"
-        elif "mel_band_roformer" in model_path.lower() or "melbandroformer" in model_path.lower():
+        elif (
+            "mel_band_roformer" in model_path.lower()
+            or "melbandroformer" in model_path.lower()
+        ):
             self.model_type = "mel_band_roformer"
 
         if not os.path.exists(config_path):

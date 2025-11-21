@@ -1,15 +1,35 @@
 import os
 import sys
 from PyQt5.QtCore import QEvent
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton, QTextEdit
-from PyQt5.QtWidgets import QGridLayout, QVBoxLayout, QWidget, QFileDialog, QStatusBar, QComboBox
+from PyQt5.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QTextEdit,
+)
+from PyQt5.QtWidgets import (
+    QGridLayout,
+    QVBoxLayout,
+    QWidget,
+    QFileDialog,
+    QStatusBar,
+    QComboBox,
+)
 import soundfile as sf
 
 from tools.i18n.i18n import I18nAuto
 
 i18n = I18nAuto()
 
-from inference_webui import gpt_path, sovits_path, change_gpt_weights, change_sovits_weights, get_tts_wav
+from inference_webui import (
+    gpt_path,
+    sovits_path,
+    change_gpt_weights,
+    change_sovits_weights,
+    get_tts_wav,
+)
 
 
 class GPTSoVITSGUI(QMainWindow):
@@ -102,7 +122,9 @@ class GPTSoVITSGUI(QMainWindow):
 
         self.ref_language_label = QLabel("参考音频语言:")
         self.ref_language_combobox = QComboBox()
-        self.ref_language_combobox.addItems(["中文", "英文", "日文", "中英混合", "日英混合", "多语种混合"])
+        self.ref_language_combobox.addItems(
+            ["中文", "英文", "日文", "中英混合", "日英混合", "多语种混合"]
+        )
         self.ref_language_combobox.setCurrentText("多语种混合")
 
         self.target_text_label = QLabel("合成目标文本:")
@@ -113,7 +135,9 @@ class GPTSoVITSGUI(QMainWindow):
 
         self.target_language_label = QLabel("合成音频语言:")
         self.target_language_combobox = QComboBox()
-        self.target_language_combobox.addItems(["中文", "英文", "日文", "中英混合", "日英混合", "多语种混合"])
+        self.target_language_combobox.addItems(
+            ["中文", "英文", "日文", "中英混合", "日英混合", "多语种混合"]
+        )
         self.target_language_combobox.setCurrentText("多语种混合")
 
         self.output_label = QLabel("输出音频路径:")
@@ -222,29 +246,39 @@ class GPTSoVITSGUI(QMainWindow):
         return super().eventFilter(obj, event)
 
     def select_GPT_model(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择GPT模型文件", "", "GPT Files (*.ckpt)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择GPT模型文件", "", "GPT Files (*.ckpt)"
+        )
         if file_path:
             self.GPT_model_input.setText(file_path)
 
     def select_SoVITS_model(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择SoVITS模型文件", "", "SoVITS Files (*.pth)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择SoVITS模型文件", "", "SoVITS Files (*.pth)"
+        )
         if file_path:
             self.SoVITS_model_input.setText(file_path)
 
     def select_ref_audio(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择参考音频文件", "", "Audio Files (*.wav *.mp3)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择参考音频文件", "", "Audio Files (*.wav *.mp3)"
+        )
         if file_path:
             self.update_ref_audio(file_path)
 
     def upload_ref_text(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择文本文件", "", "Text Files (*.txt)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择文本文件", "", "Text Files (*.txt)"
+        )
         if file_path:
             with open(file_path, "r", encoding="utf-8") as file:
                 content = file.read()
                 self.ref_text_input.setText(content)
 
     def upload_target_text(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "选择文本文件", "", "Text Files (*.txt)")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择文本文件", "", "Text Files (*.txt)"
+        )
         if file_path:
             with open(file_path, "r", encoding="utf-8") as file:
                 content = file.read()

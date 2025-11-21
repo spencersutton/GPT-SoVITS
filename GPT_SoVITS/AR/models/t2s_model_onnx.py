@@ -6,7 +6,11 @@ from torch.nn import functional as F
 from torchmetrics.classification import MulticlassAccuracy
 
 from AR.modules.embedding_onnx import SinePositionalEmbedding, TokenEmbedding
-from AR.modules.transformer_onnx import LayerNorm, TransformerEncoder, TransformerEncoderLayer
+from AR.modules.transformer_onnx import (
+    LayerNorm,
+    TransformerEncoder,
+    TransformerEncoderLayer,
+)
 
 default_config = {
     "embedding_dim": 512,
@@ -151,7 +155,9 @@ class T2SFirstStageDecoder(nn.Module):
 
         y_example = y_pos[:, :, 0] * 0.0
         x_attn_mask = torch.matmul(x_example.transpose(0, 1), x_example).bool()
-        y_attn_mask = torch.ones_like(torch.matmul(y_example.transpose(0, 1), y_example), dtype=torch.int64)
+        y_attn_mask = torch.ones_like(
+            torch.matmul(y_example.transpose(0, 1), y_example), dtype=torch.int64
+        )
         y_attn_mask = torch.cumsum(y_attn_mask, dim=1) - torch.cumsum(
             torch.ones_like(
                 y_example.transpose(0, 1),
@@ -167,19 +173,25 @@ class T2SFirstStageDecoder(nn.Module):
         y_attn_mask = torch.cat([y_x_pad, y_attn_mask], dim=1)
         xy_attn_mask = torch.concat([x_attn_mask_pad, y_attn_mask], dim=0)
         cache["k"] = (
-            torch.matmul(x_attn_mask_pad[0].float().unsqueeze(-1), torch.zeros((1, 512)))
+            torch.matmul(
+                x_attn_mask_pad[0].float().unsqueeze(-1), torch.zeros((1, 512))
+            )
             .unsqueeze(1)
             .repeat(self.num_layers, 1, 1, 1)
         )
         cache["v"] = (
-            torch.matmul(x_attn_mask_pad[0].float().unsqueeze(-1), torch.zeros((1, 512)))
+            torch.matmul(
+                x_attn_mask_pad[0].float().unsqueeze(-1), torch.zeros((1, 512))
+            )
             .unsqueeze(1)
             .repeat(self.num_layers, 1, 1, 1)
         )
 
         xy_dec = self.h(xy_pos, mask=xy_attn_mask, cache=cache)
         logits = self.ar_predict_layer(xy_dec[:, -1])
-        samples = sample(logits[0], y, top_k=self.top_k, top_p=1.0, repetition_penalty=1.35)[0].unsqueeze(0)
+        samples = sample(
+            logits[0], y, top_k=self.top_k, top_p=1.0, repetition_penalty=1.35
+        )[0].unsqueeze(0)
 
         y = torch.concat([y, samples], dim=1)
 
@@ -239,7 +251,9 @@ class T2SStageDecoder(nn.Module):
 
         xy_dec = self.h(xy_pos, mask=xy_attn_mask, cache=cache)
         logits = self.ar_predict_layer(xy_dec[:, -1])
-        samples = sample(logits[0], y, top_k=self.top_k, top_p=1.0, repetition_penalty=1.35)[0].unsqueeze(0)
+        samples = sample(
+            logits[0], y, top_k=self.top_k, top_p=1.0, repetition_penalty=1.35
+        )[0].unsqueeze(0)
 
         y = torch.concat([y, samples], dim=1)
 
@@ -261,10 +275,18 @@ class Text2SemanticDecoder(nn.Module):
         self.norm_first = norm_first
         assert self.EOS == self.vocab_size - 1
         self.bert_proj = nn.Linear(1024, self.embedding_dim)
-        self.ar_text_embedding = TokenEmbedding(self.embedding_dim, self.phoneme_vocab_size, self.p_dropout)
-        self.ar_text_position = SinePositionalEmbedding(self.embedding_dim, dropout=0.1, scale=False, alpha=True)
-        self.ar_audio_embedding = TokenEmbedding(self.embedding_dim, self.vocab_size, self.p_dropout)
-        self.ar_audio_position = SinePositionalEmbedding(self.embedding_dim, dropout=0.1, scale=False, alpha=True)
+        self.ar_text_embedding = TokenEmbedding(
+            self.embedding_dim, self.phoneme_vocab_size, self.p_dropout
+        )
+        self.ar_text_position = SinePositionalEmbedding(
+            self.embedding_dim, dropout=0.1, scale=False, alpha=True
+        )
+        self.ar_audio_embedding = TokenEmbedding(
+            self.embedding_dim, self.vocab_size, self.p_dropout
+        )
+        self.ar_audio_position = SinePositionalEmbedding(
+            self.embedding_dim, dropout=0.1, scale=False, alpha=True
+        )
         self.h = TransformerEncoder(
             TransformerEncoderLayer(
                 d_model=self.model_dim,
@@ -290,7 +312,9 @@ class Text2SemanticDecoder(nn.Module):
         self.early_stop_num = torch.LongTensor([-1])
 
     def init_onnx(self):
-        self.onnx_encoder = OnnxEncoder(self.ar_text_embedding, self.bert_proj, self.ar_text_position)
+        self.onnx_encoder = OnnxEncoder(
+            self.ar_text_embedding, self.bert_proj, self.ar_text_position
+        )
         self.first_stage_decoder = T2SFirstStageDecoder(
             self.ar_audio_embedding,
             self.ar_audio_position,
@@ -360,7 +384,9 @@ class Text2SemanticDecoder(nn.Module):
             if cache["first_infer"] == 1:
                 y_emb = self.ar_audio_embedding(y)
             else:
-                y_emb = torch.cat([cache["y_emb"], self.ar_audio_embedding(y[:, -1:])], 1)
+                y_emb = torch.cat(
+                    [cache["y_emb"], self.ar_audio_embedding(y[:, -1:])], 1
+                )
             cache["y_emb"] = y_emb
             y_pos = self.ar_audio_position(y_emb)
             if cache["first_infer"] == 1:
@@ -380,7 +406,9 @@ class Text2SemanticDecoder(nn.Module):
                 xy_attn_mask = torch.zeros((1, x_len + y_len), dtype=torch.bool)
             xy_dec = self.h(xy_pos, mask=xy_attn_mask, cache=cache)
             logits = self.ar_predict_layer(xy_dec[:, -1])
-            samples = sample(logits[0], y, top_k=top_k, top_p=1.0, repetition_penalty=1.35)[0].unsqueeze(0)
+            samples = sample(
+                logits[0], y, top_k=top_k, top_p=1.0, repetition_penalty=1.35
+            )[0].unsqueeze(0)
             if early_stop_num != -1 and (y.shape[1] - prefix_len) > early_stop_num:
                 stop = True
             if torch.argmax(logits, dim=-1)[0] == self.EOS or samples[0, 0] == self.EOS:

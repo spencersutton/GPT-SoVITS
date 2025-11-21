@@ -33,7 +33,9 @@ if is_g2pw:
     parent_directory = os.path.dirname(current_file_path)
     g2pw = G2PWPinyin(
         model_dir="GPT_SoVITS/text/G2PWModel",
-        model_source=os.environ.get("bert_path", "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large"),
+        model_source=os.environ.get(
+            "bert_path", "GPT_SoVITS/pretrained_models/chinese-roberta-wwm-ext-large"
+        ),
         v_to_u=False,
         neutral_tone_with_five=True,
     )
@@ -65,7 +67,9 @@ def replace_punctuation(text):
 
     replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
 
-    replaced_text = re.sub(r"[^\u4e00-\u9fa5" + "".join(punctuation) + r"]+", "", replaced_text)
+    replaced_text = re.sub(
+        r"[^\u4e00-\u9fa5" + "".join(punctuation) + r"]+", "", replaced_text
+    )
 
     return replaced_text
 
@@ -82,7 +86,9 @@ def _get_initials_finals(word):
     finals = []
 
     orig_initials = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.INITIALS)
-    orig_finals = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.FINALS_TONE3)
+    orig_finals = lazy_pinyin(
+        word, neutral_tone_with_five=True, style=Style.FINALS_TONE3
+    )
 
     for c, v in zip(orig_initials, orig_finals):
         initials.append(c)
@@ -90,7 +96,16 @@ def _get_initials_finals(word):
     return initials, finals
 
 
-must_erhua = {"小院儿", "胡同儿", "范儿", "老汉儿", "撒欢儿", "寻老礼儿", "妥妥儿", "媳妇儿"}
+must_erhua = {
+    "小院儿",
+    "胡同儿",
+    "范儿",
+    "老汉儿",
+    "撒欢儿",
+    "寻老礼儿",
+    "妥妥儿",
+    "媳妇儿",
+}
 not_erhua = {
     "虐儿",
     "为儿",
@@ -139,7 +154,9 @@ not_erhua = {
 }
 
 
-def _merge_erhua(initials: list[str], finals: list[str], word: str, pos: str) -> list[list[str]]:
+def _merge_erhua(
+    initials: list[str], finals: list[str], word: str, pos: str
+) -> list[list[str]]:
     """
     Do erhub.
     """
@@ -196,7 +213,9 @@ def _g2p(segments):
                 sub_initials, sub_finals = _get_initials_finals(word)
                 sub_finals = tone_modifier.modified_tone(word, pos, sub_finals)
                 # 儿化
-                sub_initials, sub_finals = _merge_erhua(sub_initials, sub_finals, word, pos)
+                sub_initials, sub_finals = _merge_erhua(
+                    sub_initials, sub_finals, word, pos
+                )
                 initials.append(sub_initials)
                 finals.append(sub_finals)
                 # assert len(sub_initials) == len(sub_finals) == len(word)
@@ -205,7 +224,9 @@ def _g2p(segments):
             print("pypinyin结果", initials, finals)
         else:
             # g2pw采用整句推理
-            pinyins = g2pw.lazy_pinyin(seg, neutral_tone_with_five=True, style=Style.TONE3)
+            pinyins = g2pw.lazy_pinyin(
+                seg, neutral_tone_with_five=True, style=Style.TONE3
+            )
 
             pre_word_length = 0
             for word, pos in seg_cut:
@@ -225,7 +246,9 @@ def _g2p(segments):
                 for pinyin in word_pinyins:
                     if pinyin[0].isalpha():
                         sub_initials.append(to_initials(pinyin))
-                        sub_finals.append(to_finals_tone3(pinyin, neutral_tone_with_five=True))
+                        sub_finals.append(
+                            to_finals_tone3(pinyin, neutral_tone_with_five=True)
+                        )
                     else:
                         sub_initials.append(pinyin)
                         sub_finals.append(pinyin)
@@ -233,7 +256,9 @@ def _g2p(segments):
                 pre_word_length = now_word_length
                 sub_finals = tone_modifier.modified_tone(word, pos, sub_finals)
                 # 儿化
-                sub_initials, sub_finals = _merge_erhua(sub_initials, sub_finals, word, pos)
+                sub_initials, sub_finals = _merge_erhua(
+                    sub_initials, sub_finals, word, pos
+                )
                 initials.append(sub_initials)
                 finals.append(sub_finals)
 
@@ -301,7 +326,9 @@ def replace_punctuation_with_en(text):
 
     replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
 
-    replaced_text = re.sub(r"[^\u4e00-\u9fa5A-Za-z" + "".join(punctuation) + r"]+", "", replaced_text)
+    replaced_text = re.sub(
+        r"[^\u4e00-\u9fa5A-Za-z" + "".join(punctuation) + r"]+", "", replaced_text
+    )
 
     return replaced_text
 

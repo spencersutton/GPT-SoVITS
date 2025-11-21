@@ -43,7 +43,9 @@ torch.backends.cudnn.deterministic = False
 ###反正A100fp32更快，那试试tf32吧
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
-torch.set_float32_matmul_precision("medium")  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
+torch.set_float32_matmul_precision(
+    "medium"
+)  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
 # from config import pretrained_s2G,pretrained_s2D
 global_step = 0
 
@@ -87,8 +89,16 @@ def run(rank, n_gpus, hps):
     if torch.cuda.is_available():
         torch.cuda.set_device(rank)
 
-    TextAudioSpeakerLoader = TextAudioSpeakerLoaderV3 if hps.model.version == "v3" else TextAudioSpeakerLoaderV4
-    TextAudioSpeakerCollate = TextAudioSpeakerCollateV3 if hps.model.version == "v3" else TextAudioSpeakerCollateV4
+    TextAudioSpeakerLoader = (
+        TextAudioSpeakerLoaderV3
+        if hps.model.version == "v3"
+        else TextAudioSpeakerLoaderV4
+    )
+    TextAudioSpeakerCollate = (
+        TextAudioSpeakerCollateV3
+        if hps.model.version == "v3"
+        else TextAudioSpeakerCollateV4
+    )
     train_dataset = TextAudioSpeakerLoader(hps.data)  ########
     train_sampler = DistributedBucketSampler(
         train_dataset,
@@ -128,7 +138,11 @@ def run(rank, n_gpus, hps):
         persistent_workers=True,
         prefetch_factor=4,
     )
-    save_root = "%s/logs_s2_%s_lora_%s" % (hps.data.exp_dir, hps.model.version, hps.train.lora_rank)
+    save_root = "%s/logs_s2_%s_lora_%s" % (
+        hps.data.exp_dir,
+        hps.model.version,
+        hps.train.lora_rank,
+    )
     os.makedirs(save_root, exist_ok=True)
     lora_rank = int(hps.train.lora_rank)
     lora_config = LoraConfig(
@@ -156,7 +170,9 @@ def run(rank, n_gpus, hps):
 
     def model2cuda(net_g, rank):
         if torch.cuda.is_available():
-            net_g = DDP(net_g.cuda(rank), device_ids=[rank], find_unused_parameters=True)
+            net_g = DDP(
+                net_g.cuda(rank), device_ids=[rank], find_unused_parameters=True
+            )
         else:
             net_g = net_g.to(device)
         return net_g
@@ -189,7 +205,9 @@ def run(rank, n_gpus, hps):
             print(
                 "loaded pretrained %s" % hps.train.pretrained_s2G,
                 net_g.load_state_dict(
-                    torch.load(hps.train.pretrained_s2G, map_location="cpu", weights_only=False)["weight"],
+                    torch.load(
+                        hps.train.pretrained_s2G, map_location="cpu", weights_only=False
+                    )["weight"],
                     strict=False,
                 ),
             )
@@ -205,7 +223,9 @@ def run(rank, n_gpus, hps):
     # print(no_grad_names)
     # os._exit(233333)
 
-    scheduler_g = torch.optim.lr_scheduler.ExponentialLR(optim_g, gamma=hps.train.lr_decay, last_epoch=-1)
+    scheduler_g = torch.optim.lr_scheduler.ExponentialLR(
+        optim_g, gamma=hps.train.lr_decay, last_epoch=-1
+    )
     for _ in range(epoch_str):
         scheduler_g.step()
 
@@ -245,7 +265,9 @@ def run(rank, n_gpus, hps):
     print("training done")
 
 
-def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loaders, logger, writers):
+def train_and_evaluate(
+    rank, epoch, hps, nets, optims, schedulers, scaler, loaders, logger, writers
+):
     net_g, net_d = nets
     optim_g, optim_d = optims
     # scheduler_g, scheduler_d = schedulers
@@ -257,9 +279,16 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
     global global_step
 
     net_g.train()
-    for batch_idx, (ssl, spec, mel, ssl_lengths, spec_lengths, text, text_lengths, mel_lengths) in enumerate(
-        tqdm(train_loader)
-    ):
+    for batch_idx, (
+        ssl,
+        spec,
+        mel,
+        ssl_lengths,
+        spec_lengths,
+        text,
+        text_lengths,
+        mel_lengths,
+    ) in enumerate(tqdm(train_loader)):
         if torch.cuda.is_available():
             spec, spec_lengths = (
                 spec.cuda(
@@ -271,7 +300,10 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
                     non_blocking=True,
                 ),
             )
-            mel, mel_lengths = mel.cuda(rank, non_blocking=True), mel_lengths.cuda(rank, non_blocking=True)
+            mel, mel_lengths = (
+                mel.cuda(rank, non_blocking=True),
+                mel_lengths.cuda(rank, non_blocking=True),
+            )
             ssl = ssl.cuda(rank, non_blocking=True)
             ssl.requires_grad = False
             text, text_lengths = (
@@ -315,10 +347,18 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
             if global_step % hps.train.log_interval == 0:
                 lr = optim_g.param_groups[0]["lr"]
                 losses = [cfm_loss]
-                logger.info("Train Epoch: {} [{:.0f}%]".format(epoch, 100.0 * batch_idx / len(train_loader)))
+                logger.info(
+                    "Train Epoch: {} [{:.0f}%]".format(
+                        epoch, 100.0 * batch_idx / len(train_loader)
+                    )
+                )
                 logger.info([x.item() for x in losses] + [global_step, lr])
 
-                scalar_dict = {"loss/g/total": loss_gen_all, "learning_rate": lr, "grad_norm_g": grad_norm_g}
+                scalar_dict = {
+                    "loss/g/total": loss_gen_all,
+                    "learning_rate": lr,
+                    "grad_norm_g": grad_norm_g,
+                }
                 utils.summarize(
                     writer=writer,
                     global_step=global_step,

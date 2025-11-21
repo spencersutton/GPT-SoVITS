@@ -37,7 +37,9 @@ _comma_number_re = re.compile(r"([0-9][0-9\,]+[0-9])")
 _time_re = re.compile(r"\b([01]?[0-9]|2[0-3]):([0-5][0-9])\b")
 
 # 后缀计量单位识别
-_measurement_re = re.compile(r"\b([0-9]+(\.[0-9]+)?(m|km|km/h|ft|L|tbsp|tsp|h|min|s|°C|°F))\b")
+_measurement_re = re.compile(
+    r"\b([0-9]+(\.[0-9]+)?(m|km|km/h|ft|L|tbsp|tsp|h|min|s|°C|°F))\b"
+)
 
 # 前后 £ 识别 ( 写了识别两边某一边的，但是不知道为什么失败了┭┮﹏┭┮ )
 _pounds_re_start = re.compile(r"£([0-9\.\,]*[0-9]+)")
@@ -233,7 +235,9 @@ def _expand_number(m):
         elif num % 100 == 0:
             return _inflect.number_to_words(num // 100) + " hundred"
         else:
-            return _inflect.number_to_words(num, andword="", zero="oh", group=2).replace(", ", " ")
+            return _inflect.number_to_words(
+                num, andword="", zero="oh", group=2
+            ).replace(", ", " ")
     else:
         return _inflect.number_to_words(num, andword="")
 
@@ -259,7 +263,9 @@ def normalize(text):
     text = re.sub(_number_re, _expand_number, text)
 
     text = "".join(
-        char for char in unicodedata.normalize("NFD", text) if unicodedata.category(char) != "Mn"
+        char
+        for char in unicodedata.normalize("NFD", text)
+        if unicodedata.category(char) != "Mn"
     )  # Strip accents
 
     text = re.sub("%", " percent", text)

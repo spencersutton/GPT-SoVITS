@@ -30,7 +30,9 @@ warnings.filterwarnings("ignore")
 model_version = "1.1"
 
 
-def predict(session, onnx_input: Dict[str, Any], labels: List[str]) -> Tuple[List[str], List[float]]:
+def predict(
+    session, onnx_input: Dict[str, Any], labels: List[str]
+) -> Tuple[List[str], List[float]]:
     all_preds = []
     all_confidences = []
     probs = session.run(
@@ -90,7 +92,9 @@ class G2PWOnnxConverter:
         uncompress_path = download_and_decompress(model_dir)
 
         sess_options = onnxruntime.SessionOptions()
-        sess_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+        sess_options.graph_optimization_level = (
+            onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+        )
         sess_options.execution_mode = onnxruntime.ExecutionMode.ORT_SEQUENTIAL
         sess_options.intra_op_num_threads = 2 if torch.cuda.is_available() else 0
         if "CUDAExecutionProvider" in onnxruntime.get_available_providers():
@@ -105,7 +109,9 @@ class G2PWOnnxConverter:
                 sess_options=sess_options,
                 providers=["CPUExecutionProvider"],
             )
-        self.config = load_config(config_path=os.path.join(uncompress_path, "config.py"), use_default=True)
+        self.config = load_config(
+            config_path=os.path.join(uncompress_path, "config.py"), use_default=True
+        )
 
         self.model_source = model_source if model_source else self.config.model_source
         self.enable_opencc = enable_non_tradional_chinese
@@ -115,7 +121,11 @@ class G2PWOnnxConverter:
         polyphonic_chars_path = os.path.join(uncompress_path, "POLYPHONIC_CHARS.txt")
         monophonic_chars_path = os.path.join(uncompress_path, "MONOPHONIC_CHARS.txt")
         self.polyphonic_chars = [
-            line.split("\t") for line in open(polyphonic_chars_path, encoding="utf-8").read().strip().split("\n")
+            line.split("\t")
+            for line in open(polyphonic_chars_path, encoding="utf-8")
+            .read()
+            .strip()
+            .split("\n")
         ]
         self.non_polyphonic = {
             "一",
@@ -140,7 +150,11 @@ class G2PWOnnxConverter:
         }
         self.non_monophonic = {"似", "攢"}
         self.monophonic_chars = [
-            line.split("\t") for line in open(monophonic_chars_path, encoding="utf-8").read().strip().split("\n")
+            line.split("\t")
+            for line in open(monophonic_chars_path, encoding="utf-8")
+            .read()
+            .strip()
+            .split("\n")
         ]
         self.labels, self.char2phonemes = (
             get_char_phoneme_labels(polyphonic_chars=self.polyphonic_chars)
@@ -155,21 +169,31 @@ class G2PWOnnxConverter:
             if char in self.polyphonic_chars_new:
                 self.polyphonic_chars_new.remove(char)
 
-        self.monophonic_chars_dict = {char: phoneme for char, phoneme in self.monophonic_chars}
+        self.monophonic_chars_dict = {
+            char: phoneme for char, phoneme in self.monophonic_chars
+        }
         for char in self.non_monophonic:
             if char in self.monophonic_chars_dict:
                 self.monophonic_chars_dict.pop(char)
 
         self.pos_tags = ["UNK", "A", "C", "D", "I", "N", "P", "T", "V", "DE", "SHI"]
 
-        with open(os.path.join(uncompress_path, "bopomofo_to_pinyin_wo_tune_dict.json"), "r", encoding="utf-8") as fr:
+        with open(
+            os.path.join(uncompress_path, "bopomofo_to_pinyin_wo_tune_dict.json"),
+            "r",
+            encoding="utf-8",
+        ) as fr:
             self.bopomofo_convert_dict = json.load(fr)
         self.style_convert_func = {
             "bopomofo": lambda x: x,
             "pinyin": self._convert_bopomofo_to_pinyin,
         }[style]
 
-        with open(os.path.join(uncompress_path, "char_bopomofo_dict.json"), "r", encoding="utf-8") as fr:
+        with open(
+            os.path.join(uncompress_path, "char_bopomofo_dict.json"),
+            "r",
+            encoding="utf-8",
+        ) as fr:
             self.char_bopomofo_dict = json.load(fr)
 
         if self.enable_opencc:
@@ -197,7 +221,9 @@ class G2PWOnnxConverter:
                 translated_sentences.append(translated_sent)
             sentences = translated_sentences
 
-        texts, query_ids, sent_ids, partial_results = self._prepare_data(sentences=sentences)
+        texts, query_ids, sent_ids, partial_results = self._prepare_data(
+            sentences=sentences
+        )
         if len(texts) == 0:
             # sentences no polyphonic words
             return partial_results
@@ -213,7 +239,9 @@ class G2PWOnnxConverter:
             window_size=None,
         )
 
-        preds, confidences = predict(session=self.session_g2pW, onnx_input=onnx_input, labels=self.labels)
+        preds, confidences = predict(
+            session=self.session_g2pW, onnx_input=onnx_input, labels=self.labels
+        )
         if self.config.use_char_phoneme:
             preds = [pred.split(" ")[1] for pred in preds]
 
@@ -223,12 +251,16 @@ class G2PWOnnxConverter:
 
         return results
 
-    def _prepare_data(self, sentences: List[str]) -> Tuple[List[str], List[int], List[int], List[List[str]]]:
+    def _prepare_data(
+        self, sentences: List[str]
+    ) -> Tuple[List[str], List[int], List[int], List[List[str]]]:
         texts, query_ids, sent_ids, partial_results = [], [], [], []
         for sent_id, sent in enumerate(sentences):
             # pypinyin works well for Simplified Chinese than Traditional Chinese
             sent_s = tranditional_to_simplified(sent)
-            pypinyin_result = pinyin(sent_s, neutral_tone_with_five=True, style=Style.TONE3)
+            pypinyin_result = pinyin(
+                sent_s, neutral_tone_with_five=True, style=Style.TONE3
+            )
             partial_result = [None] * len(sent)
             for i, char in enumerate(sent):
                 if char in self.polyphonic_chars_new:
@@ -236,7 +268,9 @@ class G2PWOnnxConverter:
                     query_ids.append(i)
                     sent_ids.append(sent_id)
                 elif char in self.monophonic_chars_dict:
-                    partial_result[i] = self.style_convert_func(self.monophonic_chars_dict[char])
+                    partial_result[i] = self.style_convert_func(
+                        self.monophonic_chars_dict[char]
+                    )
                 elif char in self.char_bopomofo_dict:
                     partial_result[i] = pypinyin_result[i][0]
                     # partial_result[i] =  self.style_convert_func(self.char_bopomofo_dict[char][0])

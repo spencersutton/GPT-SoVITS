@@ -88,13 +88,17 @@ class T2SModel(nn.Module):
         super().__init__()
         dict_s1 = torch.load(t2s_path, map_location="cpu")
         self.config = dict_s1["config"]
-        self.t2s_model = Text2SemanticLightningModule(self.config, "ojbk", is_train=False)
+        self.t2s_model = Text2SemanticLightningModule(
+            self.config, "ojbk", is_train=False
+        )
         self.t2s_model.load_state_dict(dict_s1["weight"])
         self.t2s_model.eval()
         self.vits_model = vits_model.vq_model
         self.hz = 50
         self.max_sec = self.config["data"]["max_sec"]
-        self.t2s_model.model.top_k = torch.LongTensor([self.config["inference"]["top_k"]])
+        self.t2s_model.model.top_k = torch.LongTensor(
+            [self.config["inference"]["top_k"]]
+        )
         self.t2s_model.model.early_stop_num = torch.LongTensor([self.hz * self.max_sec])
         self.t2s_model = self.t2s_model.model
         self.t2s_model.init_onnx()
@@ -107,7 +111,9 @@ class T2SModel(nn.Module):
         early_stop_num = self.t2s_model.early_stop_num
 
         # [1,N] [1,N] [N, 1024] [N, 1024] [1, 768, N]
-        x, prompts = self.onnx_encoder(ref_seq, text_seq, ref_bert, text_bert, ssl_content)
+        x, prompts = self.onnx_encoder(
+            ref_seq, text_seq, ref_bert, text_bert, ssl_content
+        )
 
         prefix_len = prompts.shape[1]
 
@@ -121,7 +127,10 @@ class T2SModel(nn.Module):
             y, k, v, y_emb, logits, samples = enco
             if early_stop_num != -1 and (y.shape[1] - prefix_len) > early_stop_num:
                 stop = True
-            if torch.argmax(logits, dim=-1)[0] == self.t2s_model.EOS or samples[0, 0] == self.t2s_model.EOS:
+            if (
+                torch.argmax(logits, dim=-1)[0] == self.t2s_model.EOS
+                or samples[0, 0] == self.t2s_model.EOS
+            ):
                 stop = True
             if stop:
                 break
@@ -129,14 +138,27 @@ class T2SModel(nn.Module):
 
         return y[:, -idx:].unsqueeze(0)
 
-    def export(self, ref_seq, text_seq, ref_bert, text_bert, ssl_content, project_name, dynamo=False):
+    def export(
+        self,
+        ref_seq,
+        text_seq,
+        ref_bert,
+        text_bert,
+        ssl_content,
+        project_name,
+        dynamo=False,
+    ):
         # self.onnx_encoder = torch.jit.script(self.onnx_encoder)
         if dynamo:
             export_options = torch.onnx.ExportOptions(dynamic_shapes=True)
             onnx_encoder_export_output = torch.onnx.dynamo_export(
-                self.onnx_encoder, (ref_seq, text_seq, ref_bert, text_bert, ssl_content), export_options=export_options
+                self.onnx_encoder,
+                (ref_seq, text_seq, ref_bert, text_bert, ssl_content),
+                export_options=export_options,
             )
-            onnx_encoder_export_output.save(f"onnx/{project_name}/{project_name}_t2s_encoder.onnx")
+            onnx_encoder_export_output.save(
+                f"onnx/{project_name}/{project_name}_t2s_encoder.onnx"
+            )
             return
 
         torch.onnx.export(
@@ -154,7 +176,9 @@ class T2SModel(nn.Module):
             },
             opset_version=16,
         )
-        x, prompts = self.onnx_encoder(ref_seq, text_seq, ref_bert, text_bert, ssl_content)
+        x, prompts = self.onnx_encoder(
+            ref_seq, text_seq, ref_bert, text_bert, ssl_content
+        )
 
         torch.onnx.export(
             self.first_stage_decoder,
@@ -228,13 +252,24 @@ class GptSoVits(nn.Module):
         self.vits = vits
         self.t2s = t2s
 
-    def forward(self, ref_seq, text_seq, ref_bert, text_bert, ref_audio, ssl_content, debug=False):
+    def forward(
+        self,
+        ref_seq,
+        text_seq,
+        ref_bert,
+        text_bert,
+        ref_audio,
+        ssl_content,
+        debug=False,
+    ):
         pred_semantic = self.t2s(ref_seq, text_seq, ref_bert, text_bert, ssl_content)
         audio = self.vits(text_seq, pred_semantic, ref_audio)
         if debug:
             import onnxruntime
 
-            sess = onnxruntime.InferenceSession("onnx/koharu/koharu_vits.onnx", providers=["CPU"])
+            sess = onnxruntime.InferenceSession(
+                "onnx/koharu/koharu_vits.onnx", providers=["CPU"]
+            )
             audio1 = sess.run(
                 None,
                 {
@@ -246,8 +281,19 @@ class GptSoVits(nn.Module):
             return audio, audio1
         return audio
 
-    def export(self, ref_seq, text_seq, ref_bert, text_bert, ref_audio, ssl_content, project_name):
-        self.t2s.export(ref_seq, text_seq, ref_bert, text_bert, ssl_content, project_name)
+    def export(
+        self,
+        ref_seq,
+        text_seq,
+        ref_bert,
+        text_bert,
+        ref_audio,
+        ssl_content,
+        project_name,
+    ):
+        self.t2s.export(
+            ref_seq, text_seq, ref_bert, text_bert, ssl_content, project_name
+        )
         pred_semantic = self.t2s(ref_seq, text_seq, ref_bert, text_bert, ssl_content)
         torch.onnx.export(
             self.vits,
@@ -339,7 +385,9 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
     ref_audio = torch.randn((1, 48000 * 5)).float()
     # ref_audio = torch.tensor([load_audio("rec.wav", 48000)]).float()
     ref_audio_16k = torchaudio.functional.resample(ref_audio, 48000, 16000).float()
-    ref_audio_sr = torchaudio.functional.resample(ref_audio, 48000, vits.hps.data.sampling_rate).float()
+    ref_audio_sr = torchaudio.functional.resample(
+        ref_audio, 48000, vits.hps.data.sampling_rate
+    ).float()
 
     try:
         os.mkdir(f"onnx/{project_name}")
@@ -354,11 +402,28 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
     # gpt_sovits.export(ref_seq, text_seq, ref_bert, text_bert, ref_audio_sr, ssl_content, project_name)
 
     if debug:
-        a, b = gpt_sovits(ref_seq, text_seq, ref_bert, text_bert, ref_audio_sr, ssl_content, debug=debug)
-        soundfile.write("out1.wav", a.cpu().detach().numpy(), vits.hps.data.sampling_rate)
+        a, b = gpt_sovits(
+            ref_seq,
+            text_seq,
+            ref_bert,
+            text_bert,
+            ref_audio_sr,
+            ssl_content,
+            debug=debug,
+        )
+        soundfile.write(
+            "out1.wav", a.cpu().detach().numpy(), vits.hps.data.sampling_rate
+        )
         soundfile.write("out2.wav", b[0], vits.hps.data.sampling_rate)
     else:
-        a = gpt_sovits(ref_seq, text_seq, ref_bert, text_bert, ref_audio_sr, ssl_content).detach().cpu().numpy()
+        a = (
+            gpt_sovits(
+                ref_seq, text_seq, ref_bert, text_bert, ref_audio_sr, ssl_content
+            )
+            .detach()
+            .cpu()
+            .numpy()
+        )
         soundfile.write("out.wav", a, vits.hps.data.sampling_rate)
 
     if vits_model == "v1":

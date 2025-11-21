@@ -40,11 +40,15 @@ class ConvNeXtBlock(nn.Module):
         adanorm_num_embeddings=None,
     ):
         super().__init__()
-        self.dwconv = nn.Conv1d(dim, dim, kernel_size=7, padding=3, groups=dim)  # depthwise conv
+        self.dwconv = nn.Conv1d(
+            dim, dim, kernel_size=7, padding=3, groups=dim
+        )  # depthwise conv
         self.adanorm = adanorm_num_embeddings is not None
 
         self.norm = nn.LayerNorm(dim, eps=1e-6)
-        self.pwconv1 = nn.Linear(dim, dim * 3)  # pointwise/1x1 convs, implemented with linear layers
+        self.pwconv1 = nn.Linear(
+            dim, dim * 3
+        )  # pointwise/1x1 convs, implemented with linear layers
         self.act = nn.GELU()
         self.pwconv2 = nn.Linear(dim * 3, dim)
         self.gamma = (
@@ -80,9 +84,13 @@ class APNet_BWE_Model(torch.nn.Module):
         self.adanorm_num_embeddings = None
         layer_scale_init_value = 1 / h.ConvNeXt_layers
 
-        self.conv_pre_mag = nn.Conv1d(h.n_fft // 2 + 1, h.ConvNeXt_channels, 7, 1, padding=get_padding(7, 1))
+        self.conv_pre_mag = nn.Conv1d(
+            h.n_fft // 2 + 1, h.ConvNeXt_channels, 7, 1, padding=get_padding(7, 1)
+        )
         self.norm_pre_mag = nn.LayerNorm(h.ConvNeXt_channels, eps=1e-6)
-        self.conv_pre_pha = nn.Conv1d(h.n_fft // 2 + 1, h.ConvNeXt_channels, 7, 1, padding=get_padding(7, 1))
+        self.conv_pre_pha = nn.Conv1d(
+            h.n_fft // 2 + 1, h.ConvNeXt_channels, 7, 1, padding=get_padding(7, 1)
+        )
         self.norm_pre_pha = nn.LayerNorm(h.ConvNeXt_channels, eps=1e-6)
 
         self.convnext_mag = nn.ModuleList(
@@ -139,7 +147,13 @@ class APNet_BWE_Model(torch.nn.Module):
         x_pha_i = self.linear_post_pha_i(x_pha)
         pha_wb = torch.atan2(x_pha_i, x_pha_r).transpose(1, 2)
 
-        com_wb = torch.stack((torch.exp(mag_wb) * torch.cos(pha_wb), torch.exp(mag_wb) * torch.sin(pha_wb)), dim=-1)
+        com_wb = torch.stack(
+            (
+                torch.exp(mag_wb) * torch.cos(pha_wb),
+                torch.exp(mag_wb) * torch.sin(pha_wb),
+            ),
+            dim=-1,
+        )
 
         return mag_wb, pha_wb, com_wb
 
@@ -151,10 +165,42 @@ class DiscriminatorP(torch.nn.Module):
         norm_f = weight_norm if use_spectral_norm == False else spectral_norm
         self.convs = nn.ModuleList(
             [
-                norm_f(nn.Conv2d(1, 32, (kernel_size, 1), (stride, 1), padding=(get_padding(5, 1), 0))),
-                norm_f(nn.Conv2d(32, 128, (kernel_size, 1), (stride, 1), padding=(get_padding(5, 1), 0))),
-                norm_f(nn.Conv2d(128, 512, (kernel_size, 1), (stride, 1), padding=(get_padding(5, 1), 0))),
-                norm_f(nn.Conv2d(512, 1024, (kernel_size, 1), (stride, 1), padding=(get_padding(5, 1), 0))),
+                norm_f(
+                    nn.Conv2d(
+                        1,
+                        32,
+                        (kernel_size, 1),
+                        (stride, 1),
+                        padding=(get_padding(5, 1), 0),
+                    )
+                ),
+                norm_f(
+                    nn.Conv2d(
+                        32,
+                        128,
+                        (kernel_size, 1),
+                        (stride, 1),
+                        padding=(get_padding(5, 1), 0),
+                    )
+                ),
+                norm_f(
+                    nn.Conv2d(
+                        128,
+                        512,
+                        (kernel_size, 1),
+                        (stride, 1),
+                        padding=(get_padding(5, 1), 0),
+                    )
+                ),
+                norm_f(
+                    nn.Conv2d(
+                        512,
+                        1024,
+                        (kernel_size, 1),
+                        (stride, 1),
+                        padding=(get_padding(5, 1), 0),
+                    )
+                ),
                 norm_f(nn.Conv2d(1024, 1024, (kernel_size, 1), 1, padding=(2, 0))),
             ]
         )
@@ -215,17 +261,29 @@ class MultiPeriodDiscriminator(torch.nn.Module):
 class MultiResolutionAmplitudeDiscriminator(nn.Module):
     def __init__(
         self,
-        resolutions: Tuple[Tuple[int, int, int]] = ((512, 128, 512), (1024, 256, 1024), (2048, 512, 2048)),
+        resolutions: Tuple[Tuple[int, int, int]] = (
+            (512, 128, 512),
+            (1024, 256, 1024),
+            (2048, 512, 2048),
+        ),
         num_embeddings: int = None,
     ):
         super().__init__()
         self.discriminators = nn.ModuleList(
-            [DiscriminatorAR(resolution=r, num_embeddings=num_embeddings) for r in resolutions]
+            [
+                DiscriminatorAR(resolution=r, num_embeddings=num_embeddings)
+                for r in resolutions
+            ]
         )
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor, bandwidth_id: torch.Tensor = None
-    ) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[List[torch.Tensor]], List[List[torch.Tensor]]]:
+    ) -> Tuple[
+        List[torch.Tensor],
+        List[torch.Tensor],
+        List[List[torch.Tensor]],
+        List[List[torch.Tensor]],
+    ]:
         y_d_rs = []
         y_d_gs = []
         fmap_rs = []
@@ -255,15 +313,49 @@ class DiscriminatorAR(nn.Module):
         self.in_channels = in_channels
         self.convs = nn.ModuleList(
             [
-                weight_norm(nn.Conv2d(in_channels, channels, kernel_size=(7, 5), stride=(2, 2), padding=(3, 2))),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=(5, 3), stride=(2, 1), padding=(2, 1))),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=(5, 3), stride=(2, 2), padding=(2, 1))),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=3, stride=(2, 1), padding=1)),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=3, stride=(2, 2), padding=1)),
+                weight_norm(
+                    nn.Conv2d(
+                        in_channels,
+                        channels,
+                        kernel_size=(7, 5),
+                        stride=(2, 2),
+                        padding=(3, 2),
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels,
+                        channels,
+                        kernel_size=(5, 3),
+                        stride=(2, 1),
+                        padding=(2, 1),
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels,
+                        channels,
+                        kernel_size=(5, 3),
+                        stride=(2, 2),
+                        padding=(2, 1),
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels, channels, kernel_size=3, stride=(2, 1), padding=1
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels, channels, kernel_size=3, stride=(2, 2), padding=1
+                    )
+                ),
             ]
         )
         if num_embeddings is not None:
-            self.emb = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=channels)
+            self.emb = torch.nn.Embedding(
+                num_embeddings=num_embeddings, embedding_dim=channels
+            )
             torch.nn.init.zeros_(self.emb.weight)
         self.conv_post = weight_norm(nn.Conv2d(channels, 1, (3, 3), padding=(1, 1)))
 
@@ -309,17 +401,29 @@ class DiscriminatorAR(nn.Module):
 class MultiResolutionPhaseDiscriminator(nn.Module):
     def __init__(
         self,
-        resolutions: Tuple[Tuple[int, int, int]] = ((512, 128, 512), (1024, 256, 1024), (2048, 512, 2048)),
+        resolutions: Tuple[Tuple[int, int, int]] = (
+            (512, 128, 512),
+            (1024, 256, 1024),
+            (2048, 512, 2048),
+        ),
         num_embeddings: int = None,
     ):
         super().__init__()
         self.discriminators = nn.ModuleList(
-            [DiscriminatorPR(resolution=r, num_embeddings=num_embeddings) for r in resolutions]
+            [
+                DiscriminatorPR(resolution=r, num_embeddings=num_embeddings)
+                for r in resolutions
+            ]
         )
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor, bandwidth_id: torch.Tensor = None
-    ) -> Tuple[List[torch.Tensor], List[torch.Tensor], List[List[torch.Tensor]], List[List[torch.Tensor]]]:
+    ) -> Tuple[
+        List[torch.Tensor],
+        List[torch.Tensor],
+        List[List[torch.Tensor]],
+        List[List[torch.Tensor]],
+    ]:
         y_d_rs = []
         y_d_gs = []
         fmap_rs = []
@@ -349,15 +453,49 @@ class DiscriminatorPR(nn.Module):
         self.in_channels = in_channels
         self.convs = nn.ModuleList(
             [
-                weight_norm(nn.Conv2d(in_channels, channels, kernel_size=(7, 5), stride=(2, 2), padding=(3, 2))),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=(5, 3), stride=(2, 1), padding=(2, 1))),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=(5, 3), stride=(2, 2), padding=(2, 1))),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=3, stride=(2, 1), padding=1)),
-                weight_norm(nn.Conv2d(channels, channels, kernel_size=3, stride=(2, 2), padding=1)),
+                weight_norm(
+                    nn.Conv2d(
+                        in_channels,
+                        channels,
+                        kernel_size=(7, 5),
+                        stride=(2, 2),
+                        padding=(3, 2),
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels,
+                        channels,
+                        kernel_size=(5, 3),
+                        stride=(2, 1),
+                        padding=(2, 1),
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels,
+                        channels,
+                        kernel_size=(5, 3),
+                        stride=(2, 2),
+                        padding=(2, 1),
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels, channels, kernel_size=3, stride=(2, 1), padding=1
+                    )
+                ),
+                weight_norm(
+                    nn.Conv2d(
+                        channels, channels, kernel_size=3, stride=(2, 2), padding=1
+                    )
+                ),
             ]
         )
         if num_embeddings is not None:
-            self.emb = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=channels)
+            self.emb = torch.nn.Embedding(
+                num_embeddings=num_embeddings, embedding_dim=channels
+            )
             torch.nn.init.zeros_(self.emb.weight)
         self.conv_post = weight_norm(nn.Conv2d(channels, 1, (3, 3), padding=(1, 1)))
 
@@ -436,8 +574,12 @@ def generator_loss(disc_outputs):
 
 def phase_losses(phase_r, phase_g):
     ip_loss = torch.mean(anti_wrapping_function(phase_r - phase_g))
-    gd_loss = torch.mean(anti_wrapping_function(torch.diff(phase_r, dim=1) - torch.diff(phase_g, dim=1)))
-    iaf_loss = torch.mean(anti_wrapping_function(torch.diff(phase_r, dim=2) - torch.diff(phase_g, dim=2)))
+    gd_loss = torch.mean(
+        anti_wrapping_function(torch.diff(phase_r, dim=1) - torch.diff(phase_g, dim=1))
+    )
+    iaf_loss = torch.mean(
+        anti_wrapping_function(torch.diff(phase_r, dim=2) - torch.diff(phase_g, dim=2))
+    )
 
     return ip_loss, gd_loss, iaf_loss
 
@@ -448,13 +590,21 @@ def anti_wrapping_function(x):
 
 def stft_mag(audio, n_fft=2048, hop_length=512):
     hann_window = torch.hann_window(n_fft).to(audio.device)
-    stft_spec = torch.stft(audio, n_fft, hop_length, window=hann_window, return_complex=True)
+    stft_spec = torch.stft(
+        audio, n_fft, hop_length, window=hann_window, return_complex=True
+    )
     stft_mag = torch.abs(stft_spec)
     return stft_mag
 
 
 def cal_snr(pred, target):
-    snr = (20 * torch.log10(torch.norm(target, dim=-1) / torch.norm(pred - target, dim=-1).clamp(min=1e-8))).mean()
+    snr = (
+        20
+        * torch.log10(
+            torch.norm(target, dim=-1)
+            / torch.norm(pred - target, dim=-1).clamp(min=1e-8)
+        )
+    ).mean()
     return snr
 
 

@@ -43,7 +43,9 @@ torch.backends.cudnn.deterministic = False
 ###反正A100fp32更快，那试试tf32吧
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
-torch.set_float32_matmul_precision("medium")  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
+torch.set_float32_matmul_precision(
+    "medium"
+)  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
 # from config import pretrained_s2G,pretrained_s2D
 global_step = 0
 
@@ -149,9 +151,13 @@ def run(rank, n_gpus, hps):
     )
 
     net_d = (
-        MultiPeriodDiscriminator(hps.model.use_spectral_norm, version=hps.model.version).cuda(rank)
+        MultiPeriodDiscriminator(
+            hps.model.use_spectral_norm, version=hps.model.version
+        ).cuda(rank)
         if torch.cuda.is_available()
-        else MultiPeriodDiscriminator(hps.model.use_spectral_norm, version=hps.model.version).to(device)
+        else MultiPeriodDiscriminator(
+            hps.model.use_spectral_norm, version=hps.model.version
+        ).to(device)
     )
     for name, param in net_g.named_parameters():
         if not param.requires_grad:
@@ -205,7 +211,9 @@ def run(rank, n_gpus, hps):
 
     try:  # 如果能加载自动resume
         _, _, _, epoch_str = utils.load_checkpoint(
-            utils.latest_checkpoint_path("%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "D_*.pth"),
+            utils.latest_checkpoint_path(
+                "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "D_*.pth"
+            ),
             net_d,
             optim_d,
         )  # D多半加载没事
@@ -213,7 +221,9 @@ def run(rank, n_gpus, hps):
             logger.info("loaded D")
         # _, _, _, epoch_str = utils.load_checkpoint(utils.latest_checkpoint_path(hps.model_dir, "G_*.pth"), net_g, optim_g,load_opt=0)
         _, _, _, epoch_str = utils.load_checkpoint(
-            utils.latest_checkpoint_path("%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "G_*.pth"),
+            utils.latest_checkpoint_path(
+                "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "G_*.pth"
+            ),
             net_g,
             optim_g,
         )
@@ -235,12 +245,16 @@ def run(rank, n_gpus, hps):
             print(
                 "loaded pretrained %s" % hps.train.pretrained_s2G,
                 net_g.module.load_state_dict(
-                    torch.load(hps.train.pretrained_s2G, map_location="cpu", weights_only=False)["weight"],
+                    torch.load(
+                        hps.train.pretrained_s2G, map_location="cpu", weights_only=False
+                    )["weight"],
                     strict=False,
                 )
                 if torch.cuda.is_available()
                 else net_g.load_state_dict(
-                    torch.load(hps.train.pretrained_s2G, map_location="cpu", weights_only=False)["weight"],
+                    torch.load(
+                        hps.train.pretrained_s2G, map_location="cpu", weights_only=False
+                    )["weight"],
                     strict=False,
                 ),
             )  ##测试不加载优化器
@@ -254,11 +268,16 @@ def run(rank, n_gpus, hps):
             print(
                 "loaded pretrained %s" % hps.train.pretrained_s2D,
                 net_d.module.load_state_dict(
-                    torch.load(hps.train.pretrained_s2D, map_location="cpu", weights_only=False)["weight"], strict=False
+                    torch.load(
+                        hps.train.pretrained_s2D, map_location="cpu", weights_only=False
+                    )["weight"],
+                    strict=False,
                 )
                 if torch.cuda.is_available()
                 else net_d.load_state_dict(
-                    torch.load(hps.train.pretrained_s2D, map_location="cpu", weights_only=False)["weight"],
+                    torch.load(
+                        hps.train.pretrained_s2D, map_location="cpu", weights_only=False
+                    )["weight"],
                 ),
             )
 
@@ -315,7 +334,9 @@ def run(rank, n_gpus, hps):
     print("training done")
 
 
-def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loaders, logger, writers):
+def train_and_evaluate(
+    rank, epoch, hps, nets, optims, schedulers, scaler, loaders, logger, writers
+):
     net_g, net_d = nets
     optim_g, optim_d = optims
     # scheduler_g, scheduler_d = schedulers
@@ -330,9 +351,21 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
     net_d.train()
     for batch_idx, data in enumerate(tqdm(train_loader)):
         if hps.model.version in {"v2Pro", "v2ProPlus"}:
-            ssl, ssl_lengths, spec, spec_lengths, y, y_lengths, text, text_lengths, sv_emb = data
+            (
+                ssl,
+                ssl_lengths,
+                spec,
+                spec_lengths,
+                y,
+                y_lengths,
+                text,
+                text_lengths,
+                sv_emb,
+            ) = data
         else:
-            ssl, ssl_lengths, spec, spec_lengths, y, y_lengths, text, text_lengths = data
+            ssl, ssl_lengths, spec, spec_lengths, y, y_lengths, text, text_lengths = (
+                data
+            )
         if torch.cuda.is_available():
             spec, spec_lengths = (
                 spec.cuda(
@@ -380,9 +413,15 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
                 sv_emb = sv_emb.to(device)
         with autocast(enabled=hps.train.fp16_run):
             if hps.model.version in {"v2Pro", "v2ProPlus"}:
-                (y_hat, kl_ssl, ids_slice, x_mask, z_mask, (z, z_p, m_p, logs_p, m_q, logs_q), stats_ssl) = net_g(
-                    ssl, spec, spec_lengths, text, text_lengths, sv_emb
-                )
+                (
+                    y_hat,
+                    kl_ssl,
+                    ids_slice,
+                    x_mask,
+                    z_mask,
+                    (z, z_p, m_p, logs_p, m_q, logs_q),
+                    stats_ssl,
+                ) = net_g(ssl, spec, spec_lengths, text, text_lengths, sv_emb)
             else:
                 (
                     y_hat,
@@ -402,7 +441,9 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
                 hps.data.mel_fmin,
                 hps.data.mel_fmax,
             )
-            y_mel = commons.slice_segments(mel, ids_slice, hps.train.segment_size // hps.data.hop_length)
+            y_mel = commons.slice_segments(
+                mel, ids_slice, hps.train.segment_size // hps.data.hop_length
+            )
             y_hat_mel = mel_spectrogram_torch(
                 y_hat.squeeze(1),
                 hps.data.filter_length,
@@ -414,7 +455,9 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
                 hps.data.mel_fmax,
             )
 
-            y = commons.slice_segments(y, ids_slice * hps.data.hop_length, hps.train.segment_size)  # slice
+            y = commons.slice_segments(
+                y, ids_slice * hps.data.hop_length, hps.train.segment_size
+            )  # slice
 
             # Discriminator
             y_d_hat_r, y_d_hat_g, _, _ = net_d(y, y_hat.detach())
@@ -570,7 +613,9 @@ def train_and_evaluate(rank, epoch, hps, nets, optims, schedulers, scaler, loade
                         epoch,
                         global_step,
                         hps,
-                        model_version=None if hps.model.version not in {"v2Pro", "v2ProPlus"} else hps.model.version,
+                        model_version=None
+                        if hps.model.version not in {"v2Pro", "v2ProPlus"}
+                        else hps.model.version,
                     ),
                 )
             )
@@ -655,12 +700,16 @@ def evaluate(hps, generator, eval_loader, writer_eval):
                 )
                 audio_dict.update(
                     {
-                        f"gen/audio_{batch_idx}_{test}": y_hat[0, :, : y_hat_lengths[0]],
+                        f"gen/audio_{batch_idx}_{test}": y_hat[
+                            0, :, : y_hat_lengths[0]
+                        ],
                     },
                 )
                 image_dict.update(
                     {
-                        f"gt/mel_{batch_idx}": utils.plot_spectrogram_to_numpy(mel[0].cpu().numpy()),
+                        f"gt/mel_{batch_idx}": utils.plot_spectrogram_to_numpy(
+                            mel[0].cpu().numpy()
+                        ),
                     },
                 )
                 audio_dict.update({f"gt/audio_{batch_idx}": y[0, :, : y_lengths[0]]})

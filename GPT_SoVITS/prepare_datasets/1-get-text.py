@@ -89,7 +89,9 @@ if os.path.exists(txt_path) == False:
                 name = clean_path(name)
                 name = os.path.basename(name)
                 print(name)
-                phones, word2ph, norm_text = clean_text(text.replace("%", "-").replace("￥", ","), lan, version)
+                phones, word2ph, norm_text = clean_text(
+                    text.replace("%", "-").replace("￥", ","), lan, version
+                )
                 path_bert = "%s/%s.pt" % (bert_dir, name)
                 if os.path.exists(path_bert) == False and lan == "zh":
                     bert_feature = get_bert_feature(norm_text, word2ph)
@@ -129,9 +131,13 @@ if os.path.exists(txt_path) == False:
             wav_name, spk_name, language, text = line.split("|")
             # todo.append([name,text,"zh"])
             if language in language_v1_to_language_v2.keys():
-                todo.append([wav_name, text, language_v1_to_language_v2.get(language, language)])
+                todo.append(
+                    [wav_name, text, language_v1_to_language_v2.get(language, language)]
+                )
             else:
-                print(f"\033[33m[Waring] The {language = } of {wav_name} is not supported for training.\033[0m")
+                print(
+                    f"\033[33m[Waring] The {language = } of {wav_name} is not supported for training.\033[0m"
+                )
         except:
             print(line, traceback.format_exc())
 

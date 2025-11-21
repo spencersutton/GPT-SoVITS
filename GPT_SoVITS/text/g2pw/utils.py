@@ -71,7 +71,9 @@ def tokenize_and_map(tokenizer, text: str):
             current_word_start = word_start
             for word_token in word_tokens:
                 word_token_len = len(re.sub(r"^##", "", word_token))
-                index_map_from_token_to_text.append((current_word_start, current_word_start + word_token_len))
+                index_map_from_token_to_text.append(
+                    (current_word_start, current_word_start + word_token_len)
+                )
                 current_word_start = current_word_start + word_token_len
                 tokens.append(word_token)
 

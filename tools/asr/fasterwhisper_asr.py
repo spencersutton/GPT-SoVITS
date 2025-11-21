@@ -41,7 +41,9 @@ language_code_list = [
 
 def download_model(model_size: str):
     if "distil" in model_size:
-        repo_id = "Systran/faster-{}-whisper-{}".format(*model_size.split("-", maxsplit=1))
+        repo_id = "Systran/faster-{}-whisper-{}".format(
+            *model_size.split("-", maxsplit=1)
+        )
     else:
         repo_id = f"Systran/faster-whisper-{model_size}"
     model_path = f"tools/asr/models/{repo_id.strip('Systran/')}"
@@ -113,7 +115,9 @@ def execute_asr(input_folder, output_folder, model_path, language, precision):
             if text == "":
                 for segment in segments:
                     text += segment.text
-            output.append(f"{file_path}|{output_file_name}|{info.language.upper()}|{text}")
+            output.append(
+                f"{file_path}|{output_file_name}|{info.language.upper()}|{text}"
+            )
         except Exception as e:
             print(e)
             traceback.print_exc()
@@ -133,9 +137,19 @@ load_cudnn()
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--input_folder", type=str, required=True, help="Path to the folder containing WAV files."
+        "-i",
+        "--input_folder",
+        type=str,
+        required=True,
+        help="Path to the folder containing WAV files.",
     )
-    parser.add_argument("-o", "--output_folder", type=str, required=True, help="Output folder to store transcriptions.")
+    parser.add_argument(
+        "-o",
+        "--output_folder",
+        type=str,
+        required=True,
+        help="Output folder to store transcriptions.",
+    )
     parser.add_argument(
         "-s",
         "--model_size",
@@ -145,7 +159,12 @@ if __name__ == "__main__":
         help="Model Size of Faster Whisper",
     )
     parser.add_argument(
-        "-l", "--language", type=str, default="ja", choices=language_code_list, help="Language of the audio files."
+        "-l",
+        "--language",
+        type=str,
+        default="ja",
+        choices=language_code_list,
+        help="Language of the audio files.",
     )
     parser.add_argument(
         "-p",

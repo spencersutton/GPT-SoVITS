@@ -47,7 +47,10 @@ class SinePositionalEmbedding(nn.Module):
         self.alpha = nn.Parameter(torch.ones(1), requires_grad=alpha)
         self.dropout = torch.nn.Dropout(p=dropout)
         self.reverse = False
-        self.div_term = torch.exp(torch.arange(0, self.embedding_dim, 2) * -(math.log(10000.0) / self.embedding_dim))
+        self.div_term = torch.exp(
+            torch.arange(0, self.embedding_dim, 2)
+            * -(math.log(10000.0) / self.embedding_dim)
+        )
 
     def extend_pe(self, x):
         position = torch.cumsum(torch.ones_like(x[:, :, 0]), dim=1).transpose(0, 1)

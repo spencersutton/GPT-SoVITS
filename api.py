@@ -239,7 +239,8 @@ def init_bigvgan():
     from BigVGAN import bigvgan
 
     bigvgan_model = bigvgan.BigVGAN.from_pretrained(
-        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x" % (now_dir,),
+        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
+        % (now_dir,),
         use_cuda_kernel=False,
     )  # if True, RuntimeError: Ninja is required to load C++ extensions
     # remove weight norm in the model and set to eval mode
@@ -294,7 +295,9 @@ def resample(audio_tensor, sr0, sr1, device):
     global resample_transform_dict
     key = "%s-%s-%s" % (sr0, sr1, str(device))
     if key not in resample_transform_dict:
-        resample_transform_dict[key] = torchaudio.transforms.Resample(sr0, sr1).to(device)
+        resample_transform_dict[key] = torchaudio.transforms.Resample(sr0, sr1).to(
+            device
+        )
     return resample_transform_dict[key](audio_tensor)
 
 
@@ -351,7 +354,9 @@ def audio_sr(audio, sr):
         try:
             sr_model = AP_BWE(device, DictToAttrRecursive)
         except FileNotFoundError:
-            logger.info("你没有下载超分模型的参数，因此不进行超分。如想超分请先参照教程把文件下载")
+            logger.info(
+                "你没有下载超分模型的参数，因此不进行超分。如想超分请先参照教程把文件下载"
+            )
             return audio.cpu().detach().numpy(), sr
     return sr_model(audio, sr)
 
@@ -506,7 +511,9 @@ def get_bert_feature(text, word2ph):
     with torch.no_grad():
         inputs = tokenizer(text, return_tensors="pt")
         for i in inputs:
-            inputs[i] = inputs[i].to(device)  #####输入是long不用管精度问题，精度随bert_model
+            inputs[i] = inputs[i].to(
+                device
+            )  #####输入是long不用管精度问题，精度随bert_model
         res = bert_model(**inputs, output_hidden_states=True)
         res = torch.cat(res["hidden_states"][-3:-2], -1)[0].cpu()[1:-1]
     assert len(word2ph) == len(text)
@@ -543,25 +550,25 @@ from text import chinese
 
 
 def get_phones_and_bert(text, language, version, final=False):
-    text = re.sub(r' {2,}', ' ', text)
+    text = re.sub(r" {2,}", " ", text)
     textlist = []
     langlist = []
     if language == "all_zh":
-        for tmp in LangSegmenter.getTexts(text,"zh"):
+        for tmp in LangSegmenter.getTexts(text, "zh"):
             langlist.append(tmp["lang"])
             textlist.append(tmp["text"])
     elif language == "all_yue":
-        for tmp in LangSegmenter.getTexts(text,"zh"):
+        for tmp in LangSegmenter.getTexts(text, "zh"):
             if tmp["lang"] == "zh":
                 tmp["lang"] = "yue"
             langlist.append(tmp["lang"])
             textlist.append(tmp["text"])
     elif language == "all_ja":
-        for tmp in LangSegmenter.getTexts(text,"ja"):
+        for tmp in LangSegmenter.getTexts(text, "ja"):
             langlist.append(tmp["lang"])
             textlist.append(tmp["text"])
     elif language == "all_ko":
-        for tmp in LangSegmenter.getTexts(text,"ko"):
+        for tmp in LangSegmenter.getTexts(text, "ko"):
             langlist.append(tmp["lang"])
             textlist.append(tmp["text"])
     elif language == "en":
@@ -580,7 +587,9 @@ def get_phones_and_bert(text, language, version, final=False):
     else:
         for tmp in LangSegmenter.getTexts(text):
             if langlist:
-                if (tmp["lang"] == "en" and langlist[-1] == "en") or (tmp["lang"] != "en" and langlist[-1] != "en"):
+                if (tmp["lang"] == "en" and langlist[-1] == "en") or (
+                    tmp["lang"] != "en" and langlist[-1] != "en"
+                ):
                     textlist[-1] += tmp["text"]
                     continue
             if tmp["lang"] == "en":
@@ -606,7 +615,11 @@ def get_phones_and_bert(text, language, version, final=False):
     if not final and len(phones) < 6:
         return get_phones_and_bert("." + text, language, version, final=True)
 
-    return phones, bert.to(torch.float16 if is_half == True else torch.float32), norm_text
+    return (
+        phones,
+        bert.to(torch.float16 if is_half == True else torch.float32),
+        norm_text,
+    )
 
 
 class DictToAttrRecursive(dict):
@@ -697,7 +710,9 @@ def pack_ogg(audio_bytes, data, rate):
     #   Or split the whole audio data into smaller audio segment to avoid stack overflow?
 
     def handle_pack_ogg():
-        with sf.SoundFile(audio_bytes, mode="w", samplerate=rate, channels=1, format="ogg") as audio_file:
+        with sf.SoundFile(
+            audio_bytes, mode="w", samplerate=rate, channels=1, format="ogg"
+        ) as audio_file:
             audio_file.write(data)
 
     import threading
@@ -789,7 +804,11 @@ def read_clean_buffer(audio_bytes):
 
 
 def cut_text(text, punc):
-    punc_list = [p for p in punc if p in {",", ".", ";", "?", "!", "、", "，", "。", "？", "！", "；", "：", "…"}]
+    punc_list = [
+        p
+        for p in punc
+        if p in {",", ".", ";", "?", "!", "、", "，", "。", "？", "！", "；", "：", "…"}
+    ]
     if len(punc_list) > 0:
         punds = r"[" + "".join(punc_list) + r"]"
         text = text.strip("\n")
@@ -867,7 +886,10 @@ def get_tts_wav(
         prompt_text += "。" if prompt_language != "en" else "."
     prompt_language, text = prompt_language, text.strip("\n")
     dtype = torch.float16 if is_half == True else torch.float32
-    zero_wav = np.zeros(int(hps.data.sampling_rate * 0.3), dtype=np.float16 if is_half == True else np.float32)
+    zero_wav = np.zeros(
+        int(hps.data.sampling_rate * 0.3),
+        dtype=np.float16 if is_half == True else np.float32,
+    )
     with torch.no_grad():
         wav16k, sr = librosa.load(ref_wav_path, sr=16000)
         wav16k = torch.from_numpy(wav16k)
@@ -879,7 +901,9 @@ def get_tts_wav(
             wav16k = wav16k.to(device)
             zero_wav_torch = zero_wav_torch.to(device)
         wav16k = torch.cat([wav16k, zero_wav_torch])
-        ssl_content = ssl_model.model(wav16k.unsqueeze(0))["last_hidden_state"].transpose(1, 2)  # .float()
+        ssl_content = ssl_model.model(wav16k.unsqueeze(0))[
+            "last_hidden_state"
+        ].transpose(1, 2)  # .float()
         codes = vq_model.extract_latent(ssl_content)
         prompt_semantic = codes[0, 0]
         prompt = prompt_semantic.unsqueeze(0).to(device)
@@ -894,14 +918,18 @@ def get_tts_wav(
             if inp_refs:
                 for path in inp_refs:
                     try:  #####这里加上提取sv的逻辑，要么一堆sv一堆refer，要么单个sv单个refer
-                        refer, audio_tensor = get_spepc(hps, path.name, dtype, device, is_v2pro)
+                        refer, audio_tensor = get_spepc(
+                            hps, path.name, dtype, device, is_v2pro
+                        )
                         refers.append(refer)
                         if is_v2pro:
                             sv_emb.append(sv_cn_model.compute_embedding3(audio_tensor))
                     except Exception as e:
                         logger.error(e)
             if len(refers) == 0:
-                refers, audio_tensor = get_spepc(hps, ref_wav_path, dtype, device, is_v2pro)
+                refers, audio_tensor = get_spepc(
+                    hps, ref_wav_path, dtype, device, is_v2pro
+                )
                 refers = [refers]
                 if is_v2pro:
                     sv_emb = [sv_cn_model.compute_embedding3(audio_tensor)]
@@ -912,7 +940,9 @@ def get_tts_wav(
     # os.environ['version'] = version
     prompt_language = dict_language[prompt_language.lower()]
     text_language = dict_language[text_language.lower()]
-    phones1, bert1, norm_text1 = get_phones_and_bert(prompt_text, prompt_language, version)
+    phones1, bert1, norm_text1 = get_phones_and_bert(
+        prompt_text, prompt_language, version
+    )
     texts = text.split("\n")
     audio_bytes = BytesIO()
 
@@ -963,7 +993,10 @@ def get_tts_wav(
             else:
                 audio = (
                     vq_model.decode(
-                        pred_semantic, torch.LongTensor(phones2).to(device).unsqueeze(0), refers, speed=speed
+                        pred_semantic,
+                        torch.LongTensor(phones2).to(device).unsqueeze(0),
+                        refers,
+                        speed=speed,
                     )
                     .detach()
                     .cpu()
@@ -995,7 +1028,9 @@ def get_tts_wav(
                 T_min = Tref
             chunk_len = Tchunk - T_min
             mel2 = mel2.to(dtype)
-            fea_todo, ge = vq_model.decode_encp(pred_semantic, phoneme_ids1, refer, ge, speed)
+            fea_todo, ge = vq_model.decode_encp(
+                pred_semantic, phoneme_ids1, refer, ge, speed
+            )
             cfm_resss = []
             idx = 0
             while 1:
@@ -1005,7 +1040,11 @@ def get_tts_wav(
                 idx += chunk_len
                 fea = torch.cat([fea_ref, fea_todo_chunk], 2).transpose(2, 1)
                 cfm_res = vq_model.cfm.inference(
-                    fea, torch.LongTensor([fea.size(1)]).to(fea.device), mel2, sample_steps, inference_cfg_rate=0
+                    fea,
+                    torch.LongTensor([fea.size(1)]).to(fea.device),
+                    mel2,
+                    sample_steps,
+                    inference_cfg_rate=0,
                 )
                 cfm_res = cfm_res[:, :, mel2.shape[2] :]
                 mel2 = cfm_res[:, :, -T_min:]
@@ -1048,9 +1087,13 @@ def get_tts_wav(
             sr = 48000
 
         if is_int32:
-            audio_bytes = pack_audio(audio_bytes, (audio_opt * 2147483647).astype(np.int32), sr)
+            audio_bytes = pack_audio(
+                audio_bytes, (audio_opt * 2147483647).astype(np.int32), sr
+            )
         else:
-            audio_bytes = pack_audio(audio_bytes, (audio_opt * 32768).astype(np.int16), sr)
+            audio_bytes = pack_audio(
+                audio_bytes, (audio_opt * 32768).astype(np.int16), sr
+            )
         # logger.info("%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t3 - t2, t4 - t3))
         if stream_mode == "normal":
             audio_bytes, audio_chunk = read_clean_buffer(audio_bytes)
@@ -1079,7 +1122,11 @@ def handle_control(command):
 def handle_change(path, text, language):
     if is_empty(path, text, language):
         return JSONResponse(
-            {"code": 400, "message": '缺少任意一项以下参数: "path", "text", "language"'}, status_code=400
+            {
+                "code": 400,
+                "message": '缺少任意一项以下参数: "path", "text", "language"',
+            },
+            status_code=400,
         )
 
     if path != "" or path is not None:
@@ -1126,7 +1173,9 @@ def handle(
             default_refer.language,
         )
         if not default_refer.is_ready():
-            return JSONResponse({"code": 400, "message": "未指定参考音频且接口无预设"}, status_code=400)
+            return JSONResponse(
+                {"code": 400, "message": "未指定参考音频且接口无预设"}, status_code=400
+            )
 
     if cut_punc == None:
         text = cut_text(text, default_cut_punc)
@@ -1190,29 +1239,81 @@ g_config = global_config.Config()
 # 获取参数
 parser = argparse.ArgumentParser(description="GPT-SoVITS api")
 
-parser.add_argument("-s", "--sovits_path", type=str, default=g_config.sovits_path, help="SoVITS模型路径")
-parser.add_argument("-g", "--gpt_path", type=str, default=g_config.gpt_path, help="GPT模型路径")
-parser.add_argument("-dr", "--default_refer_path", type=str, default="", help="默认参考音频路径")
-parser.add_argument("-dt", "--default_refer_text", type=str, default="", help="默认参考音频文本")
-parser.add_argument("-dl", "--default_refer_language", type=str, default="", help="默认参考音频语种")
-parser.add_argument("-d", "--device", type=str, default=g_config.infer_device, help="cuda / cpu")
-parser.add_argument("-a", "--bind_addr", type=str, default="0.0.0.0", help="default: 0.0.0.0")
-parser.add_argument("-p", "--port", type=int, default=g_config.api_port, help="default: 9880")
 parser.add_argument(
-    "-fp", "--full_precision", action="store_true", default=False, help="覆盖config.is_half为False, 使用全精度"
+    "-s", "--sovits_path", type=str, default=g_config.sovits_path, help="SoVITS模型路径"
 )
 parser.add_argument(
-    "-hp", "--half_precision", action="store_true", default=False, help="覆盖config.is_half为True, 使用半精度"
+    "-g", "--gpt_path", type=str, default=g_config.gpt_path, help="GPT模型路径"
+)
+parser.add_argument(
+    "-dr", "--default_refer_path", type=str, default="", help="默认参考音频路径"
+)
+parser.add_argument(
+    "-dt", "--default_refer_text", type=str, default="", help="默认参考音频文本"
+)
+parser.add_argument(
+    "-dl", "--default_refer_language", type=str, default="", help="默认参考音频语种"
+)
+parser.add_argument(
+    "-d", "--device", type=str, default=g_config.infer_device, help="cuda / cpu"
+)
+parser.add_argument(
+    "-a", "--bind_addr", type=str, default="0.0.0.0", help="default: 0.0.0.0"
+)
+parser.add_argument(
+    "-p", "--port", type=int, default=g_config.api_port, help="default: 9880"
+)
+parser.add_argument(
+    "-fp",
+    "--full_precision",
+    action="store_true",
+    default=False,
+    help="覆盖config.is_half为False, 使用全精度",
+)
+parser.add_argument(
+    "-hp",
+    "--half_precision",
+    action="store_true",
+    default=False,
+    help="覆盖config.is_half为True, 使用半精度",
 )
 # bool值的用法为 `python ./api.py -fp ...`
 # 此时 full_precision==True, half_precision==False
-parser.add_argument("-sm", "--stream_mode", type=str, default="close", help="流式返回模式, close / normal / keepalive")
-parser.add_argument("-mt", "--media_type", type=str, default="wav", help="音频编码格式, wav / ogg / aac")
-parser.add_argument("-st", "--sub_type", type=str, default="int16", help="音频数据类型, int16 / int32")
-parser.add_argument("-cp", "--cut_punc", type=str, default="", help="文本切分符号设定, 符号范围,.;?!、，。？！；：…")
+parser.add_argument(
+    "-sm",
+    "--stream_mode",
+    type=str,
+    default="close",
+    help="流式返回模式, close / normal / keepalive",
+)
+parser.add_argument(
+    "-mt", "--media_type", type=str, default="wav", help="音频编码格式, wav / ogg / aac"
+)
+parser.add_argument(
+    "-st", "--sub_type", type=str, default="int16", help="音频数据类型, int16 / int32"
+)
+parser.add_argument(
+    "-cp",
+    "--cut_punc",
+    type=str,
+    default="",
+    help="文本切分符号设定, 符号范围,.;?!、，。？！；：…",
+)
 # 切割常用分句符为 `python ./api.py -cp ".?!。？！"`
-parser.add_argument("-hb", "--hubert_path", type=str, default=g_config.cnhubert_path, help="覆盖config.cnhubert_path")
-parser.add_argument("-b", "--bert_path", type=str, default=g_config.bert_path, help="覆盖config.bert_path")
+parser.add_argument(
+    "-hb",
+    "--hubert_path",
+    type=str,
+    default=g_config.cnhubert_path,
+    help="覆盖config.cnhubert_path",
+)
+parser.add_argument(
+    "-b",
+    "--bert_path",
+    type=str,
+    default=g_config.bert_path,
+    help="覆盖config.bert_path",
+)
 
 args = parser.parse_args()
 sovits_path = args.sovits_path
@@ -1225,7 +1326,9 @@ bert_path = args.bert_path
 default_cut_punc = args.cut_punc
 
 # 应用参数配置
-default_refer = DefaultRefer(args.default_refer_path, args.default_refer_text, args.default_refer_language)
+default_refer = DefaultRefer(
+    args.default_refer_path, args.default_refer_text, args.default_refer_language
+)
 
 # 模型路径检查
 if sovits_path == "":
@@ -1302,7 +1405,8 @@ app = FastAPI()
 async def set_model(request: Request):
     json_post_raw = await request.json()
     return change_gpt_sovits_weights(
-        gpt_path=json_post_raw.get("gpt_model_path"), sovits_path=json_post_raw.get("sovits_model_path")
+        gpt_path=json_post_raw.get("gpt_model_path"),
+        sovits_path=json_post_raw.get("sovits_model_path"),
     )
 
 
@@ -1311,7 +1415,9 @@ async def set_model(
     gpt_model_path: str = None,
     sovits_model_path: str = None,
 ):
-    return change_gpt_sovits_weights(gpt_path=gpt_model_path, sovits_path=sovits_model_path)
+    return change_gpt_sovits_weights(
+        gpt_path=gpt_model_path, sovits_path=sovits_model_path
+    )
 
 
 @app.post("/control")
@@ -1329,12 +1435,16 @@ async def control(command: str = None):
 async def change_refer(request: Request):
     json_post_raw = await request.json()
     return handle_change(
-        json_post_raw.get("refer_wav_path"), json_post_raw.get("prompt_text"), json_post_raw.get("prompt_language")
+        json_post_raw.get("refer_wav_path"),
+        json_post_raw.get("prompt_text"),
+        json_post_raw.get("prompt_language"),
     )
 
 
 @app.get("/change_refer")
-async def change_refer(refer_wav_path: str = None, prompt_text: str = None, prompt_language: str = None):
+async def change_refer(
+    refer_wav_path: str = None, prompt_text: str = None, prompt_language: str = None
+):
     return handle_change(refer_wav_path, prompt_text, prompt_language)
 
 

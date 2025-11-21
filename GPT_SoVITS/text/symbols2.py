@@ -785,7 +785,9 @@ symbols = sorted(set(symbols))
 # print(len(symbols))
 symbols += ["[", "]"]  ##日文新增上升下降调型
 symbols += sorted(list(ko_symbols))
-symbols += sorted(list(yue_symbols))  ##新加的yue统一摆在后头#已查过开头加Y后没有重复，韩文显然不会重复
+symbols += sorted(
+    list(yue_symbols)
+)  ##新加的yue统一摆在后头#已查过开头加Y后没有重复，韩文显然不会重复
 # print(len(symbols))
 if __name__ == "__main__":
     print(len(symbols))

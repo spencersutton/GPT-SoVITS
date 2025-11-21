@@ -14,7 +14,9 @@ try:
         OPEN_JTALK_DICT_DIR = pyopenjtalk.OPEN_JTALK_DICT_DIR.decode("utf-8")
         if not (re.match(r"^[A-Za-z0-9_/\\:.\-]*$", OPEN_JTALK_DICT_DIR)):
             if OPEN_JTALK_DICT_DIR[: len(python_dir)].upper() == python_dir.upper():
-                OPEN_JTALK_DICT_DIR = os.path.join(os.path.relpath(OPEN_JTALK_DICT_DIR, python_dir))
+                OPEN_JTALK_DICT_DIR = os.path.join(
+                    os.path.relpath(OPEN_JTALK_DICT_DIR, python_dir)
+                )
             else:
                 import shutil
 
@@ -33,7 +35,9 @@ try:
 
         if not (re.match(r"^[A-Za-z0-9_/\\:.\-]*$", current_file_path)):
             if current_file_path[: len(python_dir)].upper() == python_dir.upper():
-                current_file_path = os.path.join(os.path.relpath(current_file_path, python_dir))
+                current_file_path = os.path.join(
+                    os.path.relpath(current_file_path, python_dir)
+                )
             else:
                 if not os.path.exists("TEMP"):
                     os.mkdir("TEMP")
@@ -61,7 +65,8 @@ try:
     if os.path.exists(USERDIC_CSV_PATH):
         if (
             not os.path.exists(USERDIC_BIN_PATH)
-            or get_hash(USERDIC_CSV_PATH) != open(USERDIC_HASH_PATH, "r", encoding="utf-8").read()
+            or get_hash(USERDIC_CSV_PATH)
+            != open(USERDIC_HASH_PATH, "r", encoding="utf-8").read()
         ):
             pyopenjtalk.mecab_dict_index(USERDIC_CSV_PATH, USERDIC_BIN_PATH)
             with open(USERDIC_HASH_PATH, "w", encoding="utf-8") as f:

@@ -43,7 +43,9 @@ def resample(audio_tensor, sr0, sr1, device):
     global resample_transform_dict
     key = "%s-%s-%s" % (sr0, sr1, str(device))
     if key not in resample_transform_dict:
-        resample_transform_dict[key] = torchaudio.transforms.Resample(sr0, sr1).to(device)
+        resample_transform_dict[key] = torchaudio.transforms.Resample(sr0, sr1).to(
+            device
+        )
     return resample_transform_dict[key](audio_tensor)
 
 
@@ -98,7 +100,9 @@ def speed_change(input_audio: np.ndarray, speed: float, sr: int):
     raw_audio = input_audio.astype(np.int16).tobytes()
 
     # 设置 ffmpeg 输入流
-    input_stream = ffmpeg.input("pipe:", format="s16le", acodec="pcm_s16le", ar=str(sr), ac=1)
+    input_stream = ffmpeg.input(
+        "pipe:", format="s16le", acodec="pcm_s16le", ar=str(sr), ac=1
+    )
 
     # 变速处理
     output_stream = input_stream.filter("atempo", speed)
@@ -273,7 +277,19 @@ class TTS_Config:
     }
     configs: dict = None
     v1_languages: list = ["auto", "en", "zh", "ja", "all_zh", "all_ja"]
-    v2_languages: list = ["auto", "auto_yue", "en", "zh", "ja", "yue", "ko", "all_zh", "all_ja", "all_yue", "all_ko"]
+    v2_languages: list = [
+        "auto",
+        "auto_yue",
+        "en",
+        "zh",
+        "ja",
+        "yue",
+        "ko",
+        "all_zh",
+        "all_ja",
+        "all_yue",
+        "all_ko",
+    ]
     languages: list = v2_languages
     # "all_zh",#全部按中文识别
     # "en",#全部按英文识别#######不变
@@ -316,32 +332,50 @@ class TTS_Config:
 
         self.is_half = self.configs.get("is_half", False)
         if str(self.device) == "cpu" and self.is_half:
-            print(f"Warning: Half precision is not supported on CPU, set is_half to False.")
+            print(
+                f"Warning: Half precision is not supported on CPU, set is_half to False."
+            )
             self.is_half = False
 
         version = self.configs.get("version", None)
         self.version = version
-        assert self.version in ["v1", "v2", "v3", "v4", "v2Pro", "v2ProPlus"], "Invalid version!"
+        assert self.version in ["v1", "v2", "v3", "v4", "v2Pro", "v2ProPlus"], (
+            "Invalid version!"
+        )
         self.t2s_weights_path = self.configs.get("t2s_weights_path", None)
         self.vits_weights_path = self.configs.get("vits_weights_path", None)
         self.bert_base_path = self.configs.get("bert_base_path", None)
         self.cnhuhbert_base_path = self.configs.get("cnhuhbert_base_path", None)
-        self.languages = self.v1_languages if self.version == "v1" else self.v2_languages
+        self.languages = (
+            self.v1_languages if self.version == "v1" else self.v2_languages
+        )
 
         self.use_vocoder: bool = False
 
-        if (self.t2s_weights_path in [None, ""]) or (not os.path.exists(self.t2s_weights_path)):
+        if (self.t2s_weights_path in [None, ""]) or (
+            not os.path.exists(self.t2s_weights_path)
+        ):
             self.t2s_weights_path = self.default_configs[version]["t2s_weights_path"]
             print(f"fall back to default t2s_weights_path: {self.t2s_weights_path}")
-        if (self.vits_weights_path in [None, ""]) or (not os.path.exists(self.vits_weights_path)):
+        if (self.vits_weights_path in [None, ""]) or (
+            not os.path.exists(self.vits_weights_path)
+        ):
             self.vits_weights_path = self.default_configs[version]["vits_weights_path"]
             print(f"fall back to default vits_weights_path: {self.vits_weights_path}")
-        if (self.bert_base_path in [None, ""]) or (not os.path.exists(self.bert_base_path)):
+        if (self.bert_base_path in [None, ""]) or (
+            not os.path.exists(self.bert_base_path)
+        ):
             self.bert_base_path = self.default_configs[version]["bert_base_path"]
             print(f"fall back to default bert_base_path: {self.bert_base_path}")
-        if (self.cnhuhbert_base_path in [None, ""]) or (not os.path.exists(self.cnhuhbert_base_path)):
-            self.cnhuhbert_base_path = self.default_configs[version]["cnhuhbert_base_path"]
-            print(f"fall back to default cnhuhbert_base_path: {self.cnhuhbert_base_path}")
+        if (self.cnhuhbert_base_path in [None, ""]) or (
+            not os.path.exists(self.cnhuhbert_base_path)
+        ):
+            self.cnhuhbert_base_path = self.default_configs[version][
+                "cnhuhbert_base_path"
+            ]
+            print(
+                f"fall back to default cnhuhbert_base_path: {self.cnhuhbert_base_path}"
+            )
         self.update_configs()
 
         self.max_sec = None
@@ -389,7 +423,9 @@ class TTS_Config:
 
     def update_version(self, version: str) -> None:
         self.version = version
-        self.languages = self.v1_languages if self.version == "v1" else self.v2_languages
+        self.languages = (
+            self.v1_languages if self.version == "v1" else self.v2_languages
+        )
 
     def __str__(self):
         self.configs = self.update_configs()
@@ -453,7 +489,9 @@ class TTS:
         }
 
         self.stop_flag: bool = False
-        self.precision: torch.dtype = torch.float16 if self.configs.is_half else torch.float32
+        self.precision: torch.dtype = (
+            torch.float16 if self.configs.is_half else torch.float32
+        )
 
     def _init_models(
         self,
@@ -483,13 +521,17 @@ class TTS:
 
     def init_vits_weights(self, weights_path: str):
         self.configs.vits_weights_path = weights_path
-        version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(weights_path)
+        version, model_version, if_lora_v3 = get_sovits_version_from_path_fast(
+            weights_path
+        )
         if "Pro" in model_version:
             self.init_sv_model()
         path_sovits = self.configs.default_configs[model_version]["vits_weights_path"]
 
         if if_lora_v3 == True and os.path.exists(path_sovits) == False:
-            info = path_sovits + i18n("SoVITS %s 底模缺失，无法加载相应 LoRA 权重" % model_version)
+            info = path_sovits + i18n(
+                "SoVITS %s 底模缺失，无法加载相应 LoRA 权重" % model_version
+            )
             raise FileExistsError(info)
 
         # dict_s2 = torch.load(weights_path, map_location=self.configs.device,weights_only=False)
@@ -580,14 +622,14 @@ class TTS:
 
         self.configs.save_configs()
 
-
-
     def init_t2s_weights(self, weights_path: str):
         print(f"Loading Text2Semantic weights from {weights_path}")
         self.configs.t2s_weights_path = weights_path
         self.configs.save_configs()
         self.configs.hz = 50
-        dict_s1 = torch.load(weights_path, map_location=self.configs.device, weights_only=False)
+        dict_s1 = torch.load(
+            weights_path, map_location=self.configs.device, weights_only=False
+        )
         config = dict_s1["config"]
         self.configs.max_sec = config["data"]["max_sec"]
         t2s_model = Text2SemanticLightningModule(config, "****", is_train=False)
@@ -600,7 +642,10 @@ class TTS:
 
     def init_vocoder(self, version: str):
         if version == "v3":
-            if self.vocoder is not None and self.vocoder.__class__.__name__ == "BigVGAN":
+            if (
+                self.vocoder is not None
+                and self.vocoder.__class__.__name__ == "BigVGAN"
+            ):
                 return
             if self.vocoder is not None:
                 self.vocoder.cpu()
@@ -608,7 +653,8 @@ class TTS:
                 self.empty_cache()
 
             self.vocoder = BigVGAN.from_pretrained(
-                "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x" % (now_dir,),
+                "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
+                % (now_dir,),
                 use_cuda_kernel=False,
             )  # if True, RuntimeError: Ninja is required to load C++ extensions
             # remove weight norm in the model and set to eval mode
@@ -621,7 +667,10 @@ class TTS:
             self.vocoder_configs["overlapped_len"] = 12
 
         elif version == "v4":
-            if self.vocoder is not None and self.vocoder.__class__.__name__ == "Generator":
+            if (
+                self.vocoder is not None
+                and self.vocoder.__class__.__name__ == "Generator"
+            ):
                 return
             if self.vocoder is not None:
                 self.vocoder.cpu()
@@ -641,7 +690,8 @@ class TTS:
             )
             self.vocoder.remove_weight_norm()
             state_dict_g = torch.load(
-                "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth" % (now_dir,),
+                "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth"
+                % (now_dir,),
                 map_location="cpu",
                 weights_only=False,
             )
@@ -666,7 +716,11 @@ class TTS:
             self.sr_model: AP_BWE = AP_BWE(self.configs.device, DictToAttrRecursive)
             self.sr_model_not_exist = False
         except FileNotFoundError:
-            print(i18n("你没有下载超分模型的参数，因此不进行超分。如想超分请先参照教程把文件下载好"))
+            print(
+                i18n(
+                    "你没有下载超分模型的参数，因此不进行超分。如想超分请先参照教程把文件下载好"
+                )
+            )
             self.sr_model_not_exist = True
 
     def init_sv_model(self):
@@ -765,7 +819,9 @@ class TTS:
             audio = raw_audio.to(self.configs.device)
             if audio.shape[0] == 2:
                 audio = audio.mean(0).unsqueeze(0)
-            audio = resample(audio, raw_sr, self.configs.sampling_rate, self.configs.device)
+            audio = resample(
+                audio, raw_sr, self.configs.sampling_rate, self.configs.device
+            )
         else:
             audio = raw_audio.to(self.configs.device)
             if audio.shape[0] == 2:
@@ -785,7 +841,9 @@ class TTS:
         if self.configs.is_half:
             spec = spec.half()
         if self.is_v2pro == True:
-            audio = resample(audio, self.configs.sampling_rate, 16000, self.configs.device)
+            audio = resample(
+                audio, self.configs.sampling_rate, 16000, self.configs.device
+            )
             if self.configs.is_half:
                 audio = audio.half()
         else:
@@ -810,15 +868,21 @@ class TTS:
                 zero_wav_torch = zero_wav_torch.half()
 
             wav16k = torch.cat([wav16k, zero_wav_torch])
-            hubert_feature = self.cnhuhbert_model.model(wav16k.unsqueeze(0))["last_hidden_state"].transpose(
-                1, 2
-            )  # .float()
+            hubert_feature = self.cnhuhbert_model.model(wav16k.unsqueeze(0))[
+                "last_hidden_state"
+            ].transpose(1, 2)  # .float()
             codes = self.vits_model.extract_latent(hubert_feature)
 
             prompt_semantic = codes[0, 0].to(self.configs.device)
             self.prompt_cache["prompt_semantic"] = prompt_semantic
 
-    def batch_sequences(self, sequences: List[torch.Tensor], axis: int = 0, pad_value: int = 0, max_length: int = None):
+    def batch_sequences(
+        self,
+        sequences: List[torch.Tensor],
+        axis: int = 0,
+        pad_value: int = 0,
+        max_length: int = None,
+    ):
         seq = sequences[0]
         ndim = seq.dim()
         if axis < 0:
@@ -829,7 +893,9 @@ class TTS:
         if max_length is None:
             max_length = max(seq_lengths)
         else:
-            max_length = max(seq_lengths) if max_length < max(seq_lengths) else max_length
+            max_length = (
+                max(seq_lengths) if max_length < max(seq_lengths) else max_length
+            )
 
         padded_sequences = []
         for seq, length in zip(sequences, seq_lengths):
@@ -897,14 +963,18 @@ class TTS:
             all_phones_max_len = 0
             for item in item_list:
                 if prompt_data is not None:
-                    all_bert_features = torch.cat([prompt_data["bert_features"], item["bert_features"]], 1).to(
-                        dtype=precision, device=device
-                    )
-                    all_phones = torch.LongTensor(prompt_data["phones"] + item["phones"]).to(device)
+                    all_bert_features = torch.cat(
+                        [prompt_data["bert_features"], item["bert_features"]], 1
+                    ).to(dtype=precision, device=device)
+                    all_phones = torch.LongTensor(
+                        prompt_data["phones"] + item["phones"]
+                    ).to(device)
                     phones = torch.LongTensor(item["phones"]).to(device)
                     # norm_text = prompt_data["norm_text"]+item["norm_text"]
                 else:
-                    all_bert_features = item["bert_features"].to(dtype=precision, device=device)
+                    all_bert_features = item["bert_features"].to(
+                        dtype=precision, device=device
+                    )
                     phones = torch.LongTensor(item["phones"]).to(device)
                     all_phones = phones
                     # norm_text = item["norm_text"]
@@ -1041,10 +1111,14 @@ class TTS:
 
         if parallel_infer:
             print(i18n("并行推理模式已开启"))
-            self.t2s_model.model.infer_panel = self.t2s_model.model.infer_panel_batch_infer
+            self.t2s_model.model.infer_panel = (
+                self.t2s_model.model.infer_panel_batch_infer
+            )
         else:
             print(i18n("并行推理模式已关闭"))
-            self.t2s_model.model.infer_panel = self.t2s_model.model.infer_panel_naive_batched
+            self.t2s_model.model.infer_panel = (
+                self.t2s_model.model.infer_panel_naive_batched
+            )
 
         if return_fragment:
             print(i18n("分段返回模式已开启"))
@@ -1052,13 +1126,21 @@ class TTS:
                 split_bucket = False
                 print(i18n("分段返回模式不支持分桶处理，已自动关闭分桶处理"))
 
-        if split_bucket and speed_factor == 1.0 and not (self.configs.use_vocoder and parallel_infer):
+        if (
+            split_bucket
+            and speed_factor == 1.0
+            and not (self.configs.use_vocoder and parallel_infer)
+        ):
             print(i18n("分桶处理模式已开启"))
         elif speed_factor != 1.0:
             print(i18n("语速调节不支持分桶处理，已自动关闭分桶处理"))
             split_bucket = False
         elif self.configs.use_vocoder and parallel_infer:
-            print(i18n("当开启并行推理模式时，SoVits V3/4模型不支持分桶处理，已自动关闭分桶处理"))
+            print(
+                i18n(
+                    "当开启并行推理模式时，SoVits V3/4模型不支持分桶处理，已自动关闭分桶处理"
+                )
+            )
             split_bucket = False
         else:
             print(i18n("分桶处理模式已关闭"))
@@ -1079,7 +1161,8 @@ class TTS:
             raise NO_PROMPT_ERROR("prompt_text cannot be empty when using SoVITS_V3")
 
         if ref_audio_path in [None, ""] and (
-            (self.prompt_cache["prompt_semantic"] is None) or (self.prompt_cache["refer_spec"] in [None, []])
+            (self.prompt_cache["prompt_semantic"] is None)
+            or (self.prompt_cache["refer_spec"] in [None, []])
         ):
             raise ValueError(
                 "ref_audio_path cannot be empty, when the reference audio is not set using set_ref_audio()"
@@ -1095,9 +1178,15 @@ class TTS:
                 raise ValueError(f"{ref_audio_path} not exists")
             self.set_ref_audio(ref_audio_path)
 
-        aux_ref_audio_paths = aux_ref_audio_paths if aux_ref_audio_paths is not None else []
+        aux_ref_audio_paths = (
+            aux_ref_audio_paths if aux_ref_audio_paths is not None else []
+        )
         paths = set(aux_ref_audio_paths) & set(self.prompt_cache["aux_ref_audio_paths"])
-        if not (len(list(paths)) == len(aux_ref_audio_paths) == len(self.prompt_cache["aux_ref_audio_paths"])):
+        if not (
+            len(list(paths))
+            == len(aux_ref_audio_paths)
+            == len(self.prompt_cache["aux_ref_audio_paths"])
+        ):
             self.prompt_cache["aux_ref_audio_paths"] = aux_ref_audio_paths
             self.prompt_cache["refer_spec"] = [self.prompt_cache["refer_spec"][0]]
             for path in aux_ref_audio_paths:
@@ -1114,8 +1203,10 @@ class TTS:
                 prompt_text += "。" if prompt_lang != "en" else "."
             print(i18n("实际输入的参考文本:"), prompt_text)
             if self.prompt_cache["prompt_text"] != prompt_text:
-                phones, bert_features, norm_text = self.text_preprocessor.segment_and_extract_feature_for_text(
-                    prompt_text, prompt_lang, self.configs.version
+                phones, bert_features, norm_text = (
+                    self.text_preprocessor.segment_and_extract_feature_for_text(
+                        prompt_text, prompt_lang, self.configs.version
+                    )
                 )
                 self.prompt_cache["prompt_text"] = prompt_text
                 self.prompt_cache["prompt_lang"] = prompt_lang
@@ -1127,7 +1218,9 @@ class TTS:
         t1 = time.perf_counter()
         data: list = None
         if not return_fragment:
-            data = self.text_preprocessor.preprocess(text, text_lang, text_split_method, self.configs.version)
+            data = self.text_preprocessor.preprocess(
+                text, text_lang, text_split_method, self.configs.version
+            )
             if len(data) == 0:
                 yield 16000, np.zeros(int(16000), dtype=np.int16)
                 return
@@ -1144,7 +1237,9 @@ class TTS:
             )
         else:
             print(f"############ {i18n('切分文本')} ############")
-            texts = self.text_preprocessor.pre_seg_text(text, text_lang, text_split_method)
+            texts = self.text_preprocessor.pre_seg_text(
+                text, text_lang, text_split_method
+            )
             data = []
             for i in range(len(texts)):
                 if i % batch_size == 0:
@@ -1155,8 +1250,10 @@ class TTS:
                 batch_data = []
                 print(f"############ {i18n('提取文本Bert特征')} ############")
                 for text in tqdm(batch_texts):
-                    phones, bert_features, norm_text = self.text_preprocessor.segment_and_extract_feature_for_text(
-                        text, text_lang, self.configs.version
+                    phones, bert_features, norm_text = (
+                        self.text_preprocessor.segment_and_extract_feature_for_text(
+                            text, text_lang, self.configs.version
+                        )
                     )
                     if phones is None:
                         continue
@@ -1186,7 +1283,11 @@ class TTS:
             t_34 = 0.0
             t_45 = 0.0
             audio = []
-            output_sr = self.configs.sampling_rate if not self.configs.use_vocoder else self.vocoder_configs["sr"]
+            output_sr = (
+                self.configs.sampling_rate
+                if not self.configs.use_vocoder
+                else self.vocoder_configs["sr"]
+            )
             for item in data:
                 t3 = time.perf_counter()
                 if return_fragment:
@@ -1208,7 +1309,9 @@ class TTS:
                     prompt = None
                 else:
                     prompt = (
-                        self.prompt_cache["prompt_semantic"].expand(len(all_phoneme_ids), -1).to(self.configs.device)
+                        self.prompt_cache["prompt_semantic"]
+                        .expand(len(all_phoneme_ids), -1)
+                        .to(self.configs.device)
                     )
 
                 print(f"############ {i18n('预测语义Token')} ############")
@@ -1256,68 +1359,110 @@ class TTS:
                     if speed_factor == 1.0:
                         print(f"{i18n('并行合成中')}...")
                         # ## vits并行推理 method 2
-                        pred_semantic_list = [item[-idx:] for item, idx in zip(pred_semantic_list, idx_list)]
+                        pred_semantic_list = [
+                            item[-idx:]
+                            for item, idx in zip(pred_semantic_list, idx_list)
+                        ]
                         upsample_rate = math.prod(self.vits_model.upsample_rates)
                         audio_frag_idx = [
                             pred_semantic_list[i].shape[0] * 2 * upsample_rate
                             for i in range(0, len(pred_semantic_list))
                         ]
-                        audio_frag_end_idx = [sum(audio_frag_idx[: i + 1]) for i in range(0, len(audio_frag_idx))]
+                        audio_frag_end_idx = [
+                            sum(audio_frag_idx[: i + 1])
+                            for i in range(0, len(audio_frag_idx))
+                        ]
                         all_pred_semantic = (
-                            torch.cat(pred_semantic_list).unsqueeze(0).unsqueeze(0).to(self.configs.device)
+                            torch.cat(pred_semantic_list)
+                            .unsqueeze(0)
+                            .unsqueeze(0)
+                            .to(self.configs.device)
                         )
-                        _batch_phones = torch.cat(batch_phones).unsqueeze(0).to(self.configs.device)
+                        _batch_phones = (
+                            torch.cat(batch_phones).unsqueeze(0).to(self.configs.device)
+                        )
                         if self.is_v2pro != True:
                             _batch_audio_fragment = self.vits_model.decode(
-                                all_pred_semantic, _batch_phones, refer_audio_spec, speed=speed_factor
+                                all_pred_semantic,
+                                _batch_phones,
+                                refer_audio_spec,
+                                speed=speed_factor,
                             ).detach()[0, 0, :]
                         else:
                             _batch_audio_fragment = self.vits_model.decode(
-                                all_pred_semantic, _batch_phones, refer_audio_spec, speed=speed_factor, sv_emb=sv_emb
+                                all_pred_semantic,
+                                _batch_phones,
+                                refer_audio_spec,
+                                speed=speed_factor,
+                                sv_emb=sv_emb,
                             ).detach()[0, 0, :]
                         audio_frag_end_idx.insert(0, 0)
                         batch_audio_fragment = [
-                            _batch_audio_fragment[audio_frag_end_idx[i - 1] : audio_frag_end_idx[i]]
+                            _batch_audio_fragment[
+                                audio_frag_end_idx[i - 1] : audio_frag_end_idx[i]
+                            ]
                             for i in range(1, len(audio_frag_end_idx))
                         ]
                     else:
                         # ## vits串行推理
                         for i, idx in enumerate(tqdm(idx_list)):
-                            phones = batch_phones[i].unsqueeze(0).to(self.configs.device)
+                            phones = (
+                                batch_phones[i].unsqueeze(0).to(self.configs.device)
+                            )
                             _pred_semantic = (
                                 pred_semantic_list[i][-idx:].unsqueeze(0).unsqueeze(0)
                             )  # .unsqueeze(0)#mq要多unsqueeze一次
                             if self.is_v2pro != True:
                                 audio_fragment = self.vits_model.decode(
-                                    _pred_semantic, phones, refer_audio_spec, speed=speed_factor
+                                    _pred_semantic,
+                                    phones,
+                                    refer_audio_spec,
+                                    speed=speed_factor,
                                 ).detach()[0, 0, :]
                             else:
                                 audio_fragment = self.vits_model.decode(
-                                    _pred_semantic, phones, refer_audio_spec, speed=speed_factor, sv_emb=sv_emb
+                                    _pred_semantic,
+                                    phones,
+                                    refer_audio_spec,
+                                    speed=speed_factor,
+                                    sv_emb=sv_emb,
                                 ).detach()[0, 0, :]
-                            batch_audio_fragment.append(audio_fragment)  ###试试重建不带上prompt部分
+                            batch_audio_fragment.append(
+                                audio_fragment
+                            )  ###试试重建不带上prompt部分
                 else:
                     if parallel_infer:
                         print(f"{i18n('并行合成中')}...")
                         audio_fragments = self.using_vocoder_synthesis_batched_infer(
-                            idx_list, pred_semantic_list, batch_phones, speed=speed_factor, sample_steps=sample_steps
+                            idx_list,
+                            pred_semantic_list,
+                            batch_phones,
+                            speed=speed_factor,
+                            sample_steps=sample_steps,
                         )
                         batch_audio_fragment.extend(audio_fragments)
                     else:
                         for i, idx in enumerate(tqdm(idx_list)):
-                            phones = batch_phones[i].unsqueeze(0).to(self.configs.device)
+                            phones = (
+                                batch_phones[i].unsqueeze(0).to(self.configs.device)
+                            )
                             _pred_semantic = (
                                 pred_semantic_list[i][-idx:].unsqueeze(0).unsqueeze(0)
                             )  # .unsqueeze(0)#mq要多unsqueeze一次
                             audio_fragment = self.using_vocoder_synthesis(
-                                _pred_semantic, phones, speed=speed_factor, sample_steps=sample_steps
+                                _pred_semantic,
+                                phones,
+                                speed=speed_factor,
+                                sample_steps=sample_steps,
                             )
                             batch_audio_fragment.append(audio_fragment)
 
                 t5 = time.perf_counter()
                 t_45 += t5 - t4
                 if return_fragment:
-                    print("%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t4 - t3, t5 - t4))
+                    print(
+                        "%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t4 - t3, t5 - t4)
+                    )
                     yield self.audio_postprocess(
                         [batch_audio_fragment],
                         output_sr,
@@ -1325,7 +1470,9 @@ class TTS:
                         speed_factor,
                         False,
                         fragment_interval,
-                        super_sampling if self.configs.use_vocoder and self.configs.version == "v3" else False,
+                        super_sampling
+                        if self.configs.use_vocoder and self.configs.version == "v3"
+                        else False,
                     )
                 else:
                     audio.append(batch_audio_fragment)
@@ -1346,7 +1493,9 @@ class TTS:
                     speed_factor,
                     split_bucket,
                     fragment_interval,
-                    super_sampling if self.configs.use_vocoder and self.configs.version == "v3" else False,
+                    super_sampling
+                    if self.configs.use_vocoder and self.configs.version == "v3"
+                    else False,
                 )
 
         except Exception as e:
@@ -1385,7 +1534,9 @@ class TTS:
         super_sampling: bool = False,
     ) -> Tuple[int, np.ndarray]:
         zero_wav = torch.zeros(
-            int(self.configs.sampling_rate * fragment_interval), dtype=self.precision, device=self.configs.device
+            int(self.configs.sampling_rate * fragment_interval),
+            dtype=self.precision,
+            device=self.configs.device,
         )
 
         for i, batch in enumerate(audio):
@@ -1393,7 +1544,9 @@ class TTS:
                 max_audio = torch.abs(audio_fragment).max()  # 简单防止16bit爆音
                 if max_audio > 1:
                     audio_fragment /= max_audio
-                audio_fragment: torch.Tensor = torch.cat([audio_fragment, zero_wav], dim=0)
+                audio_fragment: torch.Tensor = torch.cat(
+                    [audio_fragment, zero_wav], dim=0
+                )
                 audio[i][j] = audio_fragment
 
         if split_bucket:
@@ -1429,16 +1582,33 @@ class TTS:
         return sr, audio
 
     def using_vocoder_synthesis(
-        self, semantic_tokens: torch.Tensor, phones: torch.Tensor, speed: float = 1.0, sample_steps: int = 32
+        self,
+        semantic_tokens: torch.Tensor,
+        phones: torch.Tensor,
+        speed: float = 1.0,
+        sample_steps: int = 32,
     ):
-        prompt_semantic_tokens = self.prompt_cache["prompt_semantic"].unsqueeze(0).unsqueeze(0).to(self.configs.device)
-        prompt_phones = torch.LongTensor(self.prompt_cache["phones"]).unsqueeze(0).to(self.configs.device)
+        prompt_semantic_tokens = (
+            self.prompt_cache["prompt_semantic"]
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .to(self.configs.device)
+        )
+        prompt_phones = (
+            torch.LongTensor(self.prompt_cache["phones"])
+            .unsqueeze(0)
+            .to(self.configs.device)
+        )
         raw_entry = self.prompt_cache["refer_spec"][0]
         if isinstance(raw_entry, tuple):
             raw_entry = raw_entry[0]
-        refer_audio_spec = raw_entry.to(dtype=self.precision, device=self.configs.device)
+        refer_audio_spec = raw_entry.to(
+            dtype=self.precision, device=self.configs.device
+        )
 
-        fea_ref, ge = self.vits_model.decode_encp(prompt_semantic_tokens, prompt_phones, refer_audio_spec)
+        fea_ref, ge = self.vits_model.decode_encp(
+            prompt_semantic_tokens, prompt_phones, refer_audio_spec
+        )
         ref_audio: torch.Tensor = self.prompt_cache["raw_audio"]
         ref_sr = self.prompt_cache["raw_sr"]
         ref_audio = ref_audio.to(self.configs.device).float()
@@ -1450,7 +1620,9 @@ class TTS:
         if ref_sr != tgt_sr:
             ref_audio = resample(ref_audio, ref_sr, tgt_sr, self.configs.device)
 
-        mel2 = mel_fn(ref_audio) if self.configs.version == "v3" else mel_fn_v4(ref_audio)
+        mel2 = (
+            mel_fn(ref_audio) if self.configs.version == "v3" else mel_fn_v4(ref_audio)
+        )
         mel2 = norm_spec(mel2)
         T_min = min(mel2.shape[2], fea_ref.shape[2])
         mel2 = mel2[:, :, :T_min]
@@ -1464,7 +1636,9 @@ class TTS:
         chunk_len = T_chunk - T_min
 
         mel2 = mel2.to(self.precision)
-        fea_todo, ge = self.vits_model.decode_encp(semantic_tokens, phones, refer_audio_spec, ge, speed)
+        fea_todo, ge = self.vits_model.decode_encp(
+            semantic_tokens, phones, refer_audio_spec, ge, speed
+        )
 
         cfm_resss = []
         idx = 0
@@ -1476,7 +1650,11 @@ class TTS:
             fea = torch.cat([fea_ref, fea_todo_chunk], 2).transpose(2, 1)
 
             cfm_res = self.vits_model.cfm.inference(
-                fea, torch.LongTensor([fea.size(1)]).to(fea.device), mel2, sample_steps, inference_cfg_rate=0
+                fea,
+                torch.LongTensor([fea.size(1)]).to(fea.device),
+                mel2,
+                sample_steps,
+                inference_cfg_rate=0,
             )
             cfm_res = cfm_res[:, :, mel2.shape[2] :]
 
@@ -1501,14 +1679,27 @@ class TTS:
         speed: float = 1.0,
         sample_steps: int = 32,
     ) -> List[torch.Tensor]:
-        prompt_semantic_tokens = self.prompt_cache["prompt_semantic"].unsqueeze(0).unsqueeze(0).to(self.configs.device)
-        prompt_phones = torch.LongTensor(self.prompt_cache["phones"]).unsqueeze(0).to(self.configs.device)
+        prompt_semantic_tokens = (
+            self.prompt_cache["prompt_semantic"]
+            .unsqueeze(0)
+            .unsqueeze(0)
+            .to(self.configs.device)
+        )
+        prompt_phones = (
+            torch.LongTensor(self.prompt_cache["phones"])
+            .unsqueeze(0)
+            .to(self.configs.device)
+        )
         raw_entry = self.prompt_cache["refer_spec"][0]
         if isinstance(raw_entry, tuple):
             raw_entry = raw_entry[0]
-        refer_audio_spec = raw_entry.to(dtype=self.precision, device=self.configs.device)
+        refer_audio_spec = raw_entry.to(
+            dtype=self.precision, device=self.configs.device
+        )
 
-        fea_ref, ge = self.vits_model.decode_encp(prompt_semantic_tokens, prompt_phones, refer_audio_spec)
+        fea_ref, ge = self.vits_model.decode_encp(
+            prompt_semantic_tokens, prompt_phones, refer_audio_spec
+        )
         ref_audio: torch.Tensor = self.prompt_cache["raw_audio"]
         ref_sr = self.prompt_cache["raw_sr"]
         ref_audio = ref_audio.to(self.configs.device).float()
@@ -1520,7 +1711,9 @@ class TTS:
         if ref_sr != tgt_sr:
             ref_audio = resample(ref_audio, ref_sr, tgt_sr, self.configs.device)
 
-        mel2 = mel_fn(ref_audio) if self.configs.version == "v3" else mel_fn_v4(ref_audio)
+        mel2 = (
+            mel_fn(ref_audio) if self.configs.version == "v3" else mel_fn_v4(ref_audio)
+        )
         mel2 = norm_spec(mel2)
         T_min = min(mel2.shape[2], fea_ref.shape[2])
         mel2 = mel2[:, :, :T_min]
@@ -1546,7 +1739,9 @@ class TTS:
             semantic_tokens = (
                 semantic_tokens_list[i][-idx:].unsqueeze(0).unsqueeze(0)
             )  # .unsqueeze(0)#mq要多unsqueeze一次
-            feat, _ = self.vits_model.decode_encp(semantic_tokens, phones, refer_audio_spec, ge, speed)
+            feat, _ = self.vits_model.decode_encp(
+                semantic_tokens, phones, refer_audio_spec, ge, speed
+            )
             feat_list.append(feat)
             feat_lens.append(feat.shape[2])
 
@@ -1575,7 +1770,11 @@ class TTS:
         fea_ref = fea_ref.repeat(bs, 1, 1)
         fea = torch.cat([fea_ref, feat_chunks], 2).transpose(2, 1)
         pred_spec = self.vits_model.cfm.inference(
-            fea, torch.LongTensor([fea.size(1)]).to(fea.device), mel2, sample_steps, inference_cfg_rate=0
+            fea,
+            torch.LongTensor([fea.size(1)]).to(fea.device),
+            mel2,
+            sample_steps,
+            inference_cfg_rate=0,
         )
         pred_spec = pred_spec[:, :, -chunk_len:]
         dd = pred_spec.shape[1]
@@ -1619,13 +1818,17 @@ class TTS:
             w1 = f1[-overlap_len:]
             w2 = f2[:overlap_len]
             assert w1.shape == w2.shape
-            corr = F.conv1d(w1.view(1, 1, -1), w2.view(1, 1, -1), padding=w2.shape[-1] // 2).view(-1)[:-1]
+            corr = F.conv1d(
+                w1.view(1, 1, -1), w2.view(1, 1, -1), padding=w2.shape[-1] // 2
+            ).view(-1)[:-1]
             idx = corr.argmax()
             f1_ = f1[: -(overlap_len - idx)]
             audio_fragments[i] = f1_
 
             f2_ = f2[idx:]
-            window = torch.hann_window((overlap_len - idx) * 2, device=f1.device, dtype=f1.dtype)
+            window = torch.hann_window(
+                (overlap_len - idx) * 2, device=f1.device, dtype=f1.dtype
+            )
             f2_[: (overlap_len - idx)] = (
                 window[: (overlap_len - idx)] * f2_[: (overlap_len - idx)]
                 + window[(overlap_len - idx) :] * f1[-(overlap_len - idx) :]

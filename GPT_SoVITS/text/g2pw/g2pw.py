@@ -45,9 +45,19 @@ class G2PWPinyin(Pinyin):
 
 
 class Converter(UltimateConverter):
-    def __init__(self, g2pw_instance, v_to_u=False, neutral_tone_with_five=False, tone_sandhi=False, **kwargs):
+    def __init__(
+        self,
+        g2pw_instance,
+        v_to_u=False,
+        neutral_tone_with_five=False,
+        tone_sandhi=False,
+        **kwargs,
+    ):
         super(Converter, self).__init__(
-            v_to_u=v_to_u, neutral_tone_with_five=neutral_tone_with_five, tone_sandhi=tone_sandhi, **kwargs
+            v_to_u=v_to_u,
+            neutral_tone_with_five=neutral_tone_with_five,
+            tone_sandhi=tone_sandhi,
+            **kwargs,
         )
 
         self._g2pw = g2pw_instance
@@ -55,7 +65,9 @@ class Converter(UltimateConverter):
     def convert(self, words, style, heteronym, errors, strict, **kwargs):
         pys = []
         if RE_HANS.match(words):
-            pys = self._to_pinyin(words, style=style, heteronym=heteronym, errors=errors, strict=strict)
+            pys = self._to_pinyin(
+                words, style=style, heteronym=heteronym, errors=errors, strict=strict
+            )
             post_data = self.post_pinyin(words, heteronym, pys)
             if post_data is not None:
                 pys = post_data
@@ -63,7 +75,9 @@ class Converter(UltimateConverter):
             pys = self.convert_styles(pys, words, style, heteronym, errors, strict)
 
         else:
-            py = self.handle_nopinyin(words, style=style, errors=errors, heteronym=heteronym, strict=strict)
+            py = self.handle_nopinyin(
+                words, style=style, errors=errors, heteronym=heteronym, strict=strict
+            )
             if py:
                 pys.extend(py)
 
@@ -75,11 +89,15 @@ class Converter(UltimateConverter):
         g2pw_pinyin = self._g2pw(han)
 
         if not g2pw_pinyin:  # g2pw 不支持的汉字改为使用 pypinyin 原有逻辑
-            return super(Converter, self).convert(han, Style.TONE, heteronym, errors, strict, **kwargs)
+            return super(Converter, self).convert(
+                han, Style.TONE, heteronym, errors, strict, **kwargs
+            )
 
         for i, item in enumerate(g2pw_pinyin[0]):
             if item is None:  # g2pw 不支持的汉字改为使用 pypinyin 原有逻辑
-                py = super(Converter, self).convert(han[i], Style.TONE, heteronym, errors, strict, **kwargs)
+                py = super(Converter, self).convert(
+                    han[i], Style.TONE, heteronym, errors, strict, **kwargs
+                )
                 pinyins.extend(py)
             else:
                 pinyins.append([to_tone(item)])

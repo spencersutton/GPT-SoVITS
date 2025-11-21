@@ -110,7 +110,11 @@ class TextNormalizer:
         sentence = sentence.replace("ο", "欧米克伦")
         sentence = sentence.replace("π", "派").replace("Π", "派")
         sentence = sentence.replace("ρ", "肉")
-        sentence = sentence.replace("ς", "西格玛").replace("Σ", "西格玛").replace("σ", "西格玛")
+        sentence = (
+            sentence.replace("ς", "西格玛")
+            .replace("Σ", "西格玛")
+            .replace("σ", "西格玛")
+        )
         sentence = sentence.replace("τ", "套")
         sentence = sentence.replace("υ", "宇普西龙")
         sentence = sentence.replace("φ", "服艾").replace("Φ", "服艾")
@@ -130,7 +134,11 @@ class TextNormalizer:
     def normalize_sentence(self, sentence: str) -> str:
         # basic character conversions
         sentence = tranditional_to_simplified(sentence)
-        sentence = sentence.translate(F2H_ASCII_LETTERS).translate(F2H_DIGITS).translate(F2H_SPACE)
+        sentence = (
+            sentence.translate(F2H_ASCII_LETTERS)
+            .translate(F2H_DIGITS)
+            .translate(F2H_SPACE)
+        )
 
         # number related NSW verbalization
         sentence = RE_DATE.sub(replace_date, sentence)

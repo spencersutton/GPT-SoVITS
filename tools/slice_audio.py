@@ -10,7 +10,19 @@ from tools.my_utils import load_audio
 from slicer2 import Slicer
 
 
-def slice(inp, opt_root, threshold, min_length, min_interval, hop_size, max_sil_kept, _max, alpha, i_part, all_part):
+def slice(
+    inp,
+    opt_root,
+    threshold,
+    min_length,
+    min_interval,
+    hop_size,
+    max_sil_kept,
+    _max,
+    alpha,
+    i_part,
+    all_part,
+):
     os.makedirs(opt_root, exist_ok=True)
     if os.path.isfile(inp):
         input = [inp]
@@ -21,9 +33,13 @@ def slice(inp, opt_root, threshold, min_length, min_interval, hop_size, max_sil_
     slicer = Slicer(
         sr=32000,  # 长音频采样率
         threshold=int(threshold),  # 音量小于这个值视作静音的备选切割点
-        min_length=int(min_length),  # 每段最小多长，如果第一段太短一直和后面段连起来直到超过这个值
+        min_length=int(
+            min_length
+        ),  # 每段最小多长，如果第一段太短一直和后面段连起来直到超过这个值
         min_interval=int(min_interval),  # 最短切割间隔
-        hop_size=int(hop_size),  # 怎么算音量曲线，越小精度越大计算量越高（不是精度越大效果越好）
+        hop_size=int(
+            hop_size
+        ),  # 怎么算音量曲线，越小精度越大计算量越高（不是精度越大效果越好）
         max_sil_kept=int(max_sil_kept),  # 切完后静音最多留多长
     )
     _max = float(_max)

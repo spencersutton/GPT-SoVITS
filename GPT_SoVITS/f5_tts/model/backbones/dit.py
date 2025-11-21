@@ -34,9 +34,16 @@ class TextEmbedding(nn.Module):
         if conv_layers > 0:
             self.extra_modeling = True
             self.precompute_max_pos = 4096  # ~44s of 24khz audio
-            self.register_buffer("freqs_cis", precompute_freqs_cis(text_dim, self.precompute_max_pos), persistent=False)
+            self.register_buffer(
+                "freqs_cis",
+                precompute_freqs_cis(text_dim, self.precompute_max_pos),
+                persistent=False,
+            )
             self.text_blocks = nn.Sequential(
-                *[ConvNeXtV2Block(text_dim, text_dim * conv_mult) for _ in range(conv_layers)]
+                *[
+                    ConvNeXtV2Block(text_dim, text_dim * conv_mult)
+                    for _ in range(conv_layers)
+                ]
             )
         else:
             self.extra_modeling = False
@@ -51,7 +58,9 @@ class TextEmbedding(nn.Module):
         if self.extra_modeling:
             # sinus pos emb
             batch_start = torch.zeros((batch,), dtype=torch.long)
-            pos_idx = get_pos_embed_indices(batch_start, seq_len, max_pos=self.precompute_max_pos)
+            pos_idx = get_pos_embed_indices(
+                batch_start, seq_len, max_pos=self.precompute_max_pos
+            )
             text_pos_embed = self.freqs_cis[pos_idx]
 
             # print(23333333,text.shape,text_pos_embed.shape)#torch.Size([7, 465, 256]) torch.Size([7, 465, 256])
@@ -73,7 +82,13 @@ class InputEmbedding(nn.Module):
         self.proj = nn.Linear(mel_dim * 2 + text_dim, out_dim)
         self.conv_pos_embed = ConvPositionEmbedding(dim=out_dim)
 
-    def forward(self, x: float["b n d"], cond: float["b n d"], text_embed: float["b n d"], drop_audio_cond=False):  # noqa: F722
+    def forward(
+        self,
+        x: float["b n d"],
+        cond: float["b n d"],
+        text_embed: float["b n d"],
+        drop_audio_cond=False,
+    ):  # noqa: F722
         if drop_audio_cond:  # cfg for cond audio
             cond = torch.zeros_like(cond)
 
@@ -115,9 +130,20 @@ class DiT(nn.Module):
         self.depth = depth
 
         self.transformer_blocks = nn.ModuleList(
-            [DiTBlock(dim=dim, heads=heads, dim_head=dim_head, ff_mult=ff_mult, dropout=dropout) for _ in range(depth)]
+            [
+                DiTBlock(
+                    dim=dim,
+                    heads=heads,
+                    dim_head=dim_head,
+                    ff_mult=ff_mult,
+                    dropout=dropout,
+                )
+                for _ in range(depth)
+            ]
         )
-        self.long_skip_connection = nn.Linear(dim * 2, dim, bias=False) if long_skip_connection else None
+        self.long_skip_connection = (
+            nn.Linear(dim * 2, dim, bias=False) if long_skip_connection else None
+        )
 
         self.norm_out = AdaLayerNormZero_Final(dim)  # final modulation
         self.proj_out = nn.Linear(dim, mel_dim)
@@ -167,7 +193,9 @@ class DiT(nn.Module):
         if infer and text_cache is not None:
             text_embed = text_cache
         else:
-            text_embed = self.text_embed(text, seq_len, drop_text=drop_text)  ###need to change
+            text_embed = self.text_embed(
+                text, seq_len, drop_text=drop_text
+            )  ###need to change
 
         x = self.input_embed(x, cond, text_embed, drop_audio_cond=drop_audio_cond)
 
@@ -178,7 +206,9 @@ class DiT(nn.Module):
 
         for block in self.transformer_blocks:
             if use_grad_ckpt:
-                x = checkpoint(self.ckpt_wrapper(block), x, t, mask, rope, use_reentrant=False)
+                x = checkpoint(
+                    self.ckpt_wrapper(block), x, t, mask, rope, use_reentrant=False
+                )
             else:
                 x = block(x, t, mask=mask, rope=rope)
 

@@ -30,22 +30,38 @@ if os.name == "nt":
                                 import shutil
 
                                 python_dir = os.getcwd()
-                                if installpath[: len(python_dir)].upper() == python_dir.upper():
-                                    dicpath = os.path.join(os.path.relpath(installpath, python_dir), "data", "mecabrc")
+                                if (
+                                    installpath[: len(python_dir)].upper()
+                                    == python_dir.upper()
+                                ):
+                                    dicpath = os.path.join(
+                                        os.path.relpath(installpath, python_dir),
+                                        "data",
+                                        "mecabrc",
+                                    )
                                 else:
                                     if not os.path.exists("TEMP"):
                                         os.mkdir("TEMP")
                                     if not os.path.exists(os.path.join("TEMP", "ko")):
                                         os.mkdir(os.path.join("TEMP", "ko"))
-                                    if os.path.exists(os.path.join("TEMP", "ko", "ko_dict")):
-                                        shutil.rmtree(os.path.join("TEMP", "ko", "ko_dict"))
+                                    if os.path.exists(
+                                        os.path.join("TEMP", "ko", "ko_dict")
+                                    ):
+                                        shutil.rmtree(
+                                            os.path.join("TEMP", "ko", "ko_dict")
+                                        )
 
                                     shutil.copytree(
-                                        os.path.join(installpath, "data"), os.path.join("TEMP", "ko", "ko_dict")
+                                        os.path.join(installpath, "data"),
+                                        os.path.join("TEMP", "ko", "ko_dict"),
                                     )
-                                    dicpath = os.path.join("TEMP", "ko", "ko_dict", "mecabrc")
+                                    dicpath = os.path.join(
+                                        "TEMP", "ko", "ko_dict", "mecabrc"
+                                    )
                             else:
-                                dicpath = os.path.abspath(os.path.join(installpath, "data/mecabrc"))
+                                dicpath = os.path.abspath(
+                                    os.path.join(installpath, "data/mecabrc")
+                                )
                             return dicpath
 
                         def __init__(self, dicpath=get_dicpath(installpath)):
@@ -59,9 +75,7 @@ if os.name == "nt":
 from text.symbols2 import symbols
 
 # This is a list of Korean classifiers preceded by pure Korean numerals.
-_korean_classifiers = (
-    "군데 권 개 그루 닢 대 두 마리 모 모금 뭇 발 발짝 방 번 벌 보루 살 수 술 시 쌈 움큼 정 짝 채 척 첩 축 켤레 톨 통"
-)
+_korean_classifiers = "군데 권 개 그루 닢 대 두 마리 모 모금 뭇 발 발짝 방 번 벌 보루 살 수 술 시 쌈 움큼 정 짝 채 척 첩 축 켤레 톨 통"
 
 # List of (hangul, hangul divided) pairs:
 _hangul_divided = [
@@ -156,7 +170,11 @@ def fix_g2pk2_error(text):
     new_text = ""
     i = 0
     while i < len(text) - 4:
-        if (text[i : i + 3] == "ㅇㅡㄹ" or text[i : i + 3] == "ㄹㅡㄹ") and text[i + 3] == " " and text[i + 4] == "ㄹ":
+        if (
+            (text[i : i + 3] == "ㅇㅡㄹ" or text[i : i + 3] == "ㄹㅡㄹ")
+            and text[i + 3] == " "
+            and text[i + 4] == "ㄹ"
+        ):
             new_text += text[i : i + 3] + " " + "ㄴ"
             i += 5
         else:
@@ -264,7 +282,10 @@ def number_to_hangul(text):
     tokens = set(re.findall(r"(\d[\d,]*)([\uac00-\ud71f]+)", text))
     for token in tokens:
         num, classifier = token
-        if classifier[:2] in _korean_classifiers or classifier[0] in _korean_classifiers:
+        if (
+            classifier[:2] in _korean_classifiers
+            or classifier[0] in _korean_classifiers
+        ):
             spelledout = hangul_number(num, sino=False)
         else:
             spelledout = hangul_number(num, sino=True)
@@ -280,7 +301,11 @@ def number_to_hangul(text):
 def korean_to_lazy_ipa(text):
     text = latin_to_hangul(text)
     text = number_to_hangul(text)
-    text = re.sub("[\uac00-\ud7af]+", lambda x: ko_pron.romanise(x.group(0), "ipa").split("] ~ [")[0], text)
+    text = re.sub(
+        "[\uac00-\ud7af]+",
+        lambda x: ko_pron.romanise(x.group(0), "ipa").split("] ~ [")[0],
+        text,
+    )
     for regex, replacement in _ipa_to_lazy_ipa:
         text = re.sub(regex, replacement, text)
     return text

@@ -42,8 +42,12 @@ class LayerNorm(nn.Module):
         self.eps = eps
         self.elementwise_affine = elementwise_affine
         if self.elementwise_affine:
-            self.weight = nn.Parameter(torch.empty(self.normalized_shape, **factory_kwargs))
-            self.bias = nn.Parameter(torch.empty(self.normalized_shape, **factory_kwargs))
+            self.weight = nn.Parameter(
+                torch.empty(self.normalized_shape, **factory_kwargs)
+            )
+            self.bias = nn.Parameter(
+                torch.empty(self.normalized_shape, **factory_kwargs)
+            )
         else:
             self.register_parameter("weight", None)
             self.register_parameter("bias", None)
@@ -70,10 +74,14 @@ class LayerNorm(nn.Module):
             )
 
         assert embedding is None
-        return F.layer_norm(input, self.normalized_shape, self.weight, self.bias, self.eps)
+        return F.layer_norm(
+            input, self.normalized_shape, self.weight, self.bias, self.eps
+        )
 
     def extra_repr(self) -> str:
-        return "{normalized_shape}, eps={eps}, elementwise_affine={elementwise_affine}".format(**self.__dict__)
+        return "{normalized_shape}, eps={eps}, elementwise_affine={elementwise_affine}".format(
+            **self.__dict__
+        )
 
 
 class IdentityNorm(nn.Module):
@@ -210,9 +218,13 @@ class TransformerEncoderLayer(nn.Module):
         )
 
         # Implementation of Feedforward model
-        self.linear1 = linear1_feedforward_cls(d_model, dim_feedforward, **factory_kwargs)
+        self.linear1 = linear1_feedforward_cls(
+            d_model, dim_feedforward, **factory_kwargs
+        )
         self.dropout = nn.Dropout(dropout)
-        self.linear2 = linear2_feedforward_cls(dim_feedforward, d_model, **factory_kwargs)
+        self.linear2 = linear2_feedforward_cls(
+            dim_feedforward, d_model, **factory_kwargs
+        )
 
         self.norm_first = norm_first
         self.dropout1 = nn.Dropout(dropout)
@@ -279,8 +291,12 @@ class TransformerEncoderLayer(nn.Module):
 
         if src_key_padding_mask is not None:
             _skpm_dtype = src_key_padding_mask.dtype
-            if _skpm_dtype != torch.bool and not torch.is_floating_point(src_key_padding_mask):
-                raise AssertionError("only bool and floating types of key_padding_mask are supported")
+            if _skpm_dtype != torch.bool and not torch.is_floating_point(
+                src_key_padding_mask
+            ):
+                raise AssertionError(
+                    "only bool and floating types of key_padding_mask are supported"
+                )
 
         if self.norm_first:
             x = x + self._sa_block(

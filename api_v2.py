@@ -119,7 +119,9 @@ import uvicorn
 from io import BytesIO
 from tools.i18n.i18n import I18nAuto
 from GPT_SoVITS.TTS_infer_pack.TTS import TTS, TTS_Config
-from GPT_SoVITS.TTS_infer_pack.text_segmentation_method import get_method_names as get_cut_method_names
+from GPT_SoVITS.TTS_infer_pack.text_segmentation_method import (
+    get_method_names as get_cut_method_names,
+)
 from pydantic import BaseModel
 
 # print(sys.path)
@@ -127,8 +129,16 @@ i18n = I18nAuto()
 cut_method_names = get_cut_method_names()
 
 parser = argparse.ArgumentParser(description="GPT-SoVITS api")
-parser.add_argument("-c", "--tts_config", type=str, default="GPT_SoVITS/configs/tts_infer.yaml", help="tts_infer路径")
-parser.add_argument("-a", "--bind_addr", type=str, default="127.0.0.1", help="default: 127.0.0.1")
+parser.add_argument(
+    "-c",
+    "--tts_config",
+    type=str,
+    default="GPT_SoVITS/configs/tts_infer.yaml",
+    help="tts_infer路径",
+)
+parser.add_argument(
+    "-a", "--bind_addr", type=str, default="127.0.0.1", help="default: 127.0.0.1"
+)
 parser.add_argument("-p", "--port", type=int, default="9880", help="default: 9880")
 args = parser.parse_args()
 config_path = args.tts_config
@@ -174,7 +184,9 @@ class TTS_Request(BaseModel):
 
 ### modify from https://github.com/RVC-Boss/GPT-SoVITS/pull/894/files
 def pack_ogg(io_buffer: BytesIO, data: np.ndarray, rate: int):
-    with sf.SoundFile(io_buffer, mode="w", samplerate=rate, channels=1, format="ogg") as audio_file:
+    with sf.SoundFile(
+        io_buffer, mode="w", samplerate=rate, channels=1, format="ogg"
+    ) as audio_file:
         audio_file.write(data)
     return io_buffer
 
@@ -267,31 +279,50 @@ def check_params(req: dict):
     text_split_method: str = req.get("text_split_method", "cut5")
 
     if ref_audio_path in [None, ""]:
-        return JSONResponse(status_code=400, content={"message": "ref_audio_path is required"})
+        return JSONResponse(
+            status_code=400, content={"message": "ref_audio_path is required"}
+        )
     if text in [None, ""]:
         return JSONResponse(status_code=400, content={"message": "text is required"})
     if text_lang in [None, ""]:
-        return JSONResponse(status_code=400, content={"message": "text_lang is required"})
+        return JSONResponse(
+            status_code=400, content={"message": "text_lang is required"}
+        )
     elif text_lang.lower() not in tts_config.languages:
         return JSONResponse(
             status_code=400,
-            content={"message": f"text_lang: {text_lang} is not supported in version {tts_config.version}"},
+            content={
+                "message": f"text_lang: {text_lang} is not supported in version {tts_config.version}"
+            },
         )
     if prompt_lang in [None, ""]:
-        return JSONResponse(status_code=400, content={"message": "prompt_lang is required"})
+        return JSONResponse(
+            status_code=400, content={"message": "prompt_lang is required"}
+        )
     elif prompt_lang.lower() not in tts_config.languages:
         return JSONResponse(
             status_code=400,
-            content={"message": f"prompt_lang: {prompt_lang} is not supported in version {tts_config.version}"},
+            content={
+                "message": f"prompt_lang: {prompt_lang} is not supported in version {tts_config.version}"
+            },
         )
     if media_type not in ["wav", "raw", "ogg", "aac"]:
-        return JSONResponse(status_code=400, content={"message": f"media_type: {media_type} is not supported"})
+        return JSONResponse(
+            status_code=400,
+            content={"message": f"media_type: {media_type} is not supported"},
+        )
     elif media_type == "ogg" and not streaming_mode:
-        return JSONResponse(status_code=400, content={"message": "ogg format is not supported in non-streaming mode"})
+        return JSONResponse(
+            status_code=400,
+            content={"message": "ogg format is not supported in non-streaming mode"},
+        )
 
     if text_split_method not in cut_method_names:
         return JSONResponse(
-            status_code=400, content={"message": f"text_split_method:{text_split_method} is not supported"}
+            status_code=400,
+            content={
+                "message": f"text_split_method:{text_split_method} is not supported"
+            },
         )
 
     return None
@@ -370,7 +401,9 @@ async def tts_handle(req: dict):
             audio_data = pack_audio(BytesIO(), audio_data, sr, media_type).getvalue()
             return Response(audio_data, media_type=f"audio/{media_type}")
     except Exception as e:
-        return JSONResponse(status_code=400, content={"message": "tts failed", "Exception": str(e)})
+        return JSONResponse(
+            status_code=400, content={"message": "tts failed", "Exception": str(e)}
+        )
 
 
 @APP.get("/control")
@@ -443,7 +476,10 @@ async def set_refer_aduio(refer_audio_path: str = None):
     try:
         tts_pipeline.set_ref_audio(refer_audio_path)
     except Exception as e:
-        return JSONResponse(status_code=400, content={"message": "set refer audio failed", "Exception": str(e)})
+        return JSONResponse(
+            status_code=400,
+            content={"message": "set refer audio failed", "Exception": str(e)},
+        )
     return JSONResponse(status_code=200, content={"message": "success"})
 
 
@@ -470,10 +506,15 @@ async def set_refer_aduio(refer_audio_path: str = None):
 async def set_gpt_weights(weights_path: str = None):
     try:
         if weights_path in ["", None]:
-            return JSONResponse(status_code=400, content={"message": "gpt weight path is required"})
+            return JSONResponse(
+                status_code=400, content={"message": "gpt weight path is required"}
+            )
         tts_pipeline.init_t2s_weights(weights_path)
     except Exception as e:
-        return JSONResponse(status_code=400, content={"message": "change gpt weight failed", "Exception": str(e)})
+        return JSONResponse(
+            status_code=400,
+            content={"message": "change gpt weight failed", "Exception": str(e)},
+        )
 
     return JSONResponse(status_code=200, content={"message": "success"})
 
@@ -482,10 +523,15 @@ async def set_gpt_weights(weights_path: str = None):
 async def set_sovits_weights(weights_path: str = None):
     try:
         if weights_path in ["", None]:
-            return JSONResponse(status_code=400, content={"message": "sovits weight path is required"})
+            return JSONResponse(
+                status_code=400, content={"message": "sovits weight path is required"}
+            )
         tts_pipeline.init_vits_weights(weights_path)
     except Exception as e:
-        return JSONResponse(status_code=400, content={"message": "change sovits weight failed", "Exception": str(e)})
+        return JSONResponse(
+            status_code=400,
+            content={"message": "change sovits weight failed", "Exception": str(e)},
+        )
     return JSONResponse(status_code=200, content={"message": "success"})
 
 

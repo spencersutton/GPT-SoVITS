@@ -48,7 +48,9 @@ class Text2SemanticDataModule(LightningDataModule):
             if self.config["train"].get("if_dpo", False) is True
             else self.config["train"]["batch_size"]
         )
-        batch_size = max(min(batch_size, len(self._train_dataset) // 4), 1)  # 防止不保存
+        batch_size = max(
+            min(batch_size, len(self._train_dataset) // 4), 1
+        )  # 防止不保存
         sampler = DistributedBucketSampler(self._train_dataset, batch_size=batch_size)
         return DataLoader(
             self._train_dataset,

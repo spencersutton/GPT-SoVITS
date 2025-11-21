@@ -35,21 +35,34 @@ from f5_tts.model.modules import (
 class TextEmbedding(nn.Module):
     def __init__(self, text_num_embeds, text_dim, conv_layers=0, conv_mult=2):
         super().__init__()
-        self.text_embed = nn.Embedding(text_num_embeds + 1, text_dim)  # use 0 as filler token
+        self.text_embed = nn.Embedding(
+            text_num_embeds + 1, text_dim
+        )  # use 0 as filler token
 
         if conv_layers > 0:
             self.extra_modeling = True
             self.precompute_max_pos = 4096  # ~44s of 24khz audio
-            self.register_buffer("freqs_cis", precompute_freqs_cis(text_dim, self.precompute_max_pos), persistent=False)
+            self.register_buffer(
+                "freqs_cis",
+                precompute_freqs_cis(text_dim, self.precompute_max_pos),
+                persistent=False,
+            )
             self.text_blocks = nn.Sequential(
-                *[ConvNeXtV2Block(text_dim, text_dim * conv_mult) for _ in range(conv_layers)]
+                *[
+                    ConvNeXtV2Block(text_dim, text_dim * conv_mult)
+                    for _ in range(conv_layers)
+                ]
             )
         else:
             self.extra_modeling = False
 
     def forward(self, text: int["b nt"], seq_len, drop_text=False):  # noqa: F722
-        text = text + 1  # use 0 as filler token. preprocess of batch pad -1, see list_str_to_idx()
-        text = text[:, :seq_len]  # curtail if character tokens are more than the mel spec tokens
+        text = (
+            text + 1
+        )  # use 0 as filler token. preprocess of batch pad -1, see list_str_to_idx()
+        text = text[
+            :, :seq_len
+        ]  # curtail if character tokens are more than the mel spec tokens
         batch, text_len = text.shape[0], text.shape[1]
         text = F.pad(text, (0, seq_len - text_len), value=0)
 
@@ -62,7 +75,9 @@ class TextEmbedding(nn.Module):
         if self.extra_modeling:
             # sinus pos emb
             batch_start = torch.zeros((batch,), dtype=torch.long)
-            pos_idx = get_pos_embed_indices(batch_start, seq_len, max_pos=self.precompute_max_pos)
+            pos_idx = get_pos_embed_indices(
+                batch_start, seq_len, max_pos=self.precompute_max_pos
+            )
             text_pos_embed = self.freqs_cis[pos_idx]
             text = text + text_pos_embed
 
@@ -81,7 +96,13 @@ class InputEmbedding(nn.Module):
         self.proj = nn.Linear(mel_dim * 2 + text_dim, out_dim)
         self.conv_pos_embed = ConvPositionEmbedding(dim=out_dim)
 
-    def forward(self, x: float["b n d"], cond: float["b n d"], text_embed: float["b n d"], drop_audio_cond=False):  # noqa: F722
+    def forward(
+        self,
+        x: float["b n d"],
+        cond: float["b n d"],
+        text_embed: float["b n d"],
+        drop_audio_cond=False,
+    ):  # noqa: F722
         if drop_audio_cond:  # cfg for cond audio
             cond = torch.zeros_like(cond)
 
@@ -115,7 +136,9 @@ class UNetT(nn.Module):
         self.time_embed = TimestepEmbedding(dim)
         if text_dim is None:
             text_dim = mel_dim
-        self.text_embed = TextEmbedding(text_num_embeds, text_dim, conv_layers=conv_layers)
+        self.text_embed = TextEmbedding(
+            text_num_embeds, text_dim, conv_layers=conv_layers
+        )
         self.input_embed = InputEmbedding(mel_dim, text_dim, dim)
 
         self.rotary_embed = RotaryEmbedding(dim_head)
@@ -144,7 +167,11 @@ class UNetT(nn.Module):
             ff_norm = RMSNorm(dim)
             ff = FeedForward(dim=dim, mult=ff_mult, dropout=dropout, approximate="tanh")
 
-            skip_proj = nn.Linear(dim * 2, dim, bias=False) if needs_skip_proj and is_later_half else None
+            skip_proj = (
+                nn.Linear(dim * 2, dim, bias=False)
+                if needs_skip_proj and is_later_half
+                else None
+            )
 
             self.layers.append(
                 nn.ModuleList(
@@ -190,7 +217,9 @@ class UNetT(nn.Module):
         # flat unet transformer
         skip_connect_type = self.skip_connect_type
         skips = []
-        for idx, (maybe_skip_proj, attn_norm, attn, ff_norm, ff) in enumerate(self.layers):
+        for idx, (maybe_skip_proj, attn_norm, attn, ff_norm, ff) in enumerate(
+            self.layers
+        ):
             layer = idx + 1
 
             # skip connection logic

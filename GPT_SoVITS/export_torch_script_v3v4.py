@@ -47,7 +47,9 @@ class MelSpectrgram(torch.nn.Module):
     ):
         super().__init__()
         self.hann_window = torch.hann_window(win_size).to(device=device, dtype=dtype)
-        mel = librosa_mel_fn(sr=sampling_rate, n_fft=n_fft, n_mels=num_mels, fmin=fmin, fmax=fmax)
+        mel = librosa_mel_fn(
+            sr=sampling_rate, n_fft=n_fft, n_mels=num_mels, fmin=fmin, fmax=fmax
+        )
         self.mel_basis = torch.from_numpy(mel).to(dtype=dtype, device=device)
         self.n_fft: int = n_fft
         self.hop_size: int = hop_size
@@ -169,7 +171,9 @@ class ExportCFM(torch.nn.Module):
     ):
         T_min = fea_ref.size(2)
         fea = torch.cat([fea_ref, fea_todo_chunk], 2).transpose(2, 1)
-        cfm_res = self.cfm(fea, torch.LongTensor([fea.size(1)]).to(fea.device), mel2, sample_steps)
+        cfm_res = self.cfm(
+            fea, torch.LongTensor([fea.size(1)]).to(fea.device), mel2, sample_steps
+        )
         cfm_res = cfm_res[:, :, mel2.shape[2] :]
         mel2 = cfm_res[:, :, -T_min:]
         fea_ref = fea_todo_chunk[:, :, -T_min:]
@@ -243,7 +247,9 @@ class ExportGPTSovitsHalf(torch.nn.Module):
         self.sampling_rate: int = hps.data.sampling_rate
         self.hop_length: int = hps.data.hop_length
         self.win_length: int = hps.data.win_length
-        self.hann_window = torch.hann_window(self.win_length, device=device, dtype=torch.float32)
+        self.hann_window = torch.hann_window(
+            self.win_length, device=device, dtype=torch.float32
+        )
 
     def forward(
         self,
@@ -270,7 +276,9 @@ class ExportGPTSovitsHalf(torch.nn.Module):
         prompt = prompt_semantic.unsqueeze(0)
         # print('extract_latent',codes.shape,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-        pred_semantic = self.t2s_m(prompt, phoneme_ids0, phoneme_ids1, bert1, bert2, top_k)
+        pred_semantic = self.t2s_m(
+            prompt, phoneme_ids0, phoneme_ids1, bert1, bert2, top_k
+        )
         # print('t2s_m',pred_semantic.shape,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         ge = self.vq_model.create_ge(refer)
@@ -323,7 +331,9 @@ class ExportGPTSovitsV4Half(torch.nn.Module):
         self.sampling_rate: int = hps.data.sampling_rate
         self.hop_length: int = hps.data.hop_length
         self.win_length: int = hps.data.win_length
-        self.hann_window = torch.hann_window(self.win_length, device=device, dtype=torch.float32)
+        self.hann_window = torch.hann_window(
+            self.win_length, device=device, dtype=torch.float32
+        )
 
     def forward(
         self,
@@ -350,7 +360,9 @@ class ExportGPTSovitsV4Half(torch.nn.Module):
         prompt = prompt_semantic.unsqueeze(0)
         # print('extract_latent',codes.shape,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-        pred_semantic = self.t2s_m(prompt, phoneme_ids0, phoneme_ids1, bert1, bert2, top_k)
+        pred_semantic = self.t2s_m(
+            prompt, phoneme_ids0, phoneme_ids1, bert1, bert2, top_k
+        )
         # print('t2s_m',pred_semantic.shape,datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         ge = self.vq_model.create_ge(refer)
@@ -424,12 +436,16 @@ class GPTSoVITSV3(torch.nn.Module):
                 fea_todo_chunk = torch.cat(
                     [
                         fea_todo_chunk,
-                        torch.zeros(1, 512, complete_len).to(fea_todo_chunk.device).to(fea_todo_chunk.dtype),
+                        torch.zeros(1, 512, complete_len)
+                        .to(fea_todo_chunk.device)
+                        .to(fea_todo_chunk.dtype),
                     ],
                     2,
                 )
 
-            cfm_res, fea_ref, mel2 = self.cfm(fea_ref, fea_todo_chunk, mel2, sample_steps)
+            cfm_res, fea_ref, mel2 = self.cfm(
+                fea_ref, fea_todo_chunk, mel2, sample_steps
+            )
             idx += chunk_len
 
             cfm_res = denorm_spec(cfm_res)
@@ -484,12 +500,16 @@ class GPTSoVITSV4(torch.nn.Module):
                 fea_todo_chunk = torch.cat(
                     [
                         fea_todo_chunk,
-                        torch.zeros(1, 512, complete_len).to(fea_todo_chunk.device).to(fea_todo_chunk.dtype),
+                        torch.zeros(1, 512, complete_len)
+                        .to(fea_todo_chunk.device)
+                        .to(fea_todo_chunk.dtype),
                     ],
                     2,
                 )
 
-            cfm_res, fea_ref, mel2 = self.cfm(fea_ref, fea_todo_chunk, mel2, sample_steps)
+            cfm_res, fea_ref, mel2 = self.cfm(
+                fea_ref, fea_todo_chunk, mel2, sample_steps
+            )
             idx += chunk_len
 
             cfm_res = denorm_spec(cfm_res)
@@ -505,7 +525,8 @@ def init_bigvgan():
     from BigVGAN import bigvgan
 
     bigvgan_model = bigvgan.BigVGAN.from_pretrained(
-        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x" % (now_dir,),
+        "%s/GPT_SoVITS/pretrained_models/models--nvidia--bigvgan_v2_24khz_100band_256x"
+        % (now_dir,),
         use_cuda_kernel=False,
     )  # if True, RuntimeError: Ninja is required to load C++ extensions
     # remove weight norm in the model and set to eval mode
@@ -533,7 +554,8 @@ def init_hifigan():
     hifigan_model.eval()
     hifigan_model.remove_weight_norm()
     state_dict_g = torch.load(
-        "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth" % (now_dir,), map_location="cpu"
+        "%s/GPT_SoVITS/pretrained_models/gsv-v4-pretrained/vocoder.pth" % (now_dir,),
+        map_location="cpu",
     )
     print("loading vocoder", hifigan_model.load_state_dict(state_dict_g))
     if is_half == True:
@@ -650,7 +672,10 @@ def export_cfm(
     cfm = e_cfm.cfm
 
     B, T = mu.size(0), mu.size(1)
-    x = torch.randn([B, cfm.in_channels, T], device=mu.device, dtype=mu.dtype) * temperature
+    x = (
+        torch.randn([B, cfm.in_channels, T], device=mu.device, dtype=mu.dtype)
+        * temperature
+    )
     print("x:", x.shape, x.dtype)
     prompt_len = prompt.size(-1)
     prompt_x = torch.zeros_like(x, dtype=mu.dtype)
@@ -676,7 +701,15 @@ def export_cfm(
         mu.shape,
     )
 
-    print("cfm input dtypes:", x.dtype, prompt_x.dtype, x_lens.dtype, t_tensor.dtype, d_tensor.dtype, mu.dtype)
+    print(
+        "cfm input dtypes:",
+        x.dtype,
+        prompt_x.dtype,
+        x_lens.dtype,
+        t_tensor.dtype,
+        d_tensor.dtype,
+        mu.dtype,
+    )
 
     estimator: ExportDiT = torch.jit.trace(
         cfm.estimator,
@@ -710,7 +743,9 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
         sovits = get_sovits_weights("GPT_SoVITS/pretrained_models/s2Gv3.pth")
         init_bigvgan()
     else:
-        sovits = get_sovits_weights("GPT_SoVITS/pretrained_models/gsv-v4-pretrained/s2Gv4.pth")
+        sovits = get_sovits_weights(
+            "GPT_SoVITS/pretrained_models/gsv-v4-pretrained/s2Gv4.pth"
+        )
         init_hifigan()
 
     dict_s1 = torch.load("GPT_SoVITS/pretrained_models/s1v3.ckpt")
@@ -748,7 +783,9 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
             wav16k = wav16k.to(device)
             zero_wav_torch = zero_wav_torch.to(device)
         wav16k = torch.cat([wav16k, zero_wav_torch])
-        ssl_content = ssl_model.model(wav16k.unsqueeze(0))["last_hidden_state"].transpose(1, 2)  # .float()
+        ssl_content = ssl_model.model(wav16k.unsqueeze(0))[
+            "last_hidden_state"
+        ].transpose(1, 2)  # .float()
         codes = sovits.vq_model.extract_latent(ssl_content)
         prompt_semantic = codes[0, 0]
         prompt = prompt_semantic.unsqueeze(0).to(device)
@@ -899,7 +936,9 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
 
         idx += chunk_len
 
-        cfm_res, fea_ref, mel2 = export_cfm_(fea_ref, fea_todo_chunk, mel2, sample_steps)
+        cfm_res, fea_ref, mel2 = export_cfm_(
+            fea_ref, fea_todo_chunk, mel2, sample_steps
+        )
         cfm_resss.append(cfm_res)
         continue
 
@@ -910,11 +949,15 @@ def export_1(ref_wav_path, ref_wav_text, version="v3"):
         cmf_res_rand = torch.randn(1, 100, 934).to(device).to(dtype)
         torch._dynamo.mark_dynamic(cmf_res_rand, 2)
         if version == "v3":
-            bigvgan_model_ = torch.jit.trace(bigvgan_model, optimize=True, example_inputs=(cmf_res_rand,))
+            bigvgan_model_ = torch.jit.trace(
+                bigvgan_model, optimize=True, example_inputs=(cmf_res_rand,)
+            )
             bigvgan_model_.save("onnx/ad/bigvgan_model.pt")
             wav_gen = bigvgan_model(cmf_res)
         else:
-            hifigan_model_ = torch.jit.trace(hifigan_model, optimize=True, example_inputs=(cmf_res_rand,))
+            hifigan_model_ = torch.jit.trace(
+                hifigan_model, optimize=True, example_inputs=(cmf_res_rand,)
+            )
             hifigan_model_.save("onnx/ad/hifigan_model.pt")
             wav_gen = hifigan_model(cmf_res)
 
@@ -959,7 +1002,9 @@ def test_export(
             wav16k = wav16k.to(device)
             zero_wav_torch = zero_wav_torch.to(device)
         wav16k = torch.cat([wav16k, zero_wav_torch])
-        ssl_content = ssl_model.model(wav16k.unsqueeze(0))["last_hidden_state"].transpose(1, 2)  # .float()
+        ssl_content = ssl_model.model(wav16k.unsqueeze(0))[
+            "last_hidden_state"
+        ].transpose(1, 2)  # .float()
 
     ref_audio_32k, _ = librosa.load(ref_wav_path, sr=32000)
     ref_audio_32k = torch.from_numpy(ref_audio_32k).unsqueeze(0).to(device).float()
@@ -1012,7 +1057,13 @@ def test_export(
 
         complete_len = chunk_len - fea_todo_chunk.shape[-1]
         if complete_len != 0:
-            fea_todo_chunk = torch.cat([fea_todo_chunk, torch.zeros(1, 512, complete_len).to(device).to(dtype)], 2)
+            fea_todo_chunk = torch.cat(
+                [
+                    fea_todo_chunk,
+                    torch.zeros(1, 512, complete_len).to(device).to(dtype),
+                ],
+                2,
+            )
 
         cfm_res, fea_ref, mel2 = cfm(fea_ref, fea_todo_chunk, mel2, sample_steps)
         # if complete_len > 0 :
@@ -1077,7 +1128,9 @@ def test_export(
             wav16k = wav16k.to(device)
             zero_wav_torch = zero_wav_torch.to(device)
         wav16k = torch.cat([wav16k, zero_wav_torch])
-        ssl_content = ssl_model.model(wav16k.unsqueeze(0))["last_hidden_state"].transpose(1, 2)  # .float()
+        ssl_content = ssl_model.model(wav16k.unsqueeze(0))[
+            "last_hidden_state"
+        ].transpose(1, 2)  # .float()
         print("ssl_content:", ssl_content.shape, ssl_content.dtype)
 
     ref_audio_32k, _ = librosa.load(ref_wav_path, sr=32000)
@@ -1109,7 +1162,16 @@ def test_export(
         bert2.shape,
         top_k.shape,
     )
-    wav_gen = gpt_sovits_v3v4(ssl_content, ref_audio_32k, phoneme_ids0, phoneme_ids1, bert1, bert2, top_k, sample_steps)
+    wav_gen = gpt_sovits_v3v4(
+        ssl_content,
+        ref_audio_32k,
+        phoneme_ids0,
+        phoneme_ids1,
+        bert1,
+        bert2,
+        top_k,
+        sample_steps,
+    )
     print("wav_gen:", wav_gen.shape, wav_gen.dtype)
 
     wav_gen = torch.cat([wav_gen, zero_wav_torch], 0)
@@ -1127,7 +1189,9 @@ def export_2(version="v3"):
         sovits = get_sovits_weights("GPT_SoVITS/pretrained_models/s2Gv3.pth")
         # init_bigvgan()
     else:
-        sovits = get_sovits_weights("GPT_SoVITS/pretrained_models/gsv-v4-pretrained/s2Gv4.pth")
+        sovits = get_sovits_weights(
+            "GPT_SoVITS/pretrained_models/gsv-v4-pretrained/s2Gv4.pth"
+        )
         # init_hifigan()
 
     # cfm = ExportCFM(sovits.cfm)
@@ -1157,7 +1221,9 @@ def export_2(version="v3"):
     # t2s_m.top_k = 15
     logger.info("t2s_m ok")
 
-    vq_model: torch.jit.ScriptModule = torch.jit.load("onnx/ad/vq_model.pt", map_location=device)
+    vq_model: torch.jit.ScriptModule = torch.jit.load(
+        "onnx/ad/vq_model.pt", map_location=device
+    )
     # vq_model = torch.jit.optimize_for_inference(vq_model)
     # vq_model = vq_model.half().to(device)
     vq_model.eval()

@@ -47,7 +47,10 @@ class my_model_ckpt(ModelCheckpoint):
         # if not self._should_skip_saving_checkpoint(trainer) and self._should_save_on_train_epoch_end(trainer):
         if self._should_save_on_train_epoch_end(trainer):
             monitor_candidates = self._monitor_candidates(trainer)
-            if self._every_n_epochs >= 1 and (trainer.current_epoch + 1) % self._every_n_epochs == 0:
+            if (
+                self._every_n_epochs >= 1
+                and (trainer.current_epoch + 1) % self._every_n_epochs == 0
+            ):
                 if (
                     self.if_save_latest == True
                 ):  ####如果设置只保存最后一个ckpt，在保存下一个ckpt后要清理掉之前的所有ckpt
@@ -117,7 +120,9 @@ def main(args):
         devices=-1 if torch.cuda.is_available() else 1,
         benchmark=False,
         fast_dev_run=False,
-        strategy=DDPStrategy(process_group_backend="nccl" if platform.system() != "Windows" else "gloo")
+        strategy=DDPStrategy(
+            process_group_backend="nccl" if platform.system() != "Windows" else "gloo"
+        )
         if torch.cuda.is_available()
         else "auto",
         precision=config["train"]["precision"],
@@ -127,7 +132,9 @@ def main(args):
         use_distributed_sampler=False,  # 非常简单的修改，但解决了采用自定义的 bucket_sampler 下训练步数不一致的问题！
     )
 
-    model: Text2SemanticLightningModule = Text2SemanticLightningModule(config, output_dir)
+    model: Text2SemanticLightningModule = Text2SemanticLightningModule(
+        config, output_dir
+    )
 
     data_module: Text2SemanticDataModule = Text2SemanticDataModule(
         config,

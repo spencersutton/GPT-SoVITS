@@ -257,6 +257,8 @@ def replace_to_range(match) -> str:
 
 
 RE_VERSION_NUM = re.compile(r"((\d+)(\.\d+)(\.\d+)?(\.\d+)+)")
+
+
 def replace_vrsion_num(match) -> str:
     """
     Args:
@@ -273,7 +275,6 @@ def replace_vrsion_num(match) -> str:
     return result
 
 
-
 def _get_value(value_string: str, use_zero: bool = True) -> List[str]:
     stripped = value_string.lstrip("0")
     if len(stripped) == 0:
@@ -284,7 +285,9 @@ def _get_value(value_string: str, use_zero: bool = True) -> List[str]:
         else:
             return [DIGITS[stripped]]
     else:
-        largest_unit = next(power for power in reversed(UNITS.keys()) if power < len(stripped))
+        largest_unit = next(
+            power for power in reversed(UNITS.keys()) if power < len(stripped)
+        )
         first_part = value_string[:-largest_unit]
         second_part = value_string[-largest_unit:]
         return _get_value(first_part) + [UNITS[largest_unit]] + _get_value(second_part)
@@ -301,7 +304,11 @@ def verbalize_cardinal(value_string: str) -> str:
 
     result_symbols = _get_value(value_string)
     # verbalized number starting with '一十*' is abbreviated as `十*`
-    if len(result_symbols) >= 2 and result_symbols[0] == DIGITS["1"] and result_symbols[1] == UNITS[1]:
+    if (
+        len(result_symbols) >= 2
+        and result_symbols[0] == DIGITS["1"]
+        and result_symbols[1] == UNITS[1]
+    ):
         result_symbols = result_symbols[1:]
     return "".join(result_symbols)
 
@@ -322,7 +329,9 @@ def num2str(value_string: str) -> str:
     elif len(integer_decimal) == 2:
         integer, decimal = integer_decimal
     else:
-        raise ValueError(f"The value string: '${value_string}' has more than one point in it.")
+        raise ValueError(
+            f"The value string: '${value_string}' has more than one point in it."
+        )
 
     result = verbalize_cardinal(integer)
 

@@ -43,7 +43,9 @@ torch.backends.cudnn.deterministic = False
 ###反正A100fp32更快，那试试tf32吧
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
-torch.set_float32_matmul_precision("medium")  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
+torch.set_float32_matmul_precision(
+    "medium"
+)  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
 # from config import pretrained_s2G,pretrained_s2D
 global_step = 0
 
@@ -182,7 +184,9 @@ def run(rank, n_gpus, hps):
         #     logger.info("loaded D")
         # _, _, _, epoch_str = utils.load_checkpoint(utils.latest_checkpoint_path(hps.model_dir, "G_*.pth"), net_g, optim_g,load_opt=0)
         _, _, _, epoch_str = utils.load_checkpoint(
-            utils.latest_checkpoint_path("%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "G_*.pth"),
+            utils.latest_checkpoint_path(
+                "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version), "G_*.pth"
+            ),
             net_g,
             optim_g,
         )
@@ -204,12 +208,16 @@ def run(rank, n_gpus, hps):
             print(
                 "loaded pretrained %s" % hps.train.pretrained_s2G,
                 net_g.module.load_state_dict(
-                    torch.load(hps.train.pretrained_s2G, map_location="cpu", weights_only=False)["weight"],
+                    torch.load(
+                        hps.train.pretrained_s2G, map_location="cpu", weights_only=False
+                    )["weight"],
                     strict=False,
                 )
                 if torch.cuda.is_available()
                 else net_g.load_state_dict(
-                    torch.load(hps.train.pretrained_s2G, map_location="cpu", weights_only=False)["weight"],
+                    torch.load(
+                        hps.train.pretrained_s2G, map_location="cpu", weights_only=False
+                    )["weight"],
                     strict=False,
                 ),
             )  ##测试不加载优化器
@@ -227,7 +235,9 @@ def run(rank, n_gpus, hps):
     # scheduler_g = torch.optim.lr_scheduler.ExponentialLR(optim_g, gamma=hps.train.lr_decay, last_epoch=epoch_str - 2)
     # scheduler_d = torch.optim.lr_scheduler.ExponentialLR(optim_d, gamma=hps.train.lr_decay, last_epoch=epoch_str - 2)
 
-    scheduler_g = torch.optim.lr_scheduler.ExponentialLR(optim_g, gamma=hps.train.lr_decay, last_epoch=-1)
+    scheduler_g = torch.optim.lr_scheduler.ExponentialLR(
+        optim_g, gamma=hps.train.lr_decay, last_epoch=-1
+    )
     # scheduler_d = torch.optim.lr_scheduler.ExponentialLR(
     #     optim_d, gamma=hps.train.lr_decay, last_epoch=-1
     # )
@@ -306,9 +316,16 @@ def train_and_evaluate(
     #     text,
     #     text_lengths,
     # ) in enumerate(tqdm(train_loader)):
-    for batch_idx, (ssl, spec, mel, ssl_lengths, spec_lengths, text, text_lengths, mel_lengths) in enumerate(
-        tqdm(train_loader)
-    ):
+    for batch_idx, (
+        ssl,
+        spec,
+        mel,
+        ssl_lengths,
+        spec_lengths,
+        text,
+        text_lengths,
+        mel_lengths,
+    ) in enumerate(tqdm(train_loader)):
         if torch.cuda.is_available():
             spec, spec_lengths = (
                 spec.cuda(
@@ -320,7 +337,10 @@ def train_and_evaluate(
                     non_blocking=True,
                 ),
             )
-            mel, mel_lengths = mel.cuda(rank, non_blocking=True), mel_lengths.cuda(rank, non_blocking=True)
+            mel, mel_lengths = (
+                mel.cuda(rank, non_blocking=True),
+                mel_lengths.cuda(rank, non_blocking=True),
+            )
             ssl = ssl.cuda(rank, non_blocking=True)
             ssl.requires_grad = False
             # ssl_lengths = ssl_lengths.cuda(rank, non_blocking=True)
@@ -375,7 +395,11 @@ def train_and_evaluate(
                 )
                 logger.info([x.item() for x in losses] + [global_step, lr])
 
-                scalar_dict = {"loss/g/total": loss_gen_all, "learning_rate": lr, "grad_norm_g": grad_norm_g}
+                scalar_dict = {
+                    "loss/g/total": loss_gen_all,
+                    "learning_rate": lr,
+                    "grad_norm_g": grad_norm_g,
+                }
                 # image_dict = {
                 #     "slice/mel_org": utils.plot_spectrogram_to_numpy(y_mel[0].data.cpu().numpy()),
                 #     "slice/mel_gen": utils.plot_spectrogram_to_numpy(y_hat_mel[0].data.cpu().numpy()),

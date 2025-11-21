@@ -23,7 +23,9 @@ class Snake(nn.Module):
         >>> x = a1(x)
     """
 
-    def __init__(self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False):
+    def __init__(
+        self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False
+    ):
         """
         Initialization.
         INPUT:
@@ -78,7 +80,9 @@ class SnakeBeta(nn.Module):
         >>> x = a1(x)
     """
 
-    def __init__(self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False):
+    def __init__(
+        self, in_features, alpha=1.0, alpha_trainable=True, alpha_logscale=False
+    ):
         """
         Initialization.
         INPUT:

@@ -26,7 +26,15 @@ class SV:
             if self.is_half == True:
                 wav = wav.half()
             feat = torch.stack(
-                [Kaldi.fbank(wav0.unsqueeze(0), num_mel_bins=80, sample_frequency=16000, dither=0) for wav0 in wav]
+                [
+                    Kaldi.fbank(
+                        wav0.unsqueeze(0),
+                        num_mel_bins=80,
+                        sample_frequency=16000,
+                        dither=0,
+                    )
+                    for wav0 in wav
+                ]
             )
             sv_emb = self.embedding_model.forward3(feat)
         return sv_emb

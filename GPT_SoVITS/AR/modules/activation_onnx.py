@@ -43,7 +43,9 @@ class MultiheadAttention(Module):
         self.dropout = dropout
         self.batch_first = batch_first
         self.head_dim = embed_dim // num_heads
-        assert self.head_dim * num_heads == self.embed_dim, "embed_dim must be divisible by num_heads"
+        assert self.head_dim * num_heads == self.embed_dim, (
+            "embed_dim must be divisible by num_heads"
+        )
 
         if add_bias_kv:
             self.bias_k = Parameter(torch.empty((1, 1, embed_dim), **factory_kwargs))
@@ -89,7 +91,9 @@ class MultiheadAttention(Module):
                 )
             else:
                 self.register_parameter("in_proj_bias", None)
-            self.out_proj = NonDynamicallyQuantizableLinear(embed_dim, embed_dim, bias=bias, **factory_kwargs)
+            self.out_proj = NonDynamicallyQuantizableLinear(
+                embed_dim, embed_dim, bias=bias, **factory_kwargs
+            )
 
             self._reset_parameters()
         else:

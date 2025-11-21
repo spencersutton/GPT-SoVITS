@@ -84,9 +84,14 @@ def uvr(model_name, inp_root, save_root_vocal, paths, save_root_ins, agg, format
             done = 0
             try:
                 info = ffmpeg.probe(inp_path, cmd="ffprobe")
-                if info["streams"][0]["channels"] == 2 and info["streams"][0]["sample_rate"] == "44100":
+                if (
+                    info["streams"][0]["channels"] == 2
+                    and info["streams"][0]["sample_rate"] == "44100"
+                ):
                     need_reformat = 0
-                    pre_fun._path_audio_(inp_path, save_root_ins, save_root_vocal, format0, is_hp3)
+                    pre_fun._path_audio_(
+                        inp_path, save_root_ins, save_root_vocal, format0, is_hp3
+                    )
                     done = 1
             except:
                 need_reformat = 1
@@ -96,15 +101,21 @@ def uvr(model_name, inp_root, save_root_vocal, paths, save_root_ins, agg, format
                     os.path.join(os.environ["TEMP"]),
                     os.path.basename(inp_path),
                 )
-                os.system(f'ffmpeg -i "{inp_path}" -vn -acodec pcm_s16le -ac 2 -ar 44100 "{tmp_path}" -y')
+                os.system(
+                    f'ffmpeg -i "{inp_path}" -vn -acodec pcm_s16le -ac 2 -ar 44100 "{tmp_path}" -y'
+                )
                 inp_path = tmp_path
             try:
                 if done == 0:
-                    pre_fun._path_audio_(inp_path, save_root_ins, save_root_vocal, format0, is_hp3)
+                    pre_fun._path_audio_(
+                        inp_path, save_root_ins, save_root_vocal, format0, is_hp3
+                    )
                 infos.append("%s->Success" % (os.path.basename(inp_path)))
                 yield "\n".join(infos)
             except:
-                infos.append("%s->%s" % (os.path.basename(inp_path), traceback.format_exc()))
+                infos.append(
+                    "%s->%s" % (os.path.basename(inp_path), traceback.format_exc())
+                )
                 yield "\n".join(infos)
     except:
         infos.append(traceback.format_exc())
@@ -127,9 +138,13 @@ def uvr(model_name, inp_root, save_root_vocal, paths, save_root_ins, agg, format
 
 with gr.Blocks(title="UVR5 WebUI", analytics_enabled=False) as app:
     gr.Markdown(
-        value=i18n("本软件以MIT协议开源, 作者不对软件具备任何控制力, 使用软件者、传播软件导出的声音者自负全责.")
+        value=i18n(
+            "本软件以MIT协议开源, 作者不对软件具备任何控制力, 使用软件者、传播软件导出的声音者自负全责."
+        )
         + "<br>"
-        + i18n("如不认可该条款, 则不能使用或引用软件包内任何代码和文件. 详见根目录LICENSE.")
+        + i18n(
+            "如不认可该条款, 则不能使用或引用软件包内任何代码和文件. 详见根目录LICENSE."
+        )
     )
     with gr.Group():
         gr.Markdown(html_center(i18n("伴奏人声分离&去混响&去回声"), "h2"))
@@ -148,11 +163,15 @@ with gr.Blocks(title="UVR5 WebUI", analytics_enabled=False) as app:
                         "1、保留人声：不带和声的音频选这个，对主人声保留比HP5更好。内置HP2和HP3两个模型，HP3可能轻微漏伴奏但对主人声保留比HP2稍微好一丁点；"
                     )
                     + "<br>"
-                    + i18n("2、仅保留主人声：带和声的音频选这个，对主人声可能有削弱。内置HP5一个模型；")
+                    + i18n(
+                        "2、仅保留主人声：带和声的音频选这个，对主人声可能有削弱。内置HP5一个模型；"
+                    )
                     + "<br>"
                     + i18n("3、去混响、去延迟模型（by FoxJoy）：")
                     + "<br>  "
-                    + i18n("(1)MDX-Net(onnx_dereverb):对于双通道混响是最好的选择，不能去除单通道混响；")
+                    + i18n(
+                        "(1)MDX-Net(onnx_dereverb):对于双通道混响是最好的选择，不能去除单通道混响；"
+                    )
                     + "<br>&emsp;"
                     + i18n(
                         "(234)DeEcho:去除延迟效果。Aggressive比Normal去除得更彻底，DeReverb额外去除混响，可去除单声道混响，但是对高频重的板式混响去不干净。"
@@ -176,7 +195,8 @@ with gr.Blocks(title="UVR5 WebUI", analytics_enabled=False) as app:
                         placeholder="C:\\Users\\Desktop\\todo-songs",
                     )
                     wav_inputs = gr.File(
-                        file_count="multiple", label=i18n("也可批量输入音频文件, 二选一, 优先读文件夹")
+                        file_count="multiple",
+                        label=i18n("也可批量输入音频文件, 二选一, 优先读文件夹"),
                     )
                 with gr.Column():
                     agg = gr.Slider(
@@ -188,8 +208,12 @@ with gr.Blocks(title="UVR5 WebUI", analytics_enabled=False) as app:
                         interactive=True,
                         visible=False,  # 先不开放调整
                     )
-                    opt_vocal_root = gr.Textbox(label=i18n("指定输出主人声文件夹"), value="output/uvr5_opt")
-                    opt_ins_root = gr.Textbox(label=i18n("指定输出非主人声文件夹"), value="output/uvr5_opt")
+                    opt_vocal_root = gr.Textbox(
+                        label=i18n("指定输出主人声文件夹"), value="output/uvr5_opt"
+                    )
+                    opt_ins_root = gr.Textbox(
+                        label=i18n("指定输出非主人声文件夹"), value="output/uvr5_opt"
+                    )
                     format0 = gr.Radio(
                         label=i18n("导出文件格式"),
                         choices=["wav", "flac", "mp3", "m4a"],

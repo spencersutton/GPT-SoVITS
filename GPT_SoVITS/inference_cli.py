@@ -3,7 +3,11 @@ import os
 import soundfile as sf
 
 from tools.i18n.i18n import I18nAuto
-from GPT_SoVITS.inference_webui import change_gpt_weights, change_sovits_weights, get_tts_wav
+from GPT_SoVITS.inference_webui import (
+    change_gpt_weights,
+    change_sovits_weights,
+    get_tts_wav,
+)
 
 i18n = I18nAuto()
 
@@ -53,20 +57,33 @@ def synthesize(
 def main():
     parser = argparse.ArgumentParser(description="GPT-SoVITS Command Line Tool")
     parser.add_argument("--gpt_model", required=True, help="Path to the GPT model file")
-    parser.add_argument("--sovits_model", required=True, help="Path to the SoVITS model file")
-    parser.add_argument("--ref_audio", required=True, help="Path to the reference audio file")
-    parser.add_argument("--ref_text", required=True, help="Path to the reference text file")
     parser.add_argument(
-        "--ref_language", required=True, choices=["中文", "英文", "日文"], help="Language of the reference audio"
+        "--sovits_model", required=True, help="Path to the SoVITS model file"
     )
-    parser.add_argument("--target_text", required=True, help="Path to the target text file")
+    parser.add_argument(
+        "--ref_audio", required=True, help="Path to the reference audio file"
+    )
+    parser.add_argument(
+        "--ref_text", required=True, help="Path to the reference text file"
+    )
+    parser.add_argument(
+        "--ref_language",
+        required=True,
+        choices=["中文", "英文", "日文"],
+        help="Language of the reference audio",
+    )
+    parser.add_argument(
+        "--target_text", required=True, help="Path to the target text file"
+    )
     parser.add_argument(
         "--target_language",
         required=True,
         choices=["中文", "英文", "日文", "中英混合", "日英混合", "多语种混合"],
         help="Language of the target text",
     )
-    parser.add_argument("--output_path", required=True, help="Path to the output directory")
+    parser.add_argument(
+        "--output_path", required=True, help="Path to the output directory"
+    )
 
     args = parser.parse_args()
 

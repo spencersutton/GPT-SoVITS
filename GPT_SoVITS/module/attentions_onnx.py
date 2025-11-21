@@ -66,9 +66,13 @@ class Encoder(nn.Module):
             if self.gin_channels != 0:
                 self.spk_emb_linear = nn.Linear(self.gin_channels, self.hidden_channels)
                 # vits2 says 3rd block, so idx is 2 by default
-                self.cond_layer_idx = kwargs["cond_layer_idx"] if "cond_layer_idx" in kwargs else 2
+                self.cond_layer_idx = (
+                    kwargs["cond_layer_idx"] if "cond_layer_idx" in kwargs else 2
+                )
                 logging.debug(self.gin_channels, self.cond_layer_idx)
-                assert self.cond_layer_idx < self.n_layers, "cond_layer_idx should be less than n_layers"
+                assert self.cond_layer_idx < self.n_layers, (
+                    "cond_layer_idx should be less than n_layers"
+                )
         self.drop = nn.Dropout(p_dropout)
         self.attn_layers = nn.ModuleList()
         self.norm_layers_1 = nn.ModuleList()
@@ -169,8 +173,14 @@ class MultiHeadAttention(nn.Module):
         if window_size is not None:
             n_heads_rel = 1 if heads_share else n_heads
             rel_stddev = self.k_channels**-0.5
-            self.emb_rel_k = nn.Parameter(torch.randn(n_heads_rel, window_size * 2 + 1, self.k_channels) * rel_stddev)
-            self.emb_rel_v = nn.Parameter(torch.randn(n_heads_rel, window_size * 2 + 1, self.k_channels) * rel_stddev)
+            self.emb_rel_k = nn.Parameter(
+                torch.randn(n_heads_rel, window_size * 2 + 1, self.k_channels)
+                * rel_stddev
+            )
+            self.emb_rel_v = nn.Parameter(
+                torch.randn(n_heads_rel, window_size * 2 + 1, self.k_channels)
+                * rel_stddev
+            )
 
         nn.init.xavier_uniform_(self.conv_q.weight)
         nn.init.xavier_uniform_(self.conv_k.weight)
@@ -201,7 +211,9 @@ class MultiHeadAttention(nn.Module):
 
         if self.window_size is not None:
             key_relative_embeddings = self._get_relative_embeddings(self.emb_rel_k, t_s)
-            rel_logits = self._matmul_with_relative_keys(query / math.sqrt(self.k_channels), key_relative_embeddings)
+            rel_logits = self._matmul_with_relative_keys(
+                query / math.sqrt(self.k_channels), key_relative_embeddings
+            )
             scores_local = self._relative_position_to_absolute_position(rel_logits)
             scores = scores + scores_local
 
@@ -214,8 +226,12 @@ class MultiHeadAttention(nn.Module):
 
         if self.window_size is not None:
             relative_weights = self._absolute_position_to_relative_position(p_attn)
-            value_relative_embeddings = self._get_relative_embeddings(self.emb_rel_v, t_s)
-            output = output + self._matmul_with_relative_values(relative_weights, value_relative_embeddings)
+            value_relative_embeddings = self._get_relative_embeddings(
+                self.emb_rel_v, t_s
+            )
+            output = output + self._matmul_with_relative_values(
+                relative_weights, value_relative_embeddings
+            )
 
         output = output.transpose(2, 3).contiguous().view(b, d, -1)
         return output, p_attn
@@ -244,14 +260,18 @@ class MultiHeadAttention(nn.Module):
         pad_l = torch.zeros((1), dtype=torch.int64) + length - (self.window_size + 1)
         pad_s = torch.zeros((1), dtype=torch.int64) + (self.window_size + 1) - length
         pad_length = torch.max(pad_l, other=torch.zeros((1), dtype=torch.int64))
-        slice_start_position = torch.max(pad_s, other=torch.zeros((1), dtype=torch.int64))
+        slice_start_position = torch.max(
+            pad_s, other=torch.zeros((1), dtype=torch.int64)
+        )
 
         slice_end_position = slice_start_position + 2 * length - 1
         padded_relative_embeddings = F.pad(
             relative_embeddings,
             commons.convert_pad_shape([[0, 0], [pad_length, pad_length], [0, 0]]),
         )
-        used_relative_embeddings = padded_relative_embeddings[:, slice_start_position:slice_end_position]
+        used_relative_embeddings = padded_relative_embeddings[
+            :, slice_start_position:slice_end_position
+        ]
         return used_relative_embeddings
 
     def _relative_position_to_absolute_position(self, x):
@@ -265,10 +285,14 @@ class MultiHeadAttention(nn.Module):
 
         # Concat extra elements so to add up to shape (len+1, 2*len-1).
         x_flat = x.view([batch, heads, length * 2 * length])
-        x_flat = F.pad(x_flat, commons.convert_pad_shape([[0, 0], [0, 0], [0, length - 1]]))
+        x_flat = F.pad(
+            x_flat, commons.convert_pad_shape([[0, 0], [0, 0], [0, length - 1]])
+        )
 
         # Reshape and slice out the padded elements.
-        x_final = x_flat.view([batch, heads, length + 1, 2 * length - 1])[:, :, :length, length - 1 :]
+        x_final = x_flat.view([batch, heads, length + 1, 2 * length - 1])[
+            :, :, :length, length - 1 :
+        ]
         return x_final
 
     def _absolute_position_to_relative_position(self, x):
@@ -278,7 +302,9 @@ class MultiHeadAttention(nn.Module):
         """
         batch, heads, length, _ = x.size()
         # padd along column
-        x = F.pad(x, commons.convert_pad_shape([[0, 0], [0, 0], [0, 0], [0, length - 1]]))
+        x = F.pad(
+            x, commons.convert_pad_shape([[0, 0], [0, 0], [0, 0], [0, length - 1]])
+        )
         x_flat = x.view([batch, heads, length**2 + length * (length - 1)])
         # add 0's in the beginning that will skew the elements after reshape
         x_flat = F.pad(x_flat, commons.convert_pad_shape([[0, 0], [0, 0], [length, 0]]))
@@ -380,6 +406,10 @@ class MRTE(nn.Module):
 
         ssl_enc = self.c_pre(ssl_enc * ssl_mask)
         text_enc = self.text_pre(text * text_mask)
-        x = self.cross_attention(ssl_enc * ssl_mask, text_enc * text_mask, attn_mask) + ssl_enc + ge
+        x = (
+            self.cross_attention(ssl_enc * ssl_mask, text_enc * text_mask, attn_mask)
+            + ssl_enc
+            + ge
+        )
         x = self.c_post(x * ssl_mask)
         return x

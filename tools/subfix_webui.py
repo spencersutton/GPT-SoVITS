@@ -43,7 +43,9 @@ def reload_data(index, batch):
     datas = g_data_json[index : index + batch]
     output = []
     for d in datas:
-        output.append({g_json_key_text: d[g_json_key_text], g_json_key_path: d[g_json_key_path]})
+        output.append(
+            {g_json_key_text: d[g_json_key_text], g_json_key_path: d[g_json_key_path]}
+        )
     return output
 
 
@@ -58,7 +60,11 @@ def b_change_index(index, batch):
             #     label=f"Text {i+index}",
             #     value=_[g_json_key_text]#text
             # )
-            {"__type__": "update", "label": f"Text {i + index}", "value": _[g_json_key_text]}
+            {
+                "__type__": "update",
+                "label": f"Text {i + index}",
+                "value": _[g_json_key_text],
+            }
         )
     for _ in range(g_batch - len(datas)):
         output.append(
@@ -172,7 +178,11 @@ def b_audio_split(audio_breakpoint, *checkbox_list):
 
     g_max_json_index = len(g_data_json) - 1
     # return gr.Slider(value=g_index, maximum=g_max_json_index), *b_change_index(g_index, g_batch)
-    return {"value": g_index, "maximum": g_max_json_index, "__type__": "update"}, *b_change_index(g_index, g_batch)
+    return {
+        "value": g_index,
+        "maximum": g_max_json_index,
+        "__type__": "update",
+    }, *b_change_index(g_index, g_batch)
 
 
 def b_merge_audio(interval_r, *checkbox_list):
@@ -216,7 +226,11 @@ def b_merge_audio(interval_r, *checkbox_list):
     g_max_json_index = len(g_data_json) - 1
 
     # return gr.Slider(value=g_index, maximum=g_max_json_index), *b_change_index(g_index, g_batch)
-    return {"value": g_index, "maximum": g_max_json_index, "__type__": "update"}, *b_change_index(g_index, g_batch)
+    return {
+        "value": g_index,
+        "maximum": g_max_json_index,
+        "__type__": "update",
+    }, *b_change_index(g_index, g_batch)
 
 
 def b_save_json():
@@ -252,7 +266,12 @@ def b_load_list():
             if len(data) == 4:
                 wav_path, speaker_name, language, text = data
                 g_data_json.append(
-                    {"wav_path": wav_path, "speaker_name": speaker_name, "language": language, "text": text.strip()}
+                    {
+                        "wav_path": wav_path,
+                        "speaker_name": speaker_name,
+                        "language": language,
+                        "text": text.strip(),
+                    }
                 )
             else:
                 print("error line:", data)
@@ -296,17 +315,41 @@ def set_global(load_json, load_list, json_key_text, json_key_path, batch):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process some integers.")
-    parser.add_argument("--load_json", default="None", help="source file, like demo.json")
-    parser.add_argument("--is_share", default="False", help="whether webui is_share=True")
-    parser.add_argument("--load_list", default="None", help="source file, like demo.list")
-    parser.add_argument("--webui_port_subfix", default=9871, help="source file, like demo.list")
-    parser.add_argument("--json_key_text", default="text", help="the text key name in json, Default: text")
-    parser.add_argument("--json_key_path", default="wav_path", help="the path key name in json, Default: wav_path")
-    parser.add_argument("--g_batch", default=10, help="max number g_batch wav to display, Default: 10")
+    parser.add_argument(
+        "--load_json", default="None", help="source file, like demo.json"
+    )
+    parser.add_argument(
+        "--is_share", default="False", help="whether webui is_share=True"
+    )
+    parser.add_argument(
+        "--load_list", default="None", help="source file, like demo.list"
+    )
+    parser.add_argument(
+        "--webui_port_subfix", default=9871, help="source file, like demo.list"
+    )
+    parser.add_argument(
+        "--json_key_text",
+        default="text",
+        help="the text key name in json, Default: text",
+    )
+    parser.add_argument(
+        "--json_key_path",
+        default="wav_path",
+        help="the path key name in json, Default: wav_path",
+    )
+    parser.add_argument(
+        "--g_batch", default=10, help="max number g_batch wav to display, Default: 10"
+    )
 
     args = parser.parse_args()
 
-    set_global(args.load_json, args.load_list, args.json_key_text, args.json_key_path, args.g_batch)
+    set_global(
+        args.load_json,
+        args.load_list,
+        args.json_key_text,
+        args.json_key_path,
+        args.g_batch,
+    )
 
     with gr.Blocks(analytics_enabled=False) as demo:
         gr.Markdown(
@@ -323,9 +366,21 @@ if __name__ == "__main__":
             btn_next_index = gr.Button("Next Index")
 
         with gr.Row():
-            index_slider = gr.Slider(minimum=0, maximum=g_max_json_index, value=g_index, step=1, label="Index", scale=3)
+            index_slider = gr.Slider(
+                minimum=0,
+                maximum=g_max_json_index,
+                value=g_index,
+                step=1,
+                label="Index",
+                scale=3,
+            )
             splitpoint_slider = gr.Slider(
-                minimum=0, maximum=120.0, value=0, step=0.1, label="Audio Split Point(s)", scale=3
+                minimum=0,
+                maximum=120.0,
+                value=0,
+                step=0.1,
+                label="Audio Split Point(s)",
+                scale=3,
             )
             btn_audio_split = gr.Button("Split Audio", scale=1)
             btn_save_json = gr.Button("Save File", visible=True, scale=1)
@@ -336,17 +391,29 @@ if __name__ == "__main__":
                 for _ in range(0, g_batch):
                     with gr.Row():
                         text = gr.Textbox(label="Text", visible=True, scale=5)
-                        audio_output = gr.Audio(label="Output Audio", visible=True, scale=5)
-                        audio_check = gr.Checkbox(label="Yes", show_label=True, info="Choose Audio", scale=1)
+                        audio_output = gr.Audio(
+                            label="Output Audio", visible=True, scale=5
+                        )
+                        audio_check = gr.Checkbox(
+                            label="Yes", show_label=True, info="Choose Audio", scale=1
+                        )
                         g_text_list.append(text)
                         g_audio_list.append(audio_output)
                         g_checkbox_list.append(audio_check)
 
         with gr.Row():
             batchsize_slider = gr.Slider(
-                minimum=1, maximum=g_batch, value=g_batch, step=1, label="Batch Size", scale=3, interactive=False
+                minimum=1,
+                maximum=g_batch,
+                value=g_batch,
+                step=1,
+                label="Batch Size",
+                scale=3,
+                interactive=False,
             )
-            interval_slider = gr.Slider(minimum=0, maximum=2, value=0, step=0.01, label="Interval", scale=3)
+            interval_slider = gr.Slider(
+                minimum=0, maximum=2, value=0, step=0.01, label="Interval", scale=3
+            )
             btn_theme_dark = gr.Button("Light Theme", link="?__theme=light", scale=1)
             btn_theme_light = gr.Button("Dark Theme", link="?__theme=dark", scale=1)
 
@@ -403,7 +470,9 @@ if __name__ == "__main__":
             outputs=[index_slider, *g_text_list, *g_audio_list, *g_checkbox_list],
         )
 
-        btn_invert_selection.click(b_invert_selection, inputs=[*g_checkbox_list], outputs=[*g_checkbox_list])
+        btn_invert_selection.click(
+            b_invert_selection, inputs=[*g_checkbox_list], outputs=[*g_checkbox_list]
+        )
 
         btn_save_json.click(b_save_file)
 

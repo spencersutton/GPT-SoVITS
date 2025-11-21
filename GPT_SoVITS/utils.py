@@ -22,10 +22,16 @@ logger = logging
 
 def load_checkpoint(checkpoint_path, model, optimizer=None, skip_optimizer=False):
     assert os.path.isfile(checkpoint_path)
-    checkpoint_dict = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    checkpoint_dict = torch.load(
+        checkpoint_path, map_location="cpu", weights_only=False
+    )
     iteration = checkpoint_dict["iteration"]
     learning_rate = checkpoint_dict["learning_rate"]
-    if optimizer is not None and not skip_optimizer and checkpoint_dict["optimizer"] is not None:
+    if (
+        optimizer is not None
+        and not skip_optimizer
+        and checkpoint_dict["optimizer"] is not None
+    ):
         optimizer.load_state_dict(checkpoint_dict["optimizer"])
     saved_state_dict = checkpoint_dict["model"]
     if hasattr(model, "module"):
@@ -44,7 +50,9 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, skip_optimizer=False
             )
         except:
             traceback.print_exc()
-            print("error, %s is not in the checkpoint" % k)  # shape不对也会，比如text_embedding当cleaner修改时
+            print(
+                "error, %s is not in the checkpoint" % k
+            )  # shape不对也会，比如text_embedding当cleaner修改时
             new_state_dict[k] = v
     if hasattr(model, "module"):
         model.module.load_state_dict(new_state_dict)
@@ -73,7 +81,11 @@ def my_save(fea, path):  #####fix issue: torch.save doesn't support chinese path
 
 
 def save_checkpoint(model, optimizer, learning_rate, iteration, checkpoint_path):
-    logger.info("Saving model and optimizer state at iteration {} to {}".format(iteration, checkpoint_path))
+    logger.info(
+        "Saving model and optimizer state at iteration {} to {}".format(
+            iteration, checkpoint_path
+        )
+    )
     if hasattr(model, "module"):
         state_dict = model.module.state_dict()
     else:
@@ -195,7 +207,9 @@ def get_hparams(init=True, stage=1):
         default="./configs/s2.json",
         help="JSON file for configuration",
     )
-    parser.add_argument("-p", "--pretrain", type=str, required=False, default=None, help="pretrain dir")
+    parser.add_argument(
+        "-p", "--pretrain", type=str, required=False, default=None, help="pretrain dir"
+    )
     parser.add_argument(
         "-rs",
         "--resume_step",
@@ -244,7 +258,11 @@ def clean_checkpoints(path_to_models="logs/44k/", n_ckpts_to_keep=2, sort_by_tim
     """
     import re
 
-    ckpts_files = [f for f in os.listdir(path_to_models) if os.path.isfile(os.path.join(path_to_models, f))]
+    ckpts_files = [
+        f
+        for f in os.listdir(path_to_models)
+        if os.path.isfile(os.path.join(path_to_models, f))
+    ]
     name_key = lambda _f: int(re.compile("._(\d+)\.pth").match(_f).group(1))
     time_key = lambda _f: os.path.getmtime(os.path.join(path_to_models, _f))
     sort_key = time_key if sort_by_time else name_key
@@ -253,7 +271,8 @@ def clean_checkpoints(path_to_models="logs/44k/", n_ckpts_to_keep=2, sort_by_tim
         key=sort_key,
     )
     to_del = [
-        os.path.join(path_to_models, fn) for fn in (x_sorted("G")[:-n_ckpts_to_keep] + x_sorted("D")[:-n_ckpts_to_keep])
+        os.path.join(path_to_models, fn)
+        for fn in (x_sorted("G")[:-n_ckpts_to_keep] + x_sorted("D")[:-n_ckpts_to_keep])
     ]
     del_info = lambda fn: logger.info(f".. Free up space by deleting ckpt {fn}")
     del_routine = lambda x: [os.remove(x), del_info(x)]

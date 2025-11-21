@@ -111,7 +111,9 @@ def top_k_top_p_filtering(
         sorted_indices_to_remove[..., 0] = 0
 
         # scatter sorted tensors to original indexing
-        indices_to_remove = sorted_indices_to_remove.scatter(1, sorted_indices, sorted_indices_to_remove)
+        indices_to_remove = sorted_indices_to_remove.scatter(
+            1, sorted_indices, sorted_indices_to_remove
+        )
         logits[indices_to_remove] = filter_value
     return logits
 
@@ -168,7 +170,9 @@ def logits_to_probs(
 
     if top_p is not None and top_p < 1.0:
         sorted_logits, sorted_indices = torch.sort(logits, descending=True)
-        cum_probs = torch.cumsum(torch.nn.functional.softmax(sorted_logits, dim=-1), dim=-1)
+        cum_probs = torch.cumsum(
+            torch.nn.functional.softmax(sorted_logits, dim=-1), dim=-1
+        )
         sorted_indices_to_remove = cum_probs > top_p
         sorted_indices_to_remove[:, 0] = False  # keep at least one option
         indices_to_remove = sorted_indices_to_remove.scatter(
@@ -194,7 +198,9 @@ def sample(
     previous_tokens: Optional[torch.Tensor] = None,
     **sampling_kwargs,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    probs = logits_to_probs(logits=logits, previous_tokens=previous_tokens, **sampling_kwargs)
+    probs = logits_to_probs(
+        logits=logits, previous_tokens=previous_tokens, **sampling_kwargs
+    )
     idx_next = multinomial_sample_one_no_sync(probs)
     return idx_next, probs
 
@@ -217,7 +223,9 @@ def dpo_loss(
 
     losses = -F.logsigmoid(beta * logits)
     chosen_rewards = beta * (policy_chosen_logps - reference_chosen_logps).detach()
-    rejected_rewards = beta * (policy_rejected_logps - reference_rejected_logps).detach()
+    rejected_rewards = (
+        beta * (policy_rejected_logps - reference_rejected_logps).detach()
+    )
 
     return losses.mean(), chosen_rewards, rejected_rewards
 
@@ -274,7 +282,10 @@ def make_reject_y(y_o, y_lens):
     max_length = max(reject_y_lens)
     for b in range(bs):
         pad_length = max_length - reject_y_lens[b]
-        reject_y[b] = torch.cat([reject_y[b], torch.zeros(pad_length, dtype=y_o.dtype, device=y_o.device)], dim=0)
+        reject_y[b] = torch.cat(
+            [reject_y[b], torch.zeros(pad_length, dtype=y_o.dtype, device=y_o.device)],
+            dim=0,
+        )
 
     reject_y = torch.stack(reject_y, dim=0)
     reject_y_lens = torch.tensor(reject_y_lens, device=y_lens.device)

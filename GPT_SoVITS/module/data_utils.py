@@ -33,10 +33,14 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         if self.is_v2Pro:
             self.path7 = "%s/7-sv_cn" % exp_dir
             assert os.path.exists(self.path7)
-        names4 = set([name[:-3] for name in list(os.listdir(self.path4))])  # 去除.pt后缀
+        names4 = set(
+            [name[:-3] for name in list(os.listdir(self.path4))]
+        )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         if self.is_v2Pro:
-            names6 = set([name[:-3] for name in list(os.listdir(self.path7))])  # 去除.pt后缀
+            names6 = set(
+                [name[:-3] for name in list(os.listdir(self.path7))]
+            )  # 去除.pt后缀
         self.phoneme_data = {}
         with open(self.path2, "r", encoding="utf8") as f:
             lines = f.read().strip("\n").split("\n")
@@ -47,7 +51,9 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
                 continue
             self.phoneme_data[tmp[0]] = [tmp[1]]
         if self.is_v2Pro:
-            self.audiopaths_sid_text = list(set(self.phoneme_data) & names4 & names5 & names6)
+            self.audiopaths_sid_text = list(
+                set(self.phoneme_data) & names4 & names5 & names6
+            )
         else:
             self.audiopaths_sid_text = list(set(self.phoneme_data) & names4 & names5)
         tmp = self.audiopaths_sid_text
@@ -112,13 +118,17 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         try:
             spec, wav = self.get_audio("%s/%s" % (self.path5, audiopath))
             with torch.no_grad():
-                ssl = torch.load("%s/%s.pt" % (self.path4, audiopath), map_location="cpu")
+                ssl = torch.load(
+                    "%s/%s.pt" % (self.path4, audiopath), map_location="cpu"
+                )
                 if ssl.shape[-1] != spec.shape[-1]:
                     typee = ssl.dtype
                     ssl = F.pad(ssl.float(), (0, 1), mode="replicate").to(typee)
                 ssl.requires_grad = False
                 if self.is_v2Pro:
-                    sv_emb = torch.load("%s/%s.pt" % (self.path7, audiopath), map_location="cpu")
+                    sv_emb = torch.load(
+                        "%s/%s.pt" % (self.path7, audiopath), map_location="cpu"
+                    )
         except:
             traceback.print_exc()
             spec = torch.zeros(1025, 100)
@@ -134,12 +144,19 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
             return (ssl, spec, wav, text)
 
     def get_audio(self, filename):
-        audio_array = load_audio(filename, self.sampling_rate)  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
+        audio_array = load_audio(
+            filename, self.sampling_rate
+        )  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
         audio = torch.FloatTensor(audio_array)  # /32768
         audio_norm = audio
         audio_norm = audio_norm.unsqueeze(0)
         spec = spectrogram_torch(
-            audio_norm, self.filter_length, self.sampling_rate, self.hop_length, self.win_length, center=False
+            audio_norm,
+            self.filter_length,
+            self.sampling_rate,
+            self.hop_length,
+            self.win_length,
+            center=False,
         )
         spec = torch.squeeze(spec, 0)
         return spec, audio_norm
@@ -156,7 +173,11 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         return len(self.audiopaths_sid_text)
 
     def random_slice(self, ssl, wav, mel):
-        assert abs(ssl.shape[-1] - wav.shape[-1] // self.hop_length) < 3, ("first", ssl.shape, wav.shape)
+        assert abs(ssl.shape[-1] - wav.shape[-1] // self.hop_length) < 3, (
+            "first",
+            ssl.shape,
+            wav.shape,
+        )
 
         len_mel = mel.shape[1]
         if self.val:
@@ -203,7 +224,9 @@ class TextAudioSpeakerCollate:
         batch: [text_normalized, spec_normalized, wav_normalized, sid]
         """
         # Right zero-pad all one-hot text sequences to max input length
-        _, ids_sorted_decreasing = torch.sort(torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True)
+        _, ids_sorted_decreasing = torch.sort(
+            torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True
+        )
 
         max_ssl_len = max([x[0].size(2) for x in batch])
         max_ssl_len = int(2 * ((max_ssl_len // 2) + 1))
@@ -291,7 +314,9 @@ class TextAudioSpeakerLoaderV3(torch.utils.data.Dataset):
         assert os.path.exists(self.path2)
         assert os.path.exists(self.path4)
         assert os.path.exists(self.path5)
-        names4 = set([name[:-3] for name in list(os.listdir(self.path4))])  # 去除.pt后缀
+        names4 = set(
+            [name[:-3] for name in list(os.listdir(self.path4))]
+        )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         self.phoneme_data = {}
         with open(self.path2, "r", encoding="utf8") as f:
@@ -378,7 +403,9 @@ class TextAudioSpeakerLoaderV3(torch.utils.data.Dataset):
         try:
             spec, mel = self.get_audio("%s/%s" % (self.path5, audiopath))
             with torch.no_grad():
-                ssl = torch.load("%s/%s.pt" % (self.path4, audiopath), map_location="cpu")
+                ssl = torch.load(
+                    "%s/%s.pt" % (self.path4, audiopath), map_location="cpu"
+                )
                 if ssl.shape[-1] != spec.shape[-1]:
                     typee = ssl.dtype
                     ssl = F.pad(ssl.float(), (0, 1), mode="replicate").to(typee)
@@ -394,7 +421,9 @@ class TextAudioSpeakerLoaderV3(torch.utils.data.Dataset):
         return (ssl, spec, mel, text)
 
     def get_audio(self, filename):
-        audio_array = load_audio(filename, self.sampling_rate)  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
+        audio_array = load_audio(
+            filename, self.sampling_rate
+        )  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
         audio = torch.FloatTensor(audio_array)  # /32768
         audio_norm = audio
         audio_norm = audio_norm.unsqueeze(0)
@@ -406,7 +435,12 @@ class TextAudioSpeakerLoaderV3(torch.utils.data.Dataset):
         audio_norm24 = audio_norm24.unsqueeze(0)
 
         spec = spectrogram_torch(
-            audio_norm, self.filter_length, self.sampling_rate, self.hop_length, self.win_length, center=False
+            audio_norm,
+            self.filter_length,
+            self.sampling_rate,
+            self.hop_length,
+            self.win_length,
+            center=False,
         )
         spec = torch.squeeze(spec, 0)
 
@@ -419,7 +453,12 @@ class TextAudioSpeakerLoaderV3(torch.utils.data.Dataset):
             center=False,
         )
         mel = spec_to_mel_torch(
-            spec1, self.filter_length_mel, self.n_mel_channels, self.sampling_rate_mel, self.mel_fmin, self.mel_fmax
+            spec1,
+            self.filter_length_mel,
+            self.n_mel_channels,
+            self.sampling_rate_mel,
+            self.mel_fmin,
+            self.mel_fmax,
         )
         mel = torch.squeeze(mel, 0)
         mel = self.norm_spec(mel)
@@ -452,7 +491,9 @@ class TextAudioSpeakerCollateV3:
         """
         # ssl, spec, wav,mel, text
         # Right zero-pad all one-hot text sequences to max input length
-        _, ids_sorted_decreasing = torch.sort(torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True)
+        _, ids_sorted_decreasing = torch.sort(
+            torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True
+        )
         # (ssl, spec,mel, text)
         max_ssl_len = max([x[0].size(2) for x in batch])
 
@@ -511,7 +552,16 @@ class TextAudioSpeakerCollateV3:
             text_lengths[i] = text.size(0)
 
         # return ssl_padded, spec_padded,mel_padded, ssl_lengths, spec_lengths, text_padded, text_lengths, wav_padded, wav_lengths,mel_lengths
-        return ssl_padded, spec_padded, mel_padded, ssl_lengths, spec_lengths, text_padded, text_lengths, mel_lengths
+        return (
+            ssl_padded,
+            spec_padded,
+            mel_padded,
+            ssl_lengths,
+            spec_lengths,
+            text_padded,
+            text_lengths,
+            mel_lengths,
+        )
 
 
 class TextAudioSpeakerLoaderV4(torch.utils.data.Dataset):
@@ -529,7 +579,9 @@ class TextAudioSpeakerLoaderV4(torch.utils.data.Dataset):
         assert os.path.exists(self.path2)
         assert os.path.exists(self.path4)
         assert os.path.exists(self.path5)
-        names4 = set([name[:-3] for name in list(os.listdir(self.path4))])  # 去除.pt后缀
+        names4 = set(
+            [name[:-3] for name in list(os.listdir(self.path4))]
+        )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         self.phoneme_data = {}
         with open(self.path2, "r", encoding="utf8") as f:
@@ -616,7 +668,9 @@ class TextAudioSpeakerLoaderV4(torch.utils.data.Dataset):
         try:
             spec, mel = self.get_audio("%s/%s" % (self.path5, audiopath))
             with torch.no_grad():
-                ssl = torch.load("%s/%s.pt" % (self.path4, audiopath), map_location="cpu")
+                ssl = torch.load(
+                    "%s/%s.pt" % (self.path4, audiopath), map_location="cpu"
+                )
                 if ssl.shape[-1] != spec.shape[-1]:
                     typee = ssl.dtype
                     ssl = F.pad(ssl.float(), (0, 1), mode="replicate").to(typee)
@@ -632,12 +686,19 @@ class TextAudioSpeakerLoaderV4(torch.utils.data.Dataset):
         return (ssl, spec, mel, text)
 
     def get_audio(self, filename):
-        audio_array = load_audio(filename, self.sampling_rate)  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
+        audio_array = load_audio(
+            filename, self.sampling_rate
+        )  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
         audio = torch.FloatTensor(audio_array)  # /32768
         audio_norm = audio
         audio_norm = audio_norm.unsqueeze(0)
         spec = spectrogram_torch(
-            audio_norm, self.filter_length, self.sampling_rate, self.hop_length, self.win_length, center=False
+            audio_norm,
+            self.filter_length,
+            self.sampling_rate,
+            self.hop_length,
+            self.win_length,
+            center=False,
         )
         spec = torch.squeeze(spec, 0)
         spec1 = spectrogram_torch(audio_norm, 1280, 32000, 320, 1280, center=False)
@@ -671,7 +732,9 @@ class TextAudioSpeakerCollateV4:
         """
         # ssl, spec, wav,mel, text
         # Right zero-pad all one-hot text sequences to max input length
-        _, ids_sorted_decreasing = torch.sort(torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True)
+        _, ids_sorted_decreasing = torch.sort(
+            torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True
+        )
         # (ssl, spec,mel, text)
         max_ssl_len = max([x[0].size(2) for x in batch])
         max_ssl_len = int(2 * ((max_ssl_len // 2) + 1))
@@ -687,7 +750,9 @@ class TextAudioSpeakerCollateV4:
         mel_lengths = torch.LongTensor(len(batch))
 
         spec_padded = torch.FloatTensor(len(batch), batch[0][1].size(0), max_spec_len)
-        mel_padded = torch.FloatTensor(len(batch), batch[0][2].size(0), max_spec_len * 2)
+        mel_padded = torch.FloatTensor(
+            len(batch), batch[0][2].size(0), max_spec_len * 2
+        )
         ssl_padded = torch.FloatTensor(len(batch), batch[0][0].size(1), max_ssl_len)
         text_padded = torch.LongTensor(len(batch), max_text_len)
         # wav_padded = torch.FloatTensor(len(batch), 1, max_wav_len)
@@ -722,7 +787,16 @@ class TextAudioSpeakerCollateV4:
             text_lengths[i] = text.size(0)
 
         # return ssl_padded, spec_padded,mel_padded, ssl_lengths, spec_lengths, text_padded, text_lengths, wav_padded, wav_lengths,mel_lengths
-        return ssl_padded, spec_padded, mel_padded, ssl_lengths, spec_lengths, text_padded, text_lengths, mel_lengths
+        return (
+            ssl_padded,
+            spec_padded,
+            mel_padded,
+            ssl_lengths,
+            spec_lengths,
+            text_padded,
+            text_lengths,
+            mel_lengths,
+        )
 
 
 class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
@@ -740,7 +814,9 @@ class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
         assert os.path.exists(self.path2)
         assert os.path.exists(self.path4)
         assert os.path.exists(self.path5)
-        names4 = set([name[:-3] for name in list(os.listdir(self.path4))])  # 去除.pt后缀
+        names4 = set(
+            [name[:-3] for name in list(os.listdir(self.path4))]
+        )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         self.phoneme_data = {}
         with open(self.path2, "r", encoding="utf8") as f:
@@ -827,7 +903,9 @@ class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
         try:
             spec, mel, wav = self.get_audio("%s/%s" % (self.path5, audiopath))
             with torch.no_grad():
-                ssl = torch.load("%s/%s.pt" % (self.path4, audiopath), map_location="cpu")
+                ssl = torch.load(
+                    "%s/%s.pt" % (self.path4, audiopath), map_location="cpu"
+                )
                 if ssl.shape[-1] != spec.shape[-1]:
                     typee = ssl.dtype
                     ssl = F.pad(ssl.float(), (0, 1), mode="replicate").to(typee)
@@ -843,7 +921,9 @@ class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
         return (ssl, spec, wav, mel, text)
 
     def get_audio(self, filename):
-        audio_array = load_audio(filename, self.sampling_rate)  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
+        audio_array = load_audio(
+            filename, self.sampling_rate
+        )  # load_audio的方法是已经归一化到-1~1之间的，不用再/32768
         audio = torch.FloatTensor(audio_array)  # /32768
         audio_norm = audio
         audio_norm = audio_norm.unsqueeze(0)
@@ -855,7 +935,12 @@ class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
         audio_norm24 = audio_norm24.unsqueeze(0)
 
         spec = spectrogram_torch(
-            audio_norm, self.filter_length, self.sampling_rate, self.hop_length, self.win_length, center=False
+            audio_norm,
+            self.filter_length,
+            self.sampling_rate,
+            self.hop_length,
+            self.win_length,
+            center=False,
         )
         spec = torch.squeeze(spec, 0)
 
@@ -868,7 +953,12 @@ class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
             center=False,
         )
         mel = spec_to_mel_torch(
-            spec1, self.filter_length_mel, self.n_mel_channels, self.sampling_rate_mel, self.mel_fmin, self.mel_fmax
+            spec1,
+            self.filter_length_mel,
+            self.n_mel_channels,
+            self.sampling_rate_mel,
+            self.mel_fmin,
+            self.mel_fmax,
         )
         mel = torch.squeeze(mel, 0)
         mel = self.norm_spec(mel)
@@ -901,7 +991,9 @@ class TextAudioSpeakerCollateV3b:
         """
         # ssl, spec, wav,mel, text
         # Right zero-pad all one-hot text sequences to max input length
-        _, ids_sorted_decreasing = torch.sort(torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True)
+        _, ids_sorted_decreasing = torch.sort(
+            torch.LongTensor([x[1].size(1) for x in batch]), dim=0, descending=True
+        )
         # (ssl, spec,mel, text)
         max_ssl_len = max([x[0].size(2) for x in batch])
 
@@ -983,7 +1075,15 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
     Ex) boundaries = [b1, b2, b3] -> any x s.t. length(x) <= b1 or length(x) > b3 are discarded.
     """
 
-    def __init__(self, dataset, batch_size, boundaries, num_replicas=None, rank=None, shuffle=True):
+    def __init__(
+        self,
+        dataset,
+        batch_size,
+        boundaries,
+        num_replicas=None,
+        rank=None,
+        shuffle=True,
+    ):
         super().__init__(dataset, num_replicas=num_replicas, rank=rank, shuffle=shuffle)
         self.lengths = dataset.lengths
         self.batch_size = batch_size
@@ -1012,7 +1112,9 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
         for i in range(len(buckets)):
             len_bucket = len(buckets[i])
             total_batch_size = self.num_replicas * self.batch_size
-            rem = (total_batch_size - (len_bucket % total_batch_size)) % total_batch_size
+            rem = (
+                total_batch_size - (len_bucket % total_batch_size)
+            ) % total_batch_size
             num_samples_per_bucket.append(len_bucket + rem)
         return buckets, num_samples_per_bucket
 
@@ -1036,12 +1138,21 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
             num_samples_bucket = self.num_samples_per_bucket[i]
 
             rem = num_samples_bucket - len_bucket
-            ids_bucket = ids_bucket + ids_bucket * (rem // len_bucket) + ids_bucket[: (rem % len_bucket)]
+            ids_bucket = (
+                ids_bucket
+                + ids_bucket * (rem // len_bucket)
+                + ids_bucket[: (rem % len_bucket)]
+            )
 
             ids_bucket = ids_bucket[self.rank :: self.num_replicas]
 
             for j in range(len(ids_bucket) // self.batch_size):
-                batch = [bucket[idx] for idx in ids_bucket[j * self.batch_size : (j + 1) * self.batch_size]]
+                batch = [
+                    bucket[idx]
+                    for idx in ids_bucket[
+                        j * self.batch_size : (j + 1) * self.batch_size
+                    ]
+                ]
                 batches.append(batch)
 
         if self.shuffle:

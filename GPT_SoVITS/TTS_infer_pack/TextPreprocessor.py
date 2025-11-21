@@ -15,7 +15,11 @@ from typing import Dict, List, Tuple
 from text.cleaner import clean_text
 from text import cleaned_text_to_sequence
 from transformers import AutoModelForMaskedLM, AutoTokenizer
-from TTS_infer_pack.text_segmentation_method import split_big_text, splits, get_method as get_seg_method
+from TTS_infer_pack.text_segmentation_method import (
+    split_big_text,
+    splits,
+    get_method as get_seg_method,
+)
 
 from tools.i18n.i18n import I18nAuto, scan_language_list
 
@@ -50,20 +54,29 @@ def merge_short_text_in_array(texts: str, threshold: int) -> list:
 
 
 class TextPreprocessor:
-    def __init__(self, bert_model: AutoModelForMaskedLM, tokenizer: AutoTokenizer, device: torch.device):
+    def __init__(
+        self,
+        bert_model: AutoModelForMaskedLM,
+        tokenizer: AutoTokenizer,
+        device: torch.device,
+    ):
         self.bert_model = bert_model
         self.tokenizer = tokenizer
         self.device = device
         self.bert_lock = threading.RLock()
 
-    def preprocess(self, text: str, lang: str, text_split_method: str, version: str = "v2") -> List[Dict]:
+    def preprocess(
+        self, text: str, lang: str, text_split_method: str, version: str = "v2"
+    ) -> List[Dict]:
         print(f"############ {i18n('切分文本')} ############")
         text = self.replace_consecutive_punctuation(text)
         texts = self.pre_seg_text(text, lang, text_split_method)
         result = []
         print(f"############ {i18n('提取文本Bert特征')} ############")
         for text in tqdm(texts):
-            phones, bert_features, norm_text = self.segment_and_extract_feature_for_text(text, lang, version)
+            phones, bert_features, norm_text = (
+                self.segment_and_extract_feature_for_text(text, lang, version)
+            )
             if phones is None or norm_text == "":
                 continue
             res = {
@@ -119,27 +132,29 @@ class TextPreprocessor:
     ) -> Tuple[list, torch.Tensor, str]:
         return self.get_phones_and_bert(text, language, version)
 
-    def get_phones_and_bert(self, text: str, language: str, version: str, final: bool = False):
+    def get_phones_and_bert(
+        self, text: str, language: str, version: str, final: bool = False
+    ):
         with self.bert_lock:
-            text = re.sub(r' {2,}', ' ', text)
+            text = re.sub(r" {2,}", " ", text)
             textlist = []
             langlist = []
             if language == "all_zh":
-                for tmp in LangSegmenter.getTexts(text,"zh"):
+                for tmp in LangSegmenter.getTexts(text, "zh"):
                     langlist.append(tmp["lang"])
                     textlist.append(tmp["text"])
             elif language == "all_yue":
-                for tmp in LangSegmenter.getTexts(text,"zh"):
+                for tmp in LangSegmenter.getTexts(text, "zh"):
                     if tmp["lang"] == "zh":
                         tmp["lang"] = "yue"
                     langlist.append(tmp["lang"])
                     textlist.append(tmp["text"])
             elif language == "all_ja":
-                for tmp in LangSegmenter.getTexts(text,"ja"):
+                for tmp in LangSegmenter.getTexts(text, "ja"):
                     langlist.append(tmp["lang"])
                     textlist.append(tmp["text"])
             elif language == "all_ko":
-                for tmp in LangSegmenter.getTexts(text,"ko"):
+                for tmp in LangSegmenter.getTexts(text, "ko"):
                     langlist.append(tmp["lang"])
                     textlist.append(tmp["text"])
             elif language == "en":
@@ -158,7 +173,9 @@ class TextPreprocessor:
             else:
                 for tmp in LangSegmenter.getTexts(text):
                     if langlist:
-                        if (tmp["lang"] == "en" and langlist[-1] == "en") or (tmp["lang"] != "en" and langlist[-1] != "en"):
+                        if (tmp["lang"] == "en" and langlist[-1] == "en") or (
+                            tmp["lang"] != "en" and langlist[-1] != "en"
+                        ):
                             textlist[-1] += tmp["text"]
                             continue
                     if tmp["lang"] == "en":
@@ -174,7 +191,9 @@ class TextPreprocessor:
             norm_text_list = []
             for i in range(len(textlist)):
                 lang = langlist[i]
-                phones, word2ph, norm_text = self.clean_text_inf(textlist[i], lang, version)
+                phones, word2ph, norm_text = self.clean_text_inf(
+                    textlist[i], lang, version
+                )
                 bert = self.get_bert_inf(phones, word2ph, norm_text, lang)
                 phones_list.append(phones)
                 norm_text_list.append(norm_text)
@@ -184,7 +203,9 @@ class TextPreprocessor:
             norm_text = "".join(norm_text_list)
 
             if not final and len(phones) < 6:
-                return self.get_phones_and_bert("." + text, language, version, final=True)
+                return self.get_phones_and_bert(
+                    "." + text, language, version, final=True
+                )
 
             return phones, bert, norm_text
 

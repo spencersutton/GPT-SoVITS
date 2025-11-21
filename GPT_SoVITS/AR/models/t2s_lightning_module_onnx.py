@@ -84,7 +84,9 @@ class Text2SemanticLightningModule(LightningModule):
     def configure_optimizers(self):
         model_parameters = self.model.parameters()
         parameters_names = []
-        parameters_names.append([name_param_pair[0] for name_param_pair in self.model.named_parameters()])
+        parameters_names.append(
+            [name_param_pair[0] for name_param_pair in self.model.named_parameters()]
+        )
         lm_opt = ScaledAdam(
             model_parameters,
             lr=0.01,

@@ -363,7 +363,11 @@ _g2p = en_G2p()
 def g2p(text):
     # g2p_en 整段推理，剔除不存在的arpa返回
     phone_list = _g2p(text)
-    phones = [ph if ph != "<unk>" else "UNK" for ph in phone_list if ph not in [" ", "<pad>", "UW", "</s>", "<s>"]]
+    phones = [
+        ph if ph != "<unk>" else "UNK"
+        for ph in phone_list
+        if ph not in [" ", "<pad>", "UW", "</s>", "<s>"]
+    ]
 
     return replace_phs(phones)
 
@@ -371,4 +375,10 @@ def g2p(text):
 if __name__ == "__main__":
     print(g2p("hello"))
     print(g2p(text_normalize("e.g. I used openai's AI tool to draw a picture.")))
-    print(g2p(text_normalize("In this; paper, we propose 1 DSPGAN, a GAN-based universal vocoder.")))
+    print(
+        g2p(
+            text_normalize(
+                "In this; paper, we propose 1 DSPGAN, a GAN-based universal vocoder."
+            )
+        )
+    )

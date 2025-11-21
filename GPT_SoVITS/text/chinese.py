@@ -50,7 +50,9 @@ def replace_punctuation(text):
 
     replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
 
-    replaced_text = re.sub(r"[^\u4e00-\u9fa5" + "".join(punctuation) + r"]+", "", replaced_text)
+    replaced_text = re.sub(
+        r"[^\u4e00-\u9fa5" + "".join(punctuation) + r"]+", "", replaced_text
+    )
 
     return replaced_text
 
@@ -61,7 +63,9 @@ def replace_punctuation_with_en(text):
 
     replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
 
-    replaced_text = re.sub(r"[^\u4e00-\u9fa5A-Za-z" + "".join(punctuation) + r"]+", "", replaced_text)
+    replaced_text = re.sub(
+        r"[^\u4e00-\u9fa5A-Za-z" + "".join(punctuation) + r"]+", "", replaced_text
+    )
 
     return replaced_text
 
@@ -84,7 +88,9 @@ def _get_initials_finals(word):
     initials = []
     finals = []
     orig_initials = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.INITIALS)
-    orig_finals = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.FINALS_TONE3)
+    orig_finals = lazy_pinyin(
+        word, neutral_tone_with_five=True, style=Style.FINALS_TONE3
+    )
     for c, v in zip(orig_initials, orig_finals):
         initials.append(c)
         finals.append(v)

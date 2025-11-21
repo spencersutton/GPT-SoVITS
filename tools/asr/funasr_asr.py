@@ -25,8 +25,16 @@ def only_asr(input_file, language):
 def create_model(language="zh"):
     path_vad = "tools/asr/models/speech_fsmn_vad_zh-cn-16k-common-pytorch"
     path_punc = "tools/asr/models/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
-    path_vad = path_vad if os.path.exists(path_vad) else "iic/speech_fsmn_vad_zh-cn-16k-common-pytorch"
-    path_punc = path_punc if os.path.exists(path_punc) else "iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
+    path_vad = (
+        path_vad
+        if os.path.exists(path_vad)
+        else "iic/speech_fsmn_vad_zh-cn-16k-common-pytorch"
+    )
+    path_punc = (
+        path_punc
+        if os.path.exists(path_punc)
+        else "iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
+    )
     vad_model_revision = punc_model_revision = "v2.0.4"
 
     if language == "zh":
@@ -99,15 +107,41 @@ def execute_asr(input_folder, output_folder, model_size, language):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--input_folder", type=str, required=True, help="Path to the folder containing WAV files."
+        "-i",
+        "--input_folder",
+        type=str,
+        required=True,
+        help="Path to the folder containing WAV files.",
     )
-    parser.add_argument("-o", "--output_folder", type=str, required=True, help="Output folder to store transcriptions.")
-    parser.add_argument("-s", "--model_size", type=str, default="large", help="Model Size of FunASR is Large")
     parser.add_argument(
-        "-l", "--language", type=str, default="zh", choices=["zh", "yue", "auto"], help="Language of the audio files."
+        "-o",
+        "--output_folder",
+        type=str,
+        required=True,
+        help="Output folder to store transcriptions.",
     )
     parser.add_argument(
-        "-p", "--precision", type=str, default="float16", choices=["float16", "float32"], help="fp16 or fp32"
+        "-s",
+        "--model_size",
+        type=str,
+        default="large",
+        help="Model Size of FunASR is Large",
+    )
+    parser.add_argument(
+        "-l",
+        "--language",
+        type=str,
+        default="zh",
+        choices=["zh", "yue", "auto"],
+        help="Language of the audio files.",
+    )
+    parser.add_argument(
+        "-p",
+        "--precision",
+        type=str,
+        default="float16",
+        choices=["float16", "float32"],
+        help="fp16 or fp32",
     )  # 还没接入
     cmd = parser.parse_args()
     execute_asr(

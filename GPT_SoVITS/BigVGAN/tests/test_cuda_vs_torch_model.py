@@ -42,7 +42,9 @@ def generate_soundwave(duration=5.0, sr=24000):
 
 
 def get_mel(x, h):
-    return mel_spectrogram(x, h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax)
+    return mel_spectrogram(
+        x, h.n_fft, h.num_mels, h.sampling_rate, h.hop_size, h.win_size, h.fmin, h.fmax
+    )
 
 
 def load_checkpoint(filepath, device):
@@ -54,7 +56,9 @@ def load_checkpoint(filepath, device):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Test script to check CUDA kernel correctness.")
+    parser = argparse.ArgumentParser(
+        description="Test script to check CUDA kernel correctness."
+    )
     parser.add_argument(
         "--checkpoint_file",
         type=str,
@@ -105,7 +109,9 @@ if __name__ == "__main__":
         diff += test_result.mean(dim=-1).item()
 
     diff /= num_sample
-    if diff <= 2e-3:  # We can expect a small difference (~1e-3) which does not affect perceptual quality
+    if (
+        diff <= 2e-3
+    ):  # We can expect a small difference (~1e-3) which does not affect perceptual quality
         print(
             f"\n[Success] test CUDA fused vs. plain torch BigVGAN inference"
             f"\n > mean_difference={diff}"
@@ -180,7 +186,9 @@ if __name__ == "__main__":
         f"CUDA kernel BigVGAN: took {toc_total_cuda_kernel:.2f} seconds to generate {audio_second:.2f} seconds of audio, {khz_cuda_kernel:.1f}kHz, {audio_second / toc_total_cuda_kernel:.1f} faster than realtime, VRAM used {vram_used_cuda_kernel_gb:.1f} GB"
     )
     print(f"speedup of CUDA kernel: {khz_cuda_kernel / khz_original}")
-    print(f"VRAM saving of CUDA kernel: {vram_used_original_gb / vram_used_cuda_kernel_gb}")
+    print(
+        f"VRAM saving of CUDA kernel: {vram_used_original_gb / vram_used_cuda_kernel_gb}"
+    )
 
     # Use artificial sine waves for inference test
     audio_real, sr = generate_soundwave(duration=5.0, sr=h.sampling_rate)

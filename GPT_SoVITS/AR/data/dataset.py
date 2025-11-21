@@ -30,7 +30,9 @@ def batch_sequences(sequences: List[np.array], axis: int = 0, pad_value: int = 0
 
     padded_sequences = []
     for seq, length in zip(sequences, seq_lengths):
-        padding = [(0, 0)] * axis + [(0, max_length - length)] + [(0, 0)] * (ndim - axis - 1)
+        padding = (
+            [(0, 0)] * axis + [(0, max_length - length)] + [(0, 0)] * (ndim - axis - 1)
+        )
         padded_seq = np.pad(seq, padding, mode="constant", constant_values=pad_value)
         padded_sequences.append(padded_seq)
     batch = np.stack(padded_sequences)
@@ -156,7 +158,9 @@ class Text2SemanticDataset(Dataset):
                 num_not_in += 1
                 continue
             # if len(phoneme_ids) >400:###########2：改为恒定限制为semantic/2.5就行
-            if len(phoneme_ids) > self.max_sec * self.hz / 2.5:  ###########2：改为恒定限制为semantic/2.5就行
+            if (
+                len(phoneme_ids) > self.max_sec * self.hz / 2.5
+            ):  ###########2：改为恒定限制为semantic/2.5就行
                 num_deleted_ps += 1
                 continue
             # if len(semantic_ids) > 1000:###########3
@@ -165,7 +169,9 @@ class Text2SemanticDataset(Dataset):
 
             ps_ratio = len(phoneme_ids) / (len(semantic_ids) / self.hz)
 
-            if ps_ratio > self.max_ps_ratio or ps_ratio < self.min_ps_ratio:  ##########4#3~25#每秒多少个phone
+            if (
+                ps_ratio > self.max_ps_ratio or ps_ratio < self.min_ps_ratio
+            ):  ##########4#3~25#每秒多少个phone
                 num_deleted_ps += 1
                 # print(item_name)
                 continue

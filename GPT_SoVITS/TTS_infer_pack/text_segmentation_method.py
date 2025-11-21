@@ -168,7 +168,13 @@ def cut5(inp):
 
     for i, char in enumerate(inp):
         if char in punds:
-            if char == "." and i > 0 and i < len(inp) - 1 and inp[i - 1].isdigit() and inp[i + 1].isdigit():
+            if (
+                char == "."
+                and i > 0
+                and i < len(inp) - 1
+                and inp[i - 1].isdigit()
+                and inp[i + 1].isdigit()
+            ):
                 items.append(char)
             else:
                 items.append(char)
