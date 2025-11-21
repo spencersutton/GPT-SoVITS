@@ -165,7 +165,6 @@ class MultiheadAttention(Module):
         average_attn_weights: bool = True,
         cache=None,
     ) -> tuple[Tensor, Tensor | None]:
-        any_nested = query.is_nested or key.is_nested or value.is_nested
         query = key = value = query.transpose(1, 0)
         attn_output = multi_head_attention_forward_patched(
             query,

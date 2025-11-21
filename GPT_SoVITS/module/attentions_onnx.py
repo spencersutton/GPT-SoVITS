@@ -254,7 +254,6 @@ class MultiHeadAttention(nn.Module):
         return ret
 
     def _get_relative_embeddings(self, relative_embeddings, length):
-        max_relative_position = 2 * self.window_size + 1
         # Pad first before slice to avoid using cond ops.
         pad_l = torch.zeros((1), dtype=torch.int64) + length - (self.window_size + 1)
         pad_s = torch.zeros((1), dtype=torch.int64) + (self.window_size + 1) - length

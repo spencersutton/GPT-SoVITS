@@ -2,7 +2,7 @@ import torch
 import torchaudio
 from AR.models.t2s_lightning_module_onnx import Text2SemanticLightningModule
 from feature_extractor import cnhubert
-from module.models_onnx import SynthesizerTrn, symbols_v1, symbols_v2
+from module.models_onnx import SynthesizerTrn
 from torch import nn
 
 cnhubert_base_path = "GPT_SoVITS/pretrained_models/chinese-hubert-base"
@@ -419,11 +419,6 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
         )
         soundfile.write("out.wav", a, vits.hps.data.sampling_rate)
 
-    if vits_model == "v1":
-        symbols = symbols_v1
-    else:
-        symbols = symbols_v2
-
     MoeVSConf = {
         "Folder": f"{project_name}",
         "Name": f"{project_name}",
@@ -436,7 +431,6 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
         "AddBlank": False,
     }
 
-    MoeVSConfJson = json.dumps(MoeVSConf)
     with open(f"onnx/{project_name}.json", "w") as MoeVsConfFile:
         json.dump(MoeVSConf, MoeVsConfFile, indent=4)
 

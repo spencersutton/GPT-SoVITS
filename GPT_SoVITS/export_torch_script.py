@@ -1024,8 +1024,6 @@ def test():
     )
 
     args = parser.parse_args()
-    gpt_path = args.gpt_model
-    vits_path = args.sovits_model
     ref_audio_path = args.ref_audio
     ref_text = args.ref_text
 

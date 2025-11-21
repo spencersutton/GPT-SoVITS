@@ -254,7 +254,6 @@ def make_reject_y(y_o, y_lens):
         range_idx, _ = torch.randint(0, len(y), size=(2,)).sort()
         pre = y[: range_idx[0]]
         shf = y[range_idx[1] :]
-        range_text = y[range_idx[0] : range_idx[1]]
         new_y = torch.cat([pre, shf])
         return new_y
 

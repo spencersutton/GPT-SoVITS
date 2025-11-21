@@ -266,8 +266,6 @@ class MaskEstimator(Module):
         dim_hidden = dim * mlp_expansion_factor
 
         for dim_in in dim_inputs:
-            net = []
-
             mlp = nn.Sequential(
                 MLP(dim, dim_in * 2, dim_hidden=dim_hidden, depth=depth), nn.GLU(dim=-1)
             )

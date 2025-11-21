@@ -52,7 +52,7 @@ class AudioPre:
             os.makedirs(ins_root, exist_ok=True)
         if vocal_root is not None:
             os.makedirs(vocal_root, exist_ok=True)
-        X_wave, y_wave, X_spec_s, y_spec_s = {}, {}, {}, {}
+        X_wave, _y_wave, X_spec_s, _y_spec_s = {}, {}, {}, {}
         bands_n = len(self.mp.param["band"])
         for d in range(bands_n, 0, -1):
             bp = self.mp.param["band"][d]
@@ -238,7 +238,7 @@ class AudioPreDeEcho:
             os.makedirs(ins_root, exist_ok=True)
         if vocal_root is not None:
             os.makedirs(vocal_root, exist_ok=True)
-        X_wave, y_wave, X_spec_s, y_spec_s = {}, {}, {}, {}
+        X_wave, _y_wave, X_spec_s, _y_spec_s = {}, {}, {}, {}
         bands_n = len(self.mp.param["band"])
         for d in range(bands_n, 0, -1):
             bp = self.mp.param["band"][d]

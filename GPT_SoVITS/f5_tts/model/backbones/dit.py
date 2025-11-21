@@ -47,7 +47,7 @@ class TextEmbedding(nn.Module):
             self.extra_modeling = False
 
     def forward(self, text: int["b nt"], seq_len, drop_text=False):  # noqa: F722
-        batch, text_len = text.shape[0], text.shape[1]
+        batch, _text_len = text.shape[0], text.shape[1]
 
         if drop_text:  # cfg for text
             text = torch.zeros_like(text)

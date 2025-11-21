@@ -1075,7 +1075,7 @@ class TTS:
         fragment_interval = inputs.get("fragment_interval", 0.3)
         seed = inputs.get("seed", -1)
         seed = -1 if seed in ["", None] else seed
-        actual_seed = set_seed(seed)
+        set_seed(seed)
         parallel_infer = inputs.get("parallel_infer", True)
         repetition_penalty = inputs.get("repetition_penalty", 1.35)
         sample_steps = inputs.get("sample_steps", 32)
@@ -1269,7 +1269,7 @@ class TTS:
 
                 batch_phones: list[torch.LongTensor] = item["phones"]
                 # batch_phones:torch.LongTensor = item["phones"]
-                batch_phones_len: torch.LongTensor = item["phones_len"]
+                item["phones_len"]
                 all_phoneme_ids: torch.LongTensor = item["all_phones"]
                 all_phoneme_lens: torch.LongTensor = item["all_phones_len"]
                 all_bert_features: torch.LongTensor = item["all_bert_features"]

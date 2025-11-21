@@ -153,7 +153,6 @@ import logging
 import signal
 import subprocess
 from io import BytesIO
-from time import time as ttime
 
 import librosa
 import numpy as np
@@ -877,7 +876,6 @@ def get_tts_wav(
     if if_sr and version != "v3":
         if_sr = False
 
-    t0 = ttime()
     prompt_text = prompt_text.strip("\n")
     if prompt_text[-1] not in splits:
         prompt_text += "。" if prompt_language != "en" else "."
@@ -933,7 +931,6 @@ def get_tts_wav(
         else:
             refer, audio_tensor = get_spepc(hps, ref_wav_path, dtype, device)
 
-    t1 = ttime()
     prompt_language = dict_language[prompt_language.lower()]
     text_language = dict_language[text_language.lower()]
     phones1, bert1, _norm_text1 = get_phones_and_bert(
@@ -956,7 +953,6 @@ def get_tts_wav(
         all_phoneme_ids = torch.LongTensor(phones1 + phones2).to(device).unsqueeze(0)
         bert = bert.to(device).unsqueeze(0)
         all_phoneme_len = torch.tensor([all_phoneme_ids.shape[-1]]).to(device)
-        t2 = ttime()
         with torch.no_grad():
             pred_semantic, idx = t2s_model.model.infer_panel(
                 all_phoneme_ids,
@@ -969,7 +965,6 @@ def get_tts_wav(
                 early_stop_num=hz * max_sec,
             )
             pred_semantic = pred_semantic[:, -idx:].unsqueeze(0)
-        t3 = ttime()
 
         if version not in {"v3", "v4"}:
             if is_v2pro:
@@ -1063,7 +1058,6 @@ def get_tts_wav(
         audio_opt.append(audio)
         audio_opt.append(zero_wav)
         audio_opt = np.concatenate(audio_opt, 0)
-        t4 = ttime()
 
         if version in {"v1", "v2", "v2Pro", "v2ProPlus"}:
             sr = 32000
