@@ -1,0 +1,67 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Find References: Check for Unused Symbols (Problems View)",
+            "type": "shell",
+            "command": "/Users/spencer/projects/GPT-SoVITS/.venv/bin/python3",
+            "args": [
+                "find_references.py",
+                "${file}",
+                "--format",
+                "problems",
+                "--unused-only"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "problemMatcher": {
+                "owner": "findReferencesUnused",
+                "fileLocation": [
+                    "absolute"
+                ],
+                "pattern": {
+                    "regexp": "^([^:]+):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "label": "vulture",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/bin/vulture",
+            "args": [
+                "GPT_SoVITS"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "vulture",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
+                ],
+                "pattern": {
+                    "regexp": "^(.+):(\\d+): (.+)$",
+                    "file": 1,
+                    "line": 2,
+                    "message": 3
+                }
+            }
+        }
+    ]
+}
