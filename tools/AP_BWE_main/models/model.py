@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 from torch.nn.utils import spectral_norm, weight_norm
 
 
@@ -14,8 +14,6 @@ def init_weights(m, mean=0.0, std=0.01):
     if classname.find("Conv") != -1:
         m.weight.data.normal_(mean, std)
 
-
-from typing import List, Tuple
 
 import numpy as np
 
@@ -262,7 +260,7 @@ class MultiPeriodDiscriminator(torch.nn.Module):
 class MultiResolutionAmplitudeDiscriminator(nn.Module):
     def __init__(
         self,
-        resolutions: Tuple[Tuple[int, int, int]] = (
+        resolutions: tuple[tuple[int, int, int]] = (
             (512, 128, 512),
             (1024, 256, 1024),
             (2048, 512, 2048),
@@ -279,11 +277,11 @@ class MultiResolutionAmplitudeDiscriminator(nn.Module):
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor, bandwidth_id: torch.Tensor = None
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []
@@ -304,7 +302,7 @@ class MultiResolutionAmplitudeDiscriminator(nn.Module):
 class DiscriminatorAR(nn.Module):
     def __init__(
         self,
-        resolution: Tuple[int, int, int],
+        resolution: tuple[int, int, int],
         channels: int = 64,
         in_channels: int = 1,
         num_embeddings: int = None,
@@ -362,7 +360,7 @@ class DiscriminatorAR(nn.Module):
 
     def forward(
         self, x: torch.Tensor, cond_embedding_id: torch.Tensor = None
-    ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, list[torch.Tensor]]:
         fmap = []
         x = x.squeeze(1)
 
@@ -402,7 +400,7 @@ class DiscriminatorAR(nn.Module):
 class MultiResolutionPhaseDiscriminator(nn.Module):
     def __init__(
         self,
-        resolutions: Tuple[Tuple[int, int, int]] = (
+        resolutions: tuple[tuple[int, int, int]] = (
             (512, 128, 512),
             (1024, 256, 1024),
             (2048, 512, 2048),
@@ -419,11 +417,11 @@ class MultiResolutionPhaseDiscriminator(nn.Module):
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor, bandwidth_id: torch.Tensor = None
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []
@@ -444,7 +442,7 @@ class MultiResolutionPhaseDiscriminator(nn.Module):
 class DiscriminatorPR(nn.Module):
     def __init__(
         self,
-        resolution: Tuple[int, int, int],
+        resolution: tuple[int, int, int],
         channels: int = 64,
         in_channels: int = 1,
         num_embeddings: int = None,
@@ -502,7 +500,7 @@ class DiscriminatorPR(nn.Module):
 
     def forward(
         self, x: torch.Tensor, cond_embedding_id: torch.Tensor = None
-    ) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    ) -> tuple[torch.Tensor, list[torch.Tensor]]:
         fmap = []
         x = x.squeeze(1)
 

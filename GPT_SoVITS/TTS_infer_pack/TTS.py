@@ -13,7 +13,6 @@ from tqdm import tqdm
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 import os
-from typing import List, Tuple, Union
 
 import ffmpeg
 import librosa
@@ -68,30 +67,26 @@ def denorm_spec(x):
 
 mel_fn = lambda x: mel_spectrogram_torch(
     x,
-    **{
-        "n_fft": 1024,
-        "win_size": 1024,
-        "hop_size": 256,
-        "num_mels": 100,
-        "sampling_rate": 24000,
-        "fmin": 0,
-        "fmax": None,
-        "center": False,
-    },
+    n_fft=1024,
+    win_size=1024,
+    hop_size=256,
+    num_mels=100,
+    sampling_rate=24000,
+    fmin=0,
+    fmax=None,
+    center=False,
 )
 
 mel_fn_v4 = lambda x: mel_spectrogram_torch(
     x,
-    **{
-        "n_fft": 1280,
-        "win_size": 1280,
-        "hop_size": 320,
-        "num_mels": 100,
-        "sampling_rate": 32000,
-        "fmin": 0,
-        "fmax": None,
-        "center": False,
-    },
+    n_fft=1280,
+    win_size=1280,
+    hop_size=320,
+    num_mels=100,
+    sampling_rate=32000,
+    fmin=0,
+    fmax=None,
+    center=False,
 )
 
 
@@ -303,7 +298,7 @@ class TTS_Config:
     # "auto",#多语种启动切分识别语种
     # "auto_yue",#多语种启动切分识别语种
 
-    def __init__(self, configs: Union[dict, str] = None):
+    def __init__(self, configs: dict | str = None):
         # 设置默认配置文件路径
         configs_base_path: str = "GPT_SoVITS/configs/"
         os.makedirs(configs_base_path, exist_ok=True)
@@ -333,7 +328,7 @@ class TTS_Config:
         self.is_half = self.configs.get("is_half", False)
         if str(self.device) == "cpu" and self.is_half:
             print(
-                f"Warning: Half precision is not supported on CPU, set is_half to False."
+                "Warning: Half precision is not supported on CPU, set is_half to False."
             )
             self.is_half = False
 
@@ -394,7 +389,7 @@ class TTS_Config:
         else:
             print(i18n("路径不存在,使用默认配置"))
             self.save_configs(configs_path)
-        with open(configs_path, "r", encoding="utf-8") as f:
+        with open(configs_path, encoding="utf-8") as f:
             configs = yaml.load(f, Loader=yaml.FullLoader)
 
         return configs
@@ -431,7 +426,7 @@ class TTS_Config:
         self.configs = self.update_configs()
         string = "TTS Config".center(100, "-") + "\n"
         for k, v in self.configs.items():
-            string += f"{str(k).ljust(20)}: {str(v)}\n"
+            string += f"{str(k).ljust(20)}: {v!s}\n"
         string += "-" * 100 + "\n"
         return string
 
@@ -446,14 +441,14 @@ class TTS_Config:
 
 
 class TTS:
-    def __init__(self, configs: Union[dict, str, TTS_Config]):
+    def __init__(self, configs: dict | str | TTS_Config):
         if isinstance(configs, TTS_Config):
             self.configs = configs
         else:
             self.configs: TTS_Config = TTS_Config(configs)
 
         self.t2s_model: Text2SemanticLightningModule = None
-        self.vits_model: Union[SynthesizerTrn, SynthesizerTrnV3] = None
+        self.vits_model: SynthesizerTrn | SynthesizerTrnV3 = None
         self.bert_tokenizer: AutoTokenizer = None
         self.bert_model: AutoModelForMaskedLM = None
         self.cnhuhbert_model: CNHubert = None
@@ -878,7 +873,7 @@ class TTS:
 
     def batch_sequences(
         self,
-        sequences: List[torch.Tensor],
+        sequences: list[torch.Tensor],
         axis: int = 0,
         pad_value: int = 0,
         max_length: int = None,
@@ -893,9 +888,7 @@ class TTS:
         if max_length is None:
             max_length = max(seq_lengths)
         else:
-            max_length = (
-                max(seq_lengths) if max_length < max(seq_lengths) else max_length
-            )
+            max_length = max(max_length, max(seq_lengths))
 
         padded_sequences = []
         for seq, length in zip(sequences, seq_lengths):
@@ -1222,7 +1215,7 @@ class TTS:
                 text, text_lang, text_split_method, self.configs.version
             )
             if len(data) == 0:
-                yield 16000, np.zeros(int(16000), dtype=np.int16)
+                yield 16000, np.zeros(16000, dtype=np.int16)
                 return
 
             batch_index_list: list = None
@@ -1295,7 +1288,7 @@ class TTS:
                     if item is None:
                         continue
 
-                batch_phones: List[torch.LongTensor] = item["phones"]
+                batch_phones: list[torch.LongTensor] = item["phones"]
                 # batch_phones:torch.LongTensor = item["phones"]
                 batch_phones_len: torch.LongTensor = item["phones_len"]
                 all_phoneme_ids: torch.LongTensor = item["all_phones"]
@@ -1366,11 +1359,11 @@ class TTS:
                         upsample_rate = math.prod(self.vits_model.upsample_rates)
                         audio_frag_idx = [
                             pred_semantic_list[i].shape[0] * 2 * upsample_rate
-                            for i in range(0, len(pred_semantic_list))
+                            for i in range(len(pred_semantic_list))
                         ]
                         audio_frag_end_idx = [
                             sum(audio_frag_idx[: i + 1])
-                            for i in range(0, len(audio_frag_idx))
+                            for i in range(len(audio_frag_idx))
                         ]
                         all_pred_semantic = (
                             torch.cat(pred_semantic_list)
@@ -1430,32 +1423,29 @@ class TTS:
                             batch_audio_fragment.append(
                                 audio_fragment
                             )  ###试试重建不带上prompt部分
+                elif parallel_infer:
+                    print(f"{i18n('并行合成中')}...")
+                    audio_fragments = self.using_vocoder_synthesis_batched_infer(
+                        idx_list,
+                        pred_semantic_list,
+                        batch_phones,
+                        speed=speed_factor,
+                        sample_steps=sample_steps,
+                    )
+                    batch_audio_fragment.extend(audio_fragments)
                 else:
-                    if parallel_infer:
-                        print(f"{i18n('并行合成中')}...")
-                        audio_fragments = self.using_vocoder_synthesis_batched_infer(
-                            idx_list,
-                            pred_semantic_list,
-                            batch_phones,
+                    for i, idx in enumerate(tqdm(idx_list)):
+                        phones = batch_phones[i].unsqueeze(0).to(self.configs.device)
+                        _pred_semantic = (
+                            pred_semantic_list[i][-idx:].unsqueeze(0).unsqueeze(0)
+                        )  # .unsqueeze(0)#mq要多unsqueeze一次
+                        audio_fragment = self.using_vocoder_synthesis(
+                            _pred_semantic,
+                            phones,
                             speed=speed_factor,
                             sample_steps=sample_steps,
                         )
-                        batch_audio_fragment.extend(audio_fragments)
-                    else:
-                        for i, idx in enumerate(tqdm(idx_list)):
-                            phones = (
-                                batch_phones[i].unsqueeze(0).to(self.configs.device)
-                            )
-                            _pred_semantic = (
-                                pred_semantic_list[i][-idx:].unsqueeze(0).unsqueeze(0)
-                            )  # .unsqueeze(0)#mq要多unsqueeze一次
-                            audio_fragment = self.using_vocoder_synthesis(
-                                _pred_semantic,
-                                phones,
-                                speed=speed_factor,
-                                sample_steps=sample_steps,
-                            )
-                            batch_audio_fragment.append(audio_fragment)
+                        batch_audio_fragment.append(audio_fragment)
 
                 t5 = time.perf_counter()
                 t_45 += t5 - t4
@@ -1478,13 +1468,13 @@ class TTS:
                     audio.append(batch_audio_fragment)
 
                 if self.stop_flag:
-                    yield 16000, np.zeros(int(16000), dtype=np.int16)
+                    yield 16000, np.zeros(16000, dtype=np.int16)
                     return
 
             if not return_fragment:
                 print("%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t_34, t_45))
                 if len(audio) == 0:
-                    yield 16000, np.zeros(int(16000), dtype=np.int16)
+                    yield 16000, np.zeros(16000, dtype=np.int16)
                     return
                 yield self.audio_postprocess(
                     audio,
@@ -1501,7 +1491,7 @@ class TTS:
         except Exception as e:
             traceback.print_exc()
             # 必须返回一个空音频, 否则会导致显存不释放。
-            yield 16000, np.zeros(int(16000), dtype=np.int16)
+            yield 16000, np.zeros(16000, dtype=np.int16)
             # 重置模型, 否则会导致显存释放不完全。
             del self.t2s_model
             del self.vits_model
@@ -1525,14 +1515,14 @@ class TTS:
 
     def audio_postprocess(
         self,
-        audio: List[torch.Tensor],
+        audio: list[torch.Tensor],
         sr: int,
         batch_index_list: list = None,
         speed_factor: float = 1.0,
         split_bucket: bool = True,
         fragment_interval: float = 0.3,
         super_sampling: bool = False,
-    ) -> Tuple[int, np.ndarray]:
+    ) -> tuple[int, np.ndarray]:
         zero_wav = torch.zeros(
             int(self.configs.sampling_rate * fragment_interval),
             dtype=self.precision,
@@ -1673,12 +1663,12 @@ class TTS:
 
     def using_vocoder_synthesis_batched_infer(
         self,
-        idx_list: List[int],
-        semantic_tokens_list: List[torch.Tensor],
-        batch_phones: List[torch.Tensor],
+        idx_list: list[int],
+        semantic_tokens_list: list[torch.Tensor],
+        batch_phones: list[torch.Tensor],
         speed: float = 1.0,
         sample_steps: int = 32,
-    ) -> List[torch.Tensor]:
+    ) -> list[torch.Tensor]:
         prompt_semantic_tokens = (
             self.prompt_cache["prompt_semantic"]
             .unsqueeze(0)
@@ -1809,7 +1799,7 @@ class TTS:
 
     def sola_algorithm(
         self,
-        audio_fragments: List[torch.Tensor],
+        audio_fragments: list[torch.Tensor],
         overlap_len: int,
     ):
         for i in range(len(audio_fragments) - 1):

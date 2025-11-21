@@ -1,8 +1,9 @@
 # modified from https://github.com/lifeiteng/vall-e/blob/main/valle/modules/transformer.py
 import copy
 import numbers
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Union
 
 import torch
 from torch import Tensor, nn
@@ -11,12 +12,12 @@ from torch.nn import functional as F
 from AR.modules.activation_onnx import MultiheadAttention
 from AR.modules.scaling import BalancedDoubleSwish
 
-_shape_t = Union[int, List[int], torch.Size]
+_shape_t = Union[int, list[int], torch.Size]
 
 
 class LayerNorm(nn.Module):
     __constants__ = ["normalized_shape", "eps", "elementwise_affine"]
-    normalized_shape: Tuple[int, ...]
+    normalized_shape: tuple[int, ...]
     eps: float
     elementwise_affine: bool
 
@@ -127,8 +128,8 @@ class TransformerEncoder(nn.Module):
     def forward(
         self,
         src: Tensor,
-        mask: Optional[Tensor] = None,
-        src_key_padding_mask: Optional[Tensor] = None,
+        mask: Tensor | None = None,
+        src_key_padding_mask: Tensor | None = None,
         return_layer_states: bool = False,
         cache=None,
     ) -> Tensor:
@@ -156,7 +157,7 @@ class TransformerEncoderLayer(nn.Module):
         nhead: int,
         dim_feedforward: int = 2048,
         dropout: float = 0.1,
-        activation: Union[str, Callable[[Tensor], Tensor]] = F.relu,
+        activation: str | Callable[[Tensor], Tensor] = F.relu,
         batch_first: bool = False,
         norm_first: bool = False,
         device=None,
@@ -219,8 +220,8 @@ class TransformerEncoderLayer(nn.Module):
     def forward(
         self,
         src: Tensor,
-        src_mask: Optional[Tensor] = None,
-        src_key_padding_mask: Optional[Tensor] = None,
+        src_mask: Tensor | None = None,
+        src_key_padding_mask: Tensor | None = None,
         cache=None,
     ) -> Tensor:
         x = src
@@ -236,8 +237,8 @@ class TransformerEncoderLayer(nn.Module):
     def _sa_block(
         self,
         x: Tensor,
-        attn_mask: Optional[Tensor],
-        key_padding_mask: Optional[Tensor],
+        attn_mask: Tensor | None,
+        key_padding_mask: Tensor | None,
         cache=None,
     ) -> Tensor:
         x = self.self_attn(

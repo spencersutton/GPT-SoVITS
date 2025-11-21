@@ -6,8 +6,8 @@ import librosa
 import numpy as np
 import soundfile as sf
 import torch
-import torch.nn as nn
 import yaml
+from torch import nn
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 
 class Roformer_Loader:
     def get_config(self, config_path):
-        with open(config_path, "r", encoding="utf-8") as f:
+        with open(config_path, encoding="utf-8") as f:
             # use fullloader to load tag !!python/tuple, code can be improved
             config = yaml.load(f, Loader=yaml.FullLoader)
         return config
@@ -107,7 +107,7 @@ class Roformer_Loader:
 
             model = MelBandRoformer(**dict(self.config["model"]))
         else:
-            print("Error: Unknown model: {}".format(self.model_type))
+            print(f"Error: Unknown model: {self.model_type}")
             model = None
         return model
 
@@ -236,8 +236,8 @@ class Roformer_Loader:
         try:
             mix, sr = librosa.load(path, sr=sample_rate, mono=False)
         except Exception as e:
-            print("Can read track: {}".format(path))
-            print("Error message: {}".format(str(e)))
+            print(f"Can read track: {path}")
+            print(f"Error message: {e!s}")
             return
 
         # in case if model only supports mono tracks
@@ -264,23 +264,19 @@ class Roformer_Loader:
             ]
             other = mix_orig - res[target_instrument]  # caculate other instruments
 
-            path_vocal = "{}/{}_{}.wav".format(
-                vocal_root, file_base_name, target_instrument
-            )
-            path_other = "{}/{}_{}.wav".format(
-                others_root, file_base_name, other_instruments[0]
-            )
+            path_vocal = f"{vocal_root}/{file_base_name}_{target_instrument}.wav"
+            path_other = f"{others_root}/{file_base_name}_{other_instruments[0]}.wav"
             self.save_audio(path_vocal, res[target_instrument].T, sr, format)
             self.save_audio(path_other, other.T, sr, format)
         else:
             # if target instrument is not specified, save the first instrument as vocal and the rest as others
             vocal_inst = self.config["training"]["instruments"][0]
-            path_vocal = "{}/{}_{}.wav".format(vocal_root, file_base_name, vocal_inst)
+            path_vocal = f"{vocal_root}/{file_base_name}_{vocal_inst}.wav"
             self.save_audio(path_vocal, res[vocal_inst].T, sr, format)
             for other in self.config["training"]["instruments"][
                 1:
             ]:  # save other instruments
-                path_other = "{}/{}_{}.wav".format(others_root, file_base_name, other)
+                path_other = f"{others_root}/{file_base_name}_{other}.wav"
                 self.save_audio(path_other, res[other].T, sr, format)
 
     def save_audio(self, path, data, sr, format):
@@ -291,9 +287,7 @@ class Roformer_Loader:
             sf.write(path, data, sr)
         else:
             sf.write(path, data, sr)
-            os.system(
-                'ffmpeg -i "{}" -vn "{}" -q:a 2 -y'.format(path, path[:-3] + format)
-            )
+            os.system(f'ffmpeg -i "{path}" -vn "{path[:-3] + format}" -q:a 2 -y')
             try:
                 os.remove(path)
             except:
@@ -333,7 +327,7 @@ class Roformer_Loader:
                     # else it's a mel_band_roformer model
                     self.model_type = "mel_band_roformer"
 
-        print("Detected model type: {}".format(self.model_type))
+        print(f"Detected model type: {self.model_type}")
         model = self.get_model_from_config()
         state_dict = torch.load(model_path, map_location="cpu")
         model.load_state_dict(state_dict)

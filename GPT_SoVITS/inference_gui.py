@@ -270,7 +270,7 @@ class GPTSoVITSGUI(QMainWindow):
             self, "选择文本文件", "", "Text Files (*.txt)"
         )
         if file_path:
-            with open(file_path, "r", encoding="utf-8") as file:
+            with open(file_path, encoding="utf-8") as file:
                 content = file.read()
                 self.ref_text_input.setText(content)
 
@@ -279,7 +279,7 @@ class GPTSoVITSGUI(QMainWindow):
             self, "选择文本文件", "", "Text Files (*.txt)"
         )
         if file_path:
-            with open(file_path, "r", encoding="utf-8") as file:
+            with open(file_path, encoding="utf-8") as file:
                 content = file.read()
                 self.target_text_input.setText(content)
 

@@ -4,7 +4,6 @@
 # sys.path.append("/data/docker/liujing04/gpt-vits/mq-vits-s1bert_no_bert")
 import os
 import traceback
-from typing import Dict, List
 
 import numpy as np
 import pandas as pd
@@ -18,7 +17,7 @@ from text import cleaned_text_to_sequence
 # from config import exp_dir
 
 
-def batch_sequences(sequences: List[np.array], axis: int = 0, pad_value: int = 0):
+def batch_sequences(sequences: list[np.array], axis: int = 0, pad_value: int = 0):
     seq = sequences[0]
     ndim = seq.ndim
     if axis < 0:
@@ -72,7 +71,7 @@ class Text2SemanticDataset(Dataset):
         assert os.path.exists(self.path2)
         assert os.path.exists(self.path6)
         self.phoneme_data = {}
-        with open(self.path2, "r", encoding="utf8") as f:
+        with open(self.path2, encoding="utf8") as f:
             lines = f.read().strip("\n").split("\n")
 
         for line in lines:
@@ -211,13 +210,13 @@ class Text2SemanticDataset(Dataset):
         # 345410 for LibriTTS
         print("dataset.__len__():", self.__len__())
 
-    def __get_item_names__(self) -> List[str]:
+    def __get_item_names__(self) -> list[str]:
         return self.item_names
 
     def __len__(self) -> int:
         return len(self.semantic_phoneme)
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> dict:
         semantic_ids, phoneme_ids = self.semantic_phoneme[idx]
         item_name = self.item_names[idx]
         phoneme_ids_len = len(phoneme_ids)
@@ -249,12 +248,12 @@ class Text2SemanticDataset(Dataset):
         sec = 1.0 * len(semantic_ids) / self.hz
         return sec
 
-    def collate(self, examples: List[Dict]) -> Dict:
-        sample_index: List[int] = []
-        phoneme_ids: List[torch.Tensor] = []
-        phoneme_ids_lens: List[int] = []
-        semantic_ids: List[torch.Tensor] = []
-        semantic_ids_lens: List[int] = []
+    def collate(self, examples: list[dict]) -> dict:
+        sample_index: list[int] = []
+        phoneme_ids: list[torch.Tensor] = []
+        phoneme_ids_lens: list[int] = []
+        semantic_ids: list[torch.Tensor] = []
+        semantic_ids_lens: list[int] = []
         # return
 
         for item in examples:

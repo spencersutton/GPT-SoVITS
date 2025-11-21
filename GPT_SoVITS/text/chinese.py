@@ -13,7 +13,7 @@ normalizer = lambda x: cn2an.transform(x, "an2cn")
 current_file_path = os.path.dirname(__file__)
 pinyin_to_symbol_map = {
     line.split("\t")[0]: line.strip().split("\t")[1]
-    for line in open(os.path.join(current_file_path, "opencpop-strict.txt")).readlines()
+    for line in open(os.path.join(current_file_path, "opencpop-strict.txt"))
 }
 
 import logging
@@ -119,7 +119,6 @@ def _g2p(segments):
             # assert len(sub_initials) == len(sub_finals) == len(word)
         initials = sum(initials, [])
         finals = sum(finals, [])
-        #
         for c, v in zip(initials, finals):
             raw_pinyin = c + v
             # NOTE: post process for pypinyin outputs

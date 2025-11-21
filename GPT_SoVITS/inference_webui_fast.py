@@ -27,7 +27,6 @@ def set_high_priority():
 set_high_priority()
 import json
 import logging
-import os
 import random
 import re
 import sys
@@ -222,7 +221,7 @@ else:
     with open("./weight.json", "w", encoding="utf-8") as file:
         json.dump({"GPT": {}, "SoVITS": {}}, file)
 
-with open("./weight.json", "r", encoding="utf-8") as file:
+with open("./weight.json", encoding="utf-8") as file:
     weight_data = file.read()
     weight_data = json.loads(weight_data)
     gpt_path = os.environ.get(
@@ -578,7 +577,7 @@ with gr.Blocks(
                 ref_text_free,
                 inference_button,
             ],
-        )  #
+        )
         GPT_dropdown.change(change_gpt_weights, [GPT_dropdown], [])
 
     with gr.Group():

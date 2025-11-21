@@ -2,11 +2,11 @@
 #   Licensed under the MIT license.
 
 import torch
-import torch.nn as nn
 
 # load fused CUDA kernel: this enables importing anti_alias_activation_cuda
 from alias_free_activation.cuda import load
 from alias_free_activation.torch.resample import DownSample1d, UpSample1d
+from torch import nn
 
 anti_alias_activation_cuda = load.load()
 

@@ -12,9 +12,9 @@ import math
 
 import pooling_layers as pooling_layers
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from fusion import AFF
+from torch import nn
 
 
 class ReLU(nn.Hardtanh):
@@ -311,5 +311,5 @@ if __name__ == "__main__":
     y = model(x)
     print(y.size())
     macs, num_params = profile(model, inputs=(x,))
-    print("Params: {} M".format(num_params / 1e6))  # 17.86 M
-    print("MACs: {} G".format(macs / 1e9))  # 12.69 G
+    print(f"Params: {num_params / 1e6} M")  # 17.86 M
+    print(f"MACs: {macs / 1e9} G")  # 12.69 G

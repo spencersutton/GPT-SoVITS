@@ -85,5 +85,5 @@ if __name__ == "__main__":
         print(s.lr)
 
     plt.plot(lrs)
-    plt.plot(range(0, 25000), lrs)
+    plt.plot(range(25000), lrs)
     plt.show()

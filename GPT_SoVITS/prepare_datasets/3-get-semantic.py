@@ -103,7 +103,7 @@ if os.path.exists(semantic_path) == False:
         semantic = " ".join([str(i) for i in codes[0, 0, :].tolist()])
         lines.append("%s\t%s" % (wav_name, semantic))
 
-    with open(inp_text, "r", encoding="utf8") as f:
+    with open(inp_text, encoding="utf8") as f:
         lines = f.read().strip("\n").split("\n")
 
     lines1 = []

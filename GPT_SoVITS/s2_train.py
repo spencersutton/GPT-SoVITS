@@ -496,10 +496,7 @@ def train_and_evaluate(
                 lr = optim_g.param_groups[0]["lr"]
                 losses = [loss_disc, loss_gen, loss_fm, loss_mel, kl_ssl, loss_kl]
                 logger.info(
-                    "Train Epoch: {} [{:.0f}%]".format(
-                        epoch,
-                        100.0 * batch_idx / len(train_loader),
-                    )
+                    f"Train Epoch: {epoch} [{100.0 * batch_idx / len(train_loader):.0f}%]"
                 )
                 logger.info([x.item() for x in losses] + [global_step, lr])
 
@@ -563,7 +560,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(
                     "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
-                    "G_{}.pth".format(global_step),
+                    f"G_{global_step}.pth",
                 ),
             )
             utils.save_checkpoint(
@@ -573,7 +570,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(
                     "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
-                    "D_{}.pth".format(global_step),
+                    f"D_{global_step}.pth",
                 ),
             )
         else:
@@ -584,7 +581,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(
                     "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
-                    "G_{}.pth".format(233333333333),
+                    f"G_{233333333333}.pth",
                 ),
             )
             utils.save_checkpoint(
@@ -594,7 +591,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(
                     "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
-                    "D_{}.pth".format(233333333333),
+                    f"D_{233333333333}.pth",
                 ),
             )
         if rank == 0 and hps.train.if_save_every_weights == True:
@@ -621,7 +618,7 @@ def train_and_evaluate(
             )
 
     if rank == 0:
-        logger.info("====> Epoch: {}".format(epoch))
+        logger.info(f"====> Epoch: {epoch}")
 
 
 def evaluate(hps, generator, eval_loader, writer_eval):

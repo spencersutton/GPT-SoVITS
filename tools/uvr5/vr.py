@@ -140,7 +140,7 @@ class AudioPre:
                     ),
                     (np.array(wav_instrument) * 32768).astype("int16"),
                     self.mp.param["sr"],
-                )  #
+                )
             else:
                 path = os.path.join(
                     ins_root, head + "{}_{}.wav".format(name, self.data["agg"])
@@ -323,7 +323,7 @@ class AudioPreDeEcho:
                     ),
                     (np.array(wav_instrument) * 32768).astype("int16"),
                     self.mp.param["sr"],
-                )  #
+                )
             else:
                 path = os.path.join(
                     ins_root, "vocal_{}_{}.wav".format(name, self.data["agg"])

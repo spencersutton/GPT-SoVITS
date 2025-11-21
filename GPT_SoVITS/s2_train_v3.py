@@ -388,10 +388,7 @@ def train_and_evaluate(
                 # losses = [commit_loss,cfm_loss,mel_loss,loss_disc, loss_gen, loss_fm, loss_mel, loss_kl]
                 losses = [cfm_loss]
                 logger.info(
-                    "Train Epoch: {} [{:.0f}%]".format(
-                        epoch,
-                        100.0 * batch_idx / len(train_loader),
-                    )
+                    f"Train Epoch: {epoch} [{100.0 * batch_idx / len(train_loader):.0f}%]"
                 )
                 logger.info([x.item() for x in losses] + [global_step, lr])
 
@@ -431,7 +428,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(
                     "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
-                    "G_{}.pth".format(global_step),
+                    f"G_{global_step}.pth",
                 ),
             )
             # utils.save_checkpoint(
@@ -451,7 +448,7 @@ def train_and_evaluate(
                 epoch,
                 os.path.join(
                     "%s/logs_s2_%s" % (hps.data.exp_dir, hps.model.version),
-                    "G_{}.pth".format(233333333333),
+                    f"G_{233333333333}.pth",
                 ),
             )
             # utils.save_checkpoint(
@@ -484,7 +481,7 @@ def train_and_evaluate(
             )
 
     if rank == 0:
-        logger.info("====> Epoch: {}".format(epoch))
+        logger.info(f"====> Epoch: {epoch}")
 
 
 if __name__ == "__main__":

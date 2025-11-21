@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 
 inp_text = os.environ.get("inp_text")
@@ -107,7 +105,7 @@ if os.path.exists(txt_path) == False:
 
     todo = []
     res = []
-    with open(inp_text, "r", encoding="utf8") as f:
+    with open(inp_text, encoding="utf8") as f:
         lines = f.read().strip("\n").split("\n")
 
     language_v1_to_language_v2 = {

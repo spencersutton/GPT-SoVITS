@@ -101,7 +101,7 @@ RESP:
 import os
 import sys
 import traceback
-from typing import Generator
+from collections.abc import Generator
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)

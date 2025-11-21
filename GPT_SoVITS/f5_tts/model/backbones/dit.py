@@ -86,7 +86,7 @@ class InputEmbedding(nn.Module):
         cond: float["b n d"],
         text_embed: float["b n d"],
         drop_audio_cond=False,
-    ):  # noqa: F722
+    ):
         if drop_audio_cond:  # cfg for cond audio
             cond = torch.zeros_like(cond)
 
@@ -159,14 +159,14 @@ class DiT(nn.Module):
         x0: float["b n d"],  # nosied input audio  # noqa: F722
         cond0: float["b n d"],  # masked cond audio  # noqa: F722
         x_lens,
-        time: float["b"] | float[""],  # time step  # noqa: F821 F722
+        time: float[b] | float[""],  # time step  # noqa: F821 F722
         dt_base_bootstrap,
-        text0,  # : int["b nt"]  # noqa: F722#####condition feature
+        text0,  # : int["b nt"]  #####condition feature
         use_grad_ckpt=False,  # bool
         ###no-use
         drop_audio_cond=False,  # cfg for cond audio
         drop_text=False,  # cfg for text
-        # mask: bool["b n"] | None = None,  # noqa: F722
+        # mask: bool["b n"] | None = None,
         infer=False,  # bool
         text_cache=None,  # torch tensor as text_embed
         dt_cache=None,  # torch tensor as dt

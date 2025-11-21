@@ -11,7 +11,7 @@ import os
 import uuid
 
 try:
-    import gradio.analytics as analytics
+    from gradio import analytics
 
     analytics.version_check = lambda: None
 except:
@@ -127,14 +127,14 @@ def b_delete_audio(*checkbox_list):
     g_max_json_index = len(g_data_json) - 1
     if g_index > g_max_json_index:
         g_index = g_max_json_index
-        g_index = g_index if g_index >= 0 else 0
+        g_index = max(g_index, 0)
     if change:
         b_save_file()
     # return gr.Slider(value=g_index, maximum=(g_max_json_index if g_max_json_index>=0 else 0)), *b_change_index(g_index, g_batch)
     return {
         "value": g_index,
         "__type__": "update",
-        "maximum": (g_max_json_index if g_max_json_index >= 0 else 0),
+        "maximum": (max(g_max_json_index, 0)),
     }, *b_change_index(g_index, g_batch)
 
 
@@ -150,7 +150,7 @@ def get_next_path(filename):
         new_path = os.path.join(base_dir, f"{base_name}_{str(i).zfill(2)}.wav")
         if not os.path.exists(new_path):
             return new_path
-    return os.path.join(base_dir, f"{str(uuid.uuid4())}.wav")
+    return os.path.join(base_dir, f"{uuid.uuid4()!s}.wav")
 
 
 def b_audio_split(audio_breakpoint, *checkbox_list):
@@ -236,8 +236,9 @@ def b_merge_audio(interval_r, *checkbox_list):
 
 def b_save_json():
     with open(g_load_file, "w", encoding="utf-8") as file:
-        for data in g_data_json:
-            file.write(f"{json.dumps(data, ensure_ascii=False)}\n")
+        file.writelines(
+            f"{json.dumps(data, ensure_ascii=False)}\n" for data in g_data_json
+        )
 
 
 def b_save_list():
@@ -252,7 +253,7 @@ def b_save_list():
 
 def b_load_json():
     global g_data_json, g_max_json_index
-    with open(g_load_file, "r", encoding="utf-8") as file:
+    with open(g_load_file, encoding="utf-8") as file:
         g_data_json = file.readlines()
         g_data_json = [json.loads(line) for line in g_data_json]
         g_max_json_index = len(g_data_json) - 1
@@ -260,7 +261,7 @@ def b_load_json():
 
 def b_load_list():
     global g_data_json, g_max_json_index
-    with open(g_load_file, "r", encoding="utf-8") as source:
+    with open(g_load_file, encoding="utf-8") as source:
         data_list = source.readlines()
         for _ in data_list:
             data = _.split("|")
@@ -389,7 +390,7 @@ if __name__ == "__main__":
 
         with gr.Row():
             with gr.Column():
-                for _ in range(0, g_batch):
+                for _ in range(g_batch):
                     with gr.Row():
                         text = gr.Textbox(label="Text", visible=True, scale=5)
                         audio_output = gr.Audio(

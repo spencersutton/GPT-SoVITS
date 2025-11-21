@@ -8,7 +8,6 @@ import math
 import os
 import pathlib
 import random
-from typing import List, Optional, Tuple
 
 import librosa
 import numpy as np
@@ -150,7 +149,7 @@ def get_dataset_filelist(a):
     validation_files = []
     list_unseen_validation_files = []
 
-    with open(a.input_training_file, "r", encoding="utf-8") as fi:
+    with open(a.input_training_file, encoding="utf-8") as fi:
         training_files = [
             os.path.join(a.input_wavs_dir, x.split("|")[0] + ".wav")
             for x in fi.read().split("\n")
@@ -158,7 +157,7 @@ def get_dataset_filelist(a):
         ]
         print(f"first training file: {training_files[0]}")
 
-    with open(a.input_validation_file, "r", encoding="utf-8") as fi:
+    with open(a.input_validation_file, encoding="utf-8") as fi:
         validation_files = [
             os.path.join(a.input_wavs_dir, x.split("|")[0] + ".wav")
             for x in fi.read().split("\n")
@@ -167,7 +166,7 @@ def get_dataset_filelist(a):
         print(f"first validation file: {validation_files[0]}")
 
     for i in range(len(a.list_input_unseen_validation_file)):
-        with open(a.list_input_unseen_validation_file[i], "r", encoding="utf-8") as fi:
+        with open(a.list_input_unseen_validation_file[i], encoding="utf-8") as fi:
             unseen_validation_files = [
                 os.path.join(a.list_input_unseen_wavs_dir[i], x.split("|")[0] + ".wav")
                 for x in fi.read().split("\n")
@@ -184,7 +183,7 @@ def get_dataset_filelist(a):
 class MelDataset(torch.utils.data.Dataset):
     def __init__(
         self,
-        training_files: List[str],
+        training_files: list[str],
         hparams: AttrDict,
         segment_size: int,
         n_fft: int,
@@ -193,11 +192,11 @@ class MelDataset(torch.utils.data.Dataset):
         win_size: int,
         sampling_rate: int,
         fmin: int,
-        fmax: Optional[int],
+        fmax: int | None,
         split: bool = True,
         shuffle: bool = True,
         device: str = None,
-        fmax_loss: Optional[int] = None,
+        fmax_loss: int | None = None,
         fine_tuning: bool = False,
         base_mels_path: str = None,
         is_seen: bool = True,
@@ -235,7 +234,7 @@ class MelDataset(torch.utils.data.Dataset):
 
     def __getitem__(
         self, index: int
-    ) -> Tuple[torch.Tensor, torch.Tensor, str, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, str, torch.Tensor]:
         try:
             filename = self.audio_files[index]
 

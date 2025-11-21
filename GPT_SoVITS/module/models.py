@@ -1370,7 +1370,7 @@ class SynthesizerTrnV3(nn.Module):
             )
             with maybe_no_grad:
                 if self.freeze_quantizer:
-                    self.ssl_proj.eval()  #
+                    self.ssl_proj.eval()
                     self.quantizer.eval()
                     self.enc_p.eval()
                 ssl = self.ssl_proj(ssl)
@@ -1611,7 +1611,7 @@ class SynthesizerTrnV3b(nn.Module):
             (torch.rand([B], device=fea.device) * prompt_len_max)
             .floor()
             .to(dtype=torch.long)
-        )  #
+        )
         minn = min(mel.shape[-1], fea.shape[-1])
         mel = mel[:, :, :minn]
         fea = fea[:, :, :minn]

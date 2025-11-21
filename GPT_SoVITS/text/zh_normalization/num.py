@@ -18,7 +18,6 @@ https://zh.wikipedia.org/wiki/中文数字#現代中文
 
 import re
 from collections import OrderedDict
-from typing import List
 
 DIGITS = {str(i): tran for i, tran in enumerate("零一二三四五六七八九")}
 UNITS = OrderedDict(
@@ -75,7 +74,7 @@ def replace_percentage(match) -> str:
 
 # 整数表达式
 # 带负号的整数 -10
-RE_INTEGER = re.compile(r"(-)" r"(\d+)")
+RE_INTEGER = re.compile(r"(-)(\d+)")
 
 
 def replace_negative_num(match) -> str:
@@ -166,10 +165,10 @@ def replace_power(match) -> str:
 
 # 数字表达式
 # 纯小数
-RE_DECIMAL_NUM = re.compile(r"(-?)((\d+)(\.\d+))" r"|(\.(\d+))")
+RE_DECIMAL_NUM = re.compile(r"(-?)((\d+)(\.\d+))|(\.(\d+))")
 # 正整数 + 量词
 RE_POSITIVE_QUANTIFIERS = re.compile(r"(\d+)([多余几\+])?" + COM_QUANTIFIERS)
-RE_NUMBER = re.compile(r"(-?)((\d+)(\.\d+)?)" r"|(\.(\d+))")
+RE_NUMBER = re.compile(r"(-?)((\d+)(\.\d+)?)|(\.(\d+))")
 
 
 def replace_positive_quantifier(match) -> str:
@@ -275,7 +274,7 @@ def replace_vrsion_num(match) -> str:
     return result
 
 
-def _get_value(value_string: str, use_zero: bool = True) -> List[str]:
+def _get_value(value_string: str, use_zero: bool = True) -> list[str]:
     stripped = value_string.lstrip("0")
     if len(stripped) == 0:
         return []

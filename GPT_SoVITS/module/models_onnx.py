@@ -1,5 +1,4 @@
 import math
-from typing import Optional
 
 import torch
 from f5_tts.model import DiT
@@ -474,7 +473,7 @@ class Generator(torch.nn.Module):
         if gin_channels != 0:
             self.cond = nn.Conv1d(gin_channels, upsample_initial_channel, 1)
 
-    def forward(self, x, g: Optional[torch.Tensor] = None):
+    def forward(self, x, g: torch.Tensor | None = None):
         x = self.conv_pre(x)
         if g is not None:
             x = x + self.cond(g)

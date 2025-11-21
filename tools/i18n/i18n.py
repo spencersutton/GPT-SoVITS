@@ -8,9 +8,7 @@ I18N_JSON_DIR: os.PathLike = os.path.join(
 
 
 def load_language_list(language):
-    with open(
-        os.path.join(I18N_JSON_DIR, f"{language}.json"), "r", encoding="utf-8"
-    ) as f:
+    with open(os.path.join(I18N_JSON_DIR, f"{language}.json"), encoding="utf-8") as f:
         language_list = json.load(f)
     return language_list
 

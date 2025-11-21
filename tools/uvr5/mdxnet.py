@@ -111,8 +111,7 @@ class Predictor:
         margin = self.args.margin
         chunk_size = self.args.chunks * 44100
         assert not margin == 0, "margin cannot be zero!"
-        if margin > chunk_size:
-            margin = chunk_size
+        margin = min(margin, chunk_size)
 
         segmented_mix = {}
 

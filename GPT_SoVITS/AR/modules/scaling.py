@@ -14,11 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import random
-from typing import Optional, Tuple
 
 import torch
-import torch.nn as nn
-from torch import Tensor
+from torch import Tensor, nn
 
 
 class DoubleSwishFunction(torch.autograd.Function):
@@ -96,7 +94,7 @@ class ActivationBalancerFunction(torch.autograd.Function):
         ctx,
         x: Tensor,
         scale_factor: Tensor,
-        sign_factor: Optional[Tensor],
+        sign_factor: Tensor | None,
         channel_dim: int,
     ) -> Tensor:
         if channel_dim < 0:
@@ -110,7 +108,7 @@ class ActivationBalancerFunction(torch.autograd.Function):
         return x
 
     @staticmethod
-    def backward(ctx, x_grad: Tensor) -> Tuple[Tensor, None, None, None]:
+    def backward(ctx, x_grad: Tensor) -> tuple[Tensor, None, None, None]:
         if len(ctx.saved_tensors) == 3:
             xgt0, scale_factor, sign_factor = ctx.saved_tensors
             for _ in range(ctx.channel_dim, x_grad.ndim - 1):

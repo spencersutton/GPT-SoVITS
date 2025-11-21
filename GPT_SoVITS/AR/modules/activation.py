@@ -1,5 +1,4 @@
 # modified from https://github.com/lifeiteng/vall-e/blob/main/valle/modules/activation.py
-from typing import Optional, Tuple
 
 import torch
 from torch import Tensor
@@ -72,8 +71,8 @@ class MultiheadAttention(Module):
     """
 
     __constants__ = ["batch_first"]
-    bias_k: Optional[torch.Tensor]
-    bias_v: Optional[torch.Tensor]
+    bias_k: torch.Tensor | None
+    bias_v: torch.Tensor | None
 
     def __init__(
         self,
@@ -210,12 +209,12 @@ class MultiheadAttention(Module):
         query: Tensor,
         key: Tensor,
         value: Tensor,
-        key_padding_mask: Optional[Tensor] = None,
+        key_padding_mask: Tensor | None = None,
         need_weights: bool = True,
-        attn_mask: Optional[Tensor] = None,
+        attn_mask: Tensor | None = None,
         average_attn_weights: bool = True,
         cache=None,
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> tuple[Tensor, Tensor | None]:
         r"""
         Args:
             query: Query embeddings of shape :math:`(L, E_q)` for unbatched input, :math:`(L, N, E_q)` when ``batch_first=False``
@@ -364,7 +363,7 @@ class MultiheadAttention(Module):
         any_nested = query.is_nested or key.is_nested or value.is_nested
         assert not any_nested, (
             "MultiheadAttention does not support NestedTensor outside of its fast path. "
-            + f"The fast path was not hit because {why_not_fast_path}"
+            f"The fast path was not hit because {why_not_fast_path}"
         )
 
         if self.batch_first and is_batched:

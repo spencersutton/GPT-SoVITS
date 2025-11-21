@@ -24,11 +24,11 @@ def synthesize(
     output_path,
 ):
     # Read reference text
-    with open(ref_text_path, "r", encoding="utf-8") as file:
+    with open(ref_text_path, encoding="utf-8") as file:
         ref_text = file.read()
 
     # Read target text
-    with open(target_text_path, "r", encoding="utf-8") as file:
+    with open(target_text_path, encoding="utf-8") as file:
         target_text = file.read()
 
     # Change model weights

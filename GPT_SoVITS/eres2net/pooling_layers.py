@@ -4,7 +4,7 @@
 """This implementation is adapted from https://github.com/wenet-e2e/wespeaker."""
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 
 class TAP(nn.Module):

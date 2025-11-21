@@ -1,5 +1,4 @@
 # modified from https://github.com/lifeiteng/vall-e/blob/main/valle/modules/activation.py
-from typing import Optional, Tuple
 
 import torch
 from torch import Tensor
@@ -13,8 +12,8 @@ from AR.modules.patched_mha_with_cache_onnx import multi_head_attention_forward_
 
 class MultiheadAttention(Module):
     __constants__ = ["batch_first"]
-    bias_k: Optional[torch.Tensor]
-    bias_v: Optional[torch.Tensor]
+    bias_k: torch.Tensor | None
+    bias_v: torch.Tensor | None
 
     def __init__(
         self,
@@ -160,12 +159,12 @@ class MultiheadAttention(Module):
         query: Tensor,
         key: Tensor,
         value: Tensor,
-        key_padding_mask: Optional[Tensor] = None,
+        key_padding_mask: Tensor | None = None,
         need_weights: bool = True,
-        attn_mask: Optional[Tensor] = None,
+        attn_mask: Tensor | None = None,
         average_attn_weights: bool = True,
         cache=None,
-    ) -> Tuple[Tensor, Optional[Tensor]]:
+    ) -> tuple[Tensor, Tensor | None]:
         any_nested = query.is_nested or key.is_nested or value.is_nested
         query = key = value = query.transpose(1, 0)
         attn_output = multi_head_attention_forward_patched(

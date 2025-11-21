@@ -1,6 +1,5 @@
 # modified from https://github.com/yangdongchao/SoundStorm/blob/master/soundstorm/s1/AR/models/utils.py
 # reference: https://github.com/lifeiteng/vall-e
-from typing import Tuple
 
 import torch
 import torch.nn.functional as F
@@ -136,9 +135,6 @@ def topk_sampling(logits, top_k=10, top_p=1.0, temperature=1.0):
     return token
 
 
-from typing import Optional
-
-
 def multinomial_sample_one_no_sync(
     probs_sort,
 ):  # Does multinomial sampling without a cuda synchronization
@@ -148,10 +144,10 @@ def multinomial_sample_one_no_sync(
 
 def logits_to_probs(
     logits,
-    previous_tokens: Optional[torch.Tensor] = None,
+    previous_tokens: torch.Tensor | None = None,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
-    top_p: Optional[int] = None,
+    top_k: int | None = None,
+    top_p: int | None = None,
     repetition_penalty: float = 1.0,
 ):
     # if previous_tokens is not None:
@@ -195,9 +191,9 @@ def logits_to_probs(
 
 def sample(
     logits,
-    previous_tokens: Optional[torch.Tensor] = None,
+    previous_tokens: torch.Tensor | None = None,
     **sampling_kwargs,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor]:
     probs = logits_to_probs(
         logits=logits, previous_tokens=previous_tokens, **sampling_kwargs
     )
@@ -212,7 +208,7 @@ def dpo_loss(
     reference_rejected_logps: torch.FloatTensor,
     beta: float,
     reference_free: bool = False,
-) -> Tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
+) -> tuple[torch.FloatTensor, torch.FloatTensor, torch.FloatTensor]:
     pi_logratios = policy_chosen_logps - policy_rejected_logps
     ref_logratios = reference_chosen_logps - reference_rejected_logps
 
@@ -236,7 +232,7 @@ def get_batch_logps(
     labels_target: torch.LongTensor,
     labels_reject: torch.LongTensor,
     average_log_prob: bool = False,
-) -> Tuple[torch.FloatTensor, torch.FloatTensor]:
+) -> tuple[torch.FloatTensor, torch.FloatTensor]:
     # dummy token; we'll ignore the losses on these tokens later
 
     per_token_logps_target = torch.gather(

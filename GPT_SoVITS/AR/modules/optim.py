@@ -16,7 +16,6 @@
 import contextlib
 import logging
 from collections import defaultdict
-from typing import List, Tuple
 
 import torch
 from torch import Tensor
@@ -291,7 +290,7 @@ class ScaledAdam(BatchedOptimizer):
         state["exp_avg_sq"] = torch.zeros_like(p, memory_format=torch.preserve_format)
 
     def _get_clipping_scale(
-        self, group: dict, tuples: List[Tuple[Tensor, dict, List[str]]]
+        self, group: dict, tuples: list[tuple[Tensor, dict, list[str]]]
     ) -> float:
         """
         Returns a scalar factor <= 1.0 that dictates gradient clipping, i.e. we will scale the gradients
@@ -341,7 +340,7 @@ class ScaledAdam(BatchedOptimizer):
             # above.
             sorted_norms = first_state["model_norms"].sort()[0].to("cpu")
             quartiles = []
-            for n in range(0, 5):
+            for n in range(5):
                 index = min(
                     clipping_update_period - 1,
                     (clipping_update_period // 4) * n,
@@ -385,7 +384,7 @@ class ScaledAdam(BatchedOptimizer):
             return ans
 
     def _show_gradient_dominating_parameter(
-        self, tuples: List[Tuple[Tensor, dict, List[str]]], tot_sumsq: Tensor
+        self, tuples: list[tuple[Tensor, dict, list[str]]], tot_sumsq: Tensor
     ):
         """
         Show information of parameter which dominating tot_sumsq.

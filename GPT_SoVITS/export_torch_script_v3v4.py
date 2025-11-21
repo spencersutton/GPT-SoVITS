@@ -117,12 +117,12 @@ class ExportDitEmbed(torch.nn.Module):
 
     def forward(
         self,
-        x0: torch.Tensor,  # nosied input audio  # noqa: F722
-        cond0: torch.Tensor,  # masked cond audio  # noqa: F722
+        x0: torch.Tensor,  # nosied input audio
+        cond0: torch.Tensor,  # masked cond audio
         x_lens: torch.Tensor,
-        time: torch.Tensor,  # time step  # noqa: F821 F722
+        time: torch.Tensor,  # time step
         dt_base_bootstrap: torch.Tensor,
-        text0: torch.Tensor,  # noqa: F722#####condition feature
+        text0: torch.Tensor,  #####condition feature
     ):
         x = x0.transpose(2, 1)
         cond = cond0.transpose(2, 1)
@@ -149,12 +149,12 @@ class ExportDiT(torch.nn.Module):
 
     def forward(  # x, prompt_x, x_lens, t, style,cond
         self,  # d is channel,n is T
-        x0: torch.Tensor,  # nosied input audio  # noqa: F722
-        cond0: torch.Tensor,  # masked cond audio  # noqa: F722
+        x0: torch.Tensor,  # nosied input audio
+        cond0: torch.Tensor,  # masked cond audio
         x_lens: torch.Tensor,
-        time: torch.Tensor,  # time step  # noqa: F821 F722
+        time: torch.Tensor,  # time step
         dt_base_bootstrap: torch.Tensor,
-        text0: torch.Tensor,  # noqa: F722#####condition feature
+        text0: torch.Tensor,  #####condition feature
     ):
         x, t, mask, rope = self.embed(x0, cond0, x_lens, time, dt_base_bootstrap, text0)
         output = self.blocks(x, t, mask, rope)
@@ -186,29 +186,25 @@ class ExportCFM(torch.nn.Module):
 
 mel_fn = lambda x: mel_spectrogram_torch(
     x,
-    **{
-        "n_fft": 1024,
-        "win_size": 1024,
-        "hop_size": 256,
-        "num_mels": 100,
-        "sampling_rate": 24000,
-        "fmin": 0,
-        "fmax": None,
-        "center": False,
-    },
+    n_fft=1024,
+    win_size=1024,
+    hop_size=256,
+    num_mels=100,
+    sampling_rate=24000,
+    fmin=0,
+    fmax=None,
+    center=False,
 )
 mel_fn_v4 = lambda x: mel_spectrogram_torch(
     x,
-    **{
-        "n_fft": 1280,
-        "win_size": 1280,
-        "hop_size": 320,
-        "num_mels": 100,
-        "sampling_rate": 32000,
-        "fmin": 0,
-        "fmax": None,
-        "center": False,
-    },
+    n_fft=1280,
+    win_size=1280,
+    hop_size=320,
+    num_mels=100,
+    sampling_rate=32000,
+    fmin=0,
+    fmax=None,
+    center=False,
 )
 
 spec_min = -12

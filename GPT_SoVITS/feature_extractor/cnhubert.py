@@ -9,8 +9,8 @@ import logging
 
 logging.getLogger("numba").setLevel(logging.WARNING)
 
-import torch.nn as nn
 import utils
+from torch import nn
 from transformers import (
     HubertModel,
     Wav2Vec2FeatureExtractor,

@@ -3,7 +3,6 @@
 import argparse
 import os
 from io import BytesIO
-from typing import Optional
 
 import kaldi as Kaldi
 import soundfile
@@ -63,10 +62,10 @@ def get_raw_t2s_model(dict_s1) -> Text2SemanticLightningModule:
 @torch.jit.script
 def logits_to_probs(
     logits,
-    previous_tokens: Optional[torch.Tensor] = None,
+    previous_tokens: torch.Tensor | None = None,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
-    top_p: Optional[int] = None,
+    top_k: int | None = None,
+    top_p: int | None = None,
     repetition_penalty: float = 1.0,
 ):
     # if previous_tokens is not None:
@@ -116,8 +115,8 @@ def sample(
     logits,
     previous_tokens,
     temperature: float = 1.0,
-    top_k: Optional[int] = None,
-    top_p: Optional[int] = None,
+    top_k: int | None = None,
+    top_p: int | None = None,
     repetition_penalty: float = 1.35,
 ):
     probs = logits_to_probs(
@@ -242,7 +241,7 @@ class T2SBlock:
         self.false = torch.tensor(False, dtype=torch.bool)
 
     @torch.jit.ignore
-    def to_mask(self, x: torch.Tensor, padding_mask: Optional[torch.Tensor]):
+    def to_mask(self, x: torch.Tensor, padding_mask: torch.Tensor | None):
         if padding_mask is None:
             return x
 
@@ -255,7 +254,7 @@ class T2SBlock:
         self,
         x: torch.Tensor,
         attn_mask: torch.Tensor,
-        padding_mask: Optional[torch.Tensor] = None,
+        padding_mask: torch.Tensor | None = None,
     ):
         q, k, v = F.linear(self.to_mask(x, padding_mask), self.qkv_w, self.qkv_b).chunk(
             3, dim=-1
@@ -368,7 +367,7 @@ class T2STransformer:
         self,
         x: torch.Tensor,
         attn_mask: torch.Tensor,
-        padding_mask: Optional[torch.Tensor] = None,
+        padding_mask: torch.Tensor | None = None,
     ):
         k_cache: list[torch.Tensor] = []
         v_cache: list[torch.Tensor] = []
@@ -402,11 +401,10 @@ class VitsModel(nn.Module):
                 self.hps["model"]["version"] = "v1"
             else:
                 self.hps["model"]["version"] = "v2"
+        elif version in ["v1", "v2", "v3", "v4", "v2Pro", "v2ProPlus"]:
+            self.hps["model"]["version"] = version
         else:
-            if version in ["v1", "v2", "v3", "v4", "v2Pro", "v2ProPlus"]:
-                self.hps["model"]["version"] = version
-            else:
-                raise ValueError(f"Unsupported version: {version}")
+            raise ValueError(f"Unsupported version: {version}")
 
         self.hps = DictToAttrRecursive(self.hps)
         self.hps.model.semantic_frame_rate = "25hz"

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 import sys
 
@@ -107,7 +105,7 @@ def name2go(wav_name, wav_path):
     my_save(emb, sv_cn_path)
 
 
-with open(inp_text, "r", encoding="utf8") as f:
+with open(inp_text, encoding="utf8") as f:
     lines = f.read().strip("\n").split("\n")
 
 for line in lines[int(i_part) :: int(all_parts)]:

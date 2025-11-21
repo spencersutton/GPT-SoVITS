@@ -12,9 +12,9 @@ import math
 
 import pooling_layers as pooling_layers
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from fusion import AFF
+from torch import nn
 
 
 class ReLU(nn.Hardtanh):
@@ -311,4 +311,4 @@ if __name__ == "__main__":
     print(out.shape)  # torch.Size([10, 192])
 
     num_params = sum(param.numel() for param in model.parameters())
-    print("{} M".format(num_params / 1e6))  # 6.61M
+    print(f"{num_params / 1e6} M")  # 6.61M

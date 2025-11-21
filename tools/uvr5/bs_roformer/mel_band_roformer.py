@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, Optional, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -216,7 +216,7 @@ class Transformer(Module):
 
 class BandSplit(Module):
     # @beartype
-    def __init__(self, dim, dim_inputs: Tuple[int, ...]):
+    def __init__(self, dim, dim_inputs: tuple[int, ...]):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_features = ModuleList([])
@@ -258,7 +258,7 @@ def MLP(dim_in, dim_out, dim_hidden=None, depth=1, activation=nn.Tanh):
 
 class MaskEstimator(Module):
     # @beartype
-    def __init__(self, dim, dim_inputs: Tuple[int, ...], depth, mlp_expansion_factor=4):
+    def __init__(self, dim, dim_inputs: tuple[int, ...], depth, mlp_expansion_factor=4):
         super().__init__()
         self.dim_inputs = dim_inputs
         self.to_freqs = ModuleList([])
@@ -313,10 +313,10 @@ class MelBandRoformer(Module):
         # 10ms at 44100Hz, from sections 4.1, 4.4 in the paper - @faroit recommends // 2 or // 4 for better reconstruction
         stft_win_length=2048,
         stft_normalized=False,
-        stft_window_fn: Optional[Callable] = None,
+        stft_window_fn: Callable | None = None,
         mask_estimator_depth=1,
         multi_stft_resolution_loss_weight=1.0,
-        multi_stft_resolutions_window_sizes: Tuple[int, ...] = (
+        multi_stft_resolutions_window_sizes: tuple[int, ...] = (
             4096,
             2048,
             1024,

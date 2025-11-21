@@ -1,5 +1,4 @@
 import math
-from typing import Optional
 
 import torch
 from torch import nn
@@ -190,7 +189,7 @@ class MultiHeadAttention(nn.Module):
                 self.conv_k.weight.copy_(self.conv_q.weight)
                 self.conv_k.bias.copy_(self.conv_q.bias)
 
-    def forward(self, x, c, attn_mask: Optional[torch.Tensor] = None):
+    def forward(self, x, c, attn_mask: torch.Tensor | None = None):
         q = self.conv_q(x)
         k = self.conv_k(c)
         v = self.conv_v(c)
@@ -201,7 +200,7 @@ class MultiHeadAttention(nn.Module):
         x = self.conv_o(x)
         return x
 
-    def attention(self, query, key, value, mask: Optional[torch.Tensor] = None):
+    def attention(self, query, key, value, mask: torch.Tensor | None = None):
         # reshape [b, d, t] -> [b, n_h, t, d_k]
         b, d, t_s, _ = (*key.size(), query.size(2))
         query = query.view(b, self.n_heads, self.k_channels, -1).transpose(2, 3)

@@ -43,7 +43,7 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
                 [name[:-3] for name in list(os.listdir(self.path7))]
             )  # 去除.pt后缀
         self.phoneme_data = {}
-        with open(self.path2, "r", encoding="utf8") as f:
+        with open(self.path2, encoding="utf8") as f:
             lines = f.read().strip("\n").split("\n")
 
         for line in lines:
@@ -320,7 +320,7 @@ class TextAudioSpeakerLoaderV3(torch.utils.data.Dataset):
         )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         self.phoneme_data = {}
-        with open(self.path2, "r", encoding="utf8") as f:
+        with open(self.path2, encoding="utf8") as f:
             lines = f.read().strip("\n").split("\n")
 
         for line in lines:
@@ -585,7 +585,7 @@ class TextAudioSpeakerLoaderV4(torch.utils.data.Dataset):
         )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         self.phoneme_data = {}
-        with open(self.path2, "r", encoding="utf8") as f:
+        with open(self.path2, encoding="utf8") as f:
             lines = f.read().strip("\n").split("\n")
 
         for line in lines:
@@ -820,7 +820,7 @@ class TextAudioSpeakerLoaderV3b(torch.utils.data.Dataset):
         )  # 去除.pt后缀
         names5 = set(os.listdir(self.path5))
         self.phoneme_data = {}
-        with open(self.path2, "r", encoding="utf8") as f:
+        with open(self.path2, encoding="utf8") as f:
             lines = f.read().strip("\n").split("\n")
 
         for line in lines:
@@ -1170,7 +1170,7 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
 
         if hi > lo:
             mid = (hi + lo) // 2
-            if self.boundaries[mid] < x and x <= self.boundaries[mid + 1]:
+            if self.boundaries[mid] < x <= self.boundaries[mid + 1]:
                 return mid
             elif x <= self.boundaries[mid]:
                 return self._bisect(x, lo, mid)

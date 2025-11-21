@@ -433,7 +433,7 @@ class FFN(nn.Module):
         return x
 
 
-import torch.nn as nn
+from torch import nn
 from torch.nn.utils import remove_weight_norm, weight_norm
 
 

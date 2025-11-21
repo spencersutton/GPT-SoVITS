@@ -5,7 +5,7 @@ import json
 import os
 import warnings
 import zipfile
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 import onnxruntime
@@ -31,8 +31,8 @@ model_version = "1.1"
 
 
 def predict(
-    session, onnx_input: Dict[str, Any], labels: List[str]
-) -> Tuple[List[str], List[float]]:
+    session, onnx_input: dict[str, Any], labels: list[str]
+) -> tuple[list[str], list[float]]:
     all_preds = []
     all_confidences = []
     probs = session.run(
@@ -180,7 +180,6 @@ class G2PWOnnxConverter:
 
         with open(
             os.path.join(uncompress_path, "bopomofo_to_pinyin_wo_tune_dict.json"),
-            "r",
             encoding="utf-8",
         ) as fr:
             self.bopomofo_convert_dict = json.load(fr)
@@ -191,7 +190,6 @@ class G2PWOnnxConverter:
 
         with open(
             os.path.join(uncompress_path, "char_bopomofo_dict.json"),
-            "r",
             encoding="utf-8",
         ) as fr:
             self.char_bopomofo_dict = json.load(fr)
@@ -209,7 +207,7 @@ class G2PWOnnxConverter:
             print(f'Warning: "{bopomofo}" cannot convert to pinyin')
             return None
 
-    def __call__(self, sentences: List[str]) -> List[List[str]]:
+    def __call__(self, sentences: list[str]) -> list[list[str]]:
         if isinstance(sentences, str):
             sentences = [sentences]
 
@@ -252,8 +250,8 @@ class G2PWOnnxConverter:
         return results
 
     def _prepare_data(
-        self, sentences: List[str]
-    ) -> Tuple[List[str], List[int], List[int], List[List[str]]]:
+        self, sentences: list[str]
+    ) -> tuple[list[str], list[int], list[int], list[list[str]]]:
         texts, query_ids, sent_ids, partial_results = [], [], [], []
         for sent_id, sent in enumerate(sentences):
             # pypinyin works well for Simplified Chinese than Traditional Chinese

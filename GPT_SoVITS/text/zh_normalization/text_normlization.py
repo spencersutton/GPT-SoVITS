@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import re
-from typing import List
 
 from .char_convert import tranditional_to_simplified
 from .chronology import (
@@ -64,7 +63,7 @@ class TextNormalizer:
     def __init__(self):
         self.SENTENCE_SPLITOR = re.compile(r"([：、，；。？！,;?!][”’]?)")
 
-    def _split(self, text: str, lang="zh") -> List[str]:
+    def _split(self, text: str, lang="zh") -> list[str]:
         """Split long text into sentences with sentence-splitting punctuations.
         Args:
             text (str): The input text.
@@ -179,7 +178,7 @@ class TextNormalizer:
 
         return sentence
 
-    def normalize(self, text: str) -> List[str]:
+    def normalize(self, text: str) -> list[str]:
         sentences = self._split(text)
         sentences = [self.normalize_sentence(sent) for sent in sentences]
         return sentences

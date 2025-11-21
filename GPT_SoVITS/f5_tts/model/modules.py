@@ -10,7 +10,6 @@ d - dimension
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import torch
 import torch.nn.functional as F
@@ -366,7 +365,7 @@ class Attention(nn.Module):
         heads: int = 8,
         dim_head: int = 64,
         dropout: float = 0.0,
-        context_dim: Optional[int] = None,  # if not None -> joint attention
+        context_dim: int | None = None,  # if not None -> joint attention
         context_pre_only=None,
     ):
         super().__init__()
@@ -723,7 +722,7 @@ class TimestepEmbedding(nn.Module):
             nn.Linear(freq_embed_dim, dim), nn.SiLU(), nn.Linear(dim, dim)
         )
 
-    def forward(self, timestep: float["b"]):  # noqa: F821
+    def forward(self, timestep: float[b]):  # noqa: F821
         time_hidden = self.time_embed(timestep)
         time_hidden = time_hidden.to(timestep.dtype)
         time = self.time_mlp(time_hidden)  # b d

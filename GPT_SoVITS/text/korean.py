@@ -226,11 +226,10 @@ def hangul_number(num, sino=True):
             elif i == 1:
                 name = digit2name.get(digit, "") + "십"
                 name = name.replace("일십", "십")
-        else:
-            if i == 0:
-                name = digit2mod.get(digit, "")
-            elif i == 1:
-                name = digit2dec.get(digit, "")
+        elif i == 0:
+            name = digit2mod.get(digit, "")
+        elif i == 1:
+            name = digit2dec.get(digit, "")
         if digit == "0":
             if i % 4 == 0:
                 last_three = spelledout[-min(3, len(spelledout)) :]

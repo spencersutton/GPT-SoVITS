@@ -66,7 +66,7 @@ try:
         if (
             not os.path.exists(USERDIC_BIN_PATH)
             or get_hash(USERDIC_CSV_PATH)
-            != open(USERDIC_HASH_PATH, "r", encoding="utf-8").read()
+            != open(USERDIC_HASH_PATH, encoding="utf-8").read()
         ):
             pyopenjtalk.mecab_dict_index(USERDIC_CSV_PATH, USERDIC_BIN_PATH)
             with open(USERDIC_HASH_PATH, "w", encoding="utf-8") as f:
@@ -79,7 +79,6 @@ except Exception:
     import pyopenjtalk
 
     # failed to load user dictionary, ignore.
-    pass
 
 
 from text.symbols import punctuation

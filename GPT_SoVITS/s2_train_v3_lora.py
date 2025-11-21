@@ -348,9 +348,7 @@ def train_and_evaluate(
                 lr = optim_g.param_groups[0]["lr"]
                 losses = [cfm_loss]
                 logger.info(
-                    "Train Epoch: {} [{:.0f}%]".format(
-                        epoch, 100.0 * batch_idx / len(train_loader)
-                    )
+                    f"Train Epoch: {epoch} [{100.0 * batch_idx / len(train_loader):.0f}%]"
                 )
                 logger.info([x.item() for x in losses] + [global_step, lr])
 
@@ -373,7 +371,7 @@ def train_and_evaluate(
                 optim_g,
                 hps.train.learning_rate,
                 epoch,
-                os.path.join(save_root, "G_{}.pth".format(global_step)),
+                os.path.join(save_root, f"G_{global_step}.pth"),
             )
         else:
             utils.save_checkpoint(
@@ -381,7 +379,7 @@ def train_and_evaluate(
                 optim_g,
                 hps.train.learning_rate,
                 epoch,
-                os.path.join(save_root, "G_{}.pth".format(233333333333)),
+                os.path.join(save_root, f"G_{233333333333}.pth"),
             )
         if rank == 0 and hps.train.if_save_every_weights == True:
             if hasattr(net_g, "module"):
@@ -412,7 +410,7 @@ def train_and_evaluate(
             )
 
     if rank == 0:
-        logger.info("====> Epoch: {}".format(epoch))
+        logger.info(f"====> Epoch: {epoch}")
 
 
 if __name__ == "__main__":

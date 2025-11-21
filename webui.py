@@ -31,7 +31,6 @@ if os.path.exists(tmp):
             delete(path)
         except Exception as e:
             print(str(e))
-            pass
 import site
 import traceback
 
@@ -239,7 +238,11 @@ def kill_process(pid, process_name=""):
         cmd = "taskkill /t /f /pid %s" % pid
         # os.system(cmd)
         subprocess.run(
-            cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            cmd,
+            check=False,
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
     else:
         kill_proc_tree(pid)
@@ -866,7 +869,7 @@ def open1a(inp_text, inp_wav_dir, exp_name, gpu_numbers, bert_pretrained_dir):
         opt = []
         for i_part in range(all_parts):
             txt_path = "%s/2-name2text-%s.txt" % (opt_dir, i_part)
-            with open(txt_path, "r", encoding="utf8") as f:
+            with open(txt_path, encoding="utf8") as f:
                 opt += f.read().strip("\n").split("\n")
             os.remove(txt_path)
         path_text = "%s/2-name2text.txt" % opt_dir
@@ -1054,7 +1057,7 @@ def open1c(version, inp_text, inp_wav_dir, exp_name, gpu_numbers, pretrained_s2G
         path_semantic = "%s/6-name2semantic.tsv" % opt_dir
         for i_part in range(all_parts):
             semantic_path = "%s/6-name2semantic-%s.tsv" % (opt_dir, i_part)
-            with open(semantic_path, "r", encoding="utf8") as f:
+            with open(semantic_path, encoding="utf8") as f:
                 opt += f.read().strip("\n").split("\n")
             os.remove(semantic_path)
         with open(path_semantic, "w", encoding="utf8") as f:
@@ -1118,9 +1121,7 @@ def open1abc(
             path_text = "%s/2-name2text.txt" % opt_dir
             if os.path.exists(path_text) == False or (
                 os.path.exists(path_text) == True
-                and len(
-                    open(path_text, "r", encoding="utf8").read().strip("\n").split("\n")
-                )
+                and len(open(path_text, encoding="utf8").read().strip("\n").split("\n"))
                 < 2
             ):
                 config = {
@@ -1164,7 +1165,7 @@ def open1abc(
                     all_parts
                 ):  # txt_path="%s/2-name2text-%s.txt"%(opt_dir,i_part)
                     txt_path = "%s/2-name2text-%s.txt" % (opt_dir, i_part)
-                    with open(txt_path, "r", encoding="utf8") as f:
+                    with open(txt_path, encoding="utf8") as f:
                         opt += f.read().strip("\n").split("\n")
                     os.remove(txt_path)
                 with open(path_text, "w", encoding="utf8") as f:
@@ -1286,7 +1287,7 @@ def open1abc(
                 opt = ["item_name\tsemantic_audio"]
                 for i_part in range(all_parts):
                     semantic_path = "%s/6-name2semantic-%s.tsv" % (opt_dir, i_part)
-                    with open(semantic_path, "r", encoding="utf8") as f:
+                    with open(semantic_path, encoding="utf8") as f:
                         opt += f.read().strip("\n").split("\n")
                     os.remove(semantic_path)
                 with open(path_semantic, "w", encoding="utf8") as f:

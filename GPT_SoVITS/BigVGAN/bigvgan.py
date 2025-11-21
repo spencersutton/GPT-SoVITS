@@ -7,11 +7,10 @@
 import json
 import os
 from pathlib import Path
-from typing import Dict, Optional, Union
 
 import torch
-import torch.nn as nn
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
+from torch import nn
 from torch.nn import Conv1d, ConvTranspose1d
 from torch.nn.utils import remove_weight_norm, weight_norm
 
@@ -397,7 +396,6 @@ class BigVGAN(
             remove_weight_norm(self.conv_post)
         except ValueError:
             print("[INFO] Model already removed weight norm. Skipping!")
-            pass
 
     # Additional methods for huggingface_hub support
     def _save_pretrained(self, save_directory: Path) -> None:
@@ -418,10 +416,10 @@ class BigVGAN(
         revision: str,
         cache_dir: str,
         force_download: bool,
-        proxies: Optional[Dict],
+        proxies: dict | None,
         resume_download: bool,
         local_files_only: bool,
-        token: Union[str, bool, None],
+        token: str | bool | None,
         map_location: str = "cpu",  # Additional argument
         strict: bool = False,  # Additional argument
         use_cuda_kernel: bool = False,

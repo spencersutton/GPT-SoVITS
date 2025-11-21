@@ -8,10 +8,9 @@ now_dir = os.getcwd()
 sys.path.append(now_dir)
 
 import re
-from typing import Dict, List, Tuple
 
 import torch
-from text import chinese, cleaned_text_to_sequence
+from text import cleaned_text_to_sequence
 from text.cleaner import clean_text
 from text.LangSegmenter import LangSegmenter
 from transformers import AutoModelForMaskedLM, AutoTokenizer
@@ -69,7 +68,7 @@ class TextPreprocessor:
 
     def preprocess(
         self, text: str, lang: str, text_split_method: str, version: str = "v2"
-    ) -> List[Dict]:
+    ) -> list[dict]:
         print(f"############ {i18n('切分文本')} ############")
         text = self.replace_consecutive_punctuation(text)
         texts = self.pre_seg_text(text, lang, text_split_method)
@@ -131,7 +130,7 @@ class TextPreprocessor:
 
     def segment_and_extract_feature_for_text(
         self, text: str, language: str, version: str = "v1"
-    ) -> Tuple[list, torch.Tensor, str]:
+    ) -> tuple[list, torch.Tensor, str]:
         return self.get_phones_and_bert(text, language, version)
 
     def get_phones_and_bert(

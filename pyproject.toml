@@ -20,7 +20,31 @@ dev = [
 ]
 
 [tool.ruff.lint]
-select = ["I"]
+ignore=["COM812"]
+extend-select = [
+    "C4", 
+    "COM", 
+    "ERA", 
+    "F",
+    "FLY",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "ISC",
+    "N",
+    "NPY",
+    "PERF",
+    "PIE",
+    "PL",
+    "PTH",
+    "Q",
+    "RUF",
+    "SLF",
+    "TC",
+    "TID",
+    "UP",
+]
 
 [tool.uv]
 override-dependencies = ["pydantic>=2.12.4"]

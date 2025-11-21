@@ -13,9 +13,9 @@ import math
 
 import pooling_layers as pooling_layers
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from fusion import AFF
+from torch import nn
 
 
 class ReLU(nn.Hardtanh):

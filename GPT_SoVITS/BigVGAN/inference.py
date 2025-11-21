@@ -1,7 +1,6 @@
 # Adapted from https://github.com/jik876/hifi-gan under the MIT license.
 #   LICENSE is in incl_licenses directory.
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import argparse
 import json

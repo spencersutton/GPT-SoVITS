@@ -5,13 +5,10 @@
 #   LICENSE is in incl_licenses directory.
 
 
-import typing
-from typing import List, Tuple
-
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from env import AttrDict
+from torch import nn
 from torch.nn import Conv2d
 from torch.nn.utils import spectral_norm, weight_norm
 from torchaudio.transforms import Resample, Spectrogram
@@ -22,7 +19,7 @@ class DiscriminatorP(torch.nn.Module):
     def __init__(
         self,
         h: AttrDict,
-        period: List[int],
+        period: list[int],
         kernel_size: int = 5,
         stride: int = 3,
         use_spectral_norm: bool = False,
@@ -85,7 +82,7 @@ class DiscriminatorP(torch.nn.Module):
             Conv2d(int(1024 * self.d_mult), 1, (3, 1), 1, padding=(1, 0))
         )
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         fmap = []
 
         # 1d to 2d
@@ -121,11 +118,11 @@ class MultiPeriodDiscriminator(torch.nn.Module):
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []
@@ -143,7 +140,7 @@ class MultiPeriodDiscriminator(torch.nn.Module):
 
 
 class DiscriminatorR(nn.Module):
-    def __init__(self, cfg: AttrDict, resolution: List[List[int]]):
+    def __init__(self, cfg: AttrDict, resolution: list[list[int]]):
         super().__init__()
 
         self.resolution = resolution
@@ -209,7 +206,7 @@ class DiscriminatorR(nn.Module):
             nn.Conv2d(int(32 * self.d_mult), 1, (3, 3), padding=(1, 1))
         )
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         fmap = []
 
         x = self.spectrogram(x)
@@ -259,11 +256,11 @@ class MultiResolutionDiscriminator(nn.Module):
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []
@@ -290,7 +287,7 @@ class DiscriminatorB(nn.Module):
         window_length: int,
         channels: int = 32,
         hop_factor: float = 0.25,
-        bands: Tuple[Tuple[float, float], ...] = (
+        bands: tuple[tuple[float, float], ...] = (
             (0.0, 0.1),
             (0.1, 0.25),
             (0.25, 0.5),
@@ -333,7 +330,7 @@ class DiscriminatorB(nn.Module):
             nn.Conv2d(channels, 1, (3, 3), (1, 1), padding=(1, 1))
         )
 
-    def spectrogram(self, x: torch.Tensor) -> List[torch.Tensor]:
+    def spectrogram(self, x: torch.Tensor) -> list[torch.Tensor]:
         # Remove DC offset
         x = x - x.mean(dim=-1, keepdims=True)
         # Peak normalize the volume of input audio
@@ -345,7 +342,7 @@ class DiscriminatorB(nn.Module):
         x_bands = [x[..., b[0] : b[1]] for b in self.bands]
         return x_bands
 
-    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         x_bands = self.spectrogram(x.squeeze(1))
         fmap = []
         x = []
@@ -386,11 +383,11 @@ class MultiBandDiscriminator(nn.Module):
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []
@@ -520,15 +517,15 @@ class DiscriminatorCQT(nn.Module):
 
     def get_2d_padding(
         self,
-        kernel_size: typing.Tuple[int, int],
-        dilation: typing.Tuple[int, int] = (1, 1),
+        kernel_size: tuple[int, int],
+        dilation: tuple[int, int] = (1, 1),
     ):
         return (
             ((kernel_size[0] - 1) * dilation[0]) // 2,
             ((kernel_size[1] - 1) * dilation[1]) // 2,
         )
 
-    def forward(self, x: torch.tensor) -> Tuple[torch.Tensor, List[torch.Tensor]]:
+    def forward(self, x: torch.tensor) -> tuple[torch.Tensor, list[torch.Tensor]]:
         fmap = []
 
         if self.cqtd_normalize_volume:
@@ -605,11 +602,11 @@ class MultiScaleSubbandCQTDiscriminator(nn.Module):
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []
@@ -633,17 +630,17 @@ class CombinedDiscriminator(nn.Module):
     Example: combine mbd and cqtd as a single class
     """
 
-    def __init__(self, list_discriminator: List[nn.Module]):
+    def __init__(self, list_discriminator: list[nn.Module]):
         super().__init__()
         self.discrimiantor = nn.ModuleList(list_discriminator)
 
     def forward(
         self, y: torch.Tensor, y_hat: torch.Tensor
-    ) -> Tuple[
-        List[torch.Tensor],
-        List[torch.Tensor],
-        List[List[torch.Tensor]],
-        List[List[torch.Tensor]],
+    ) -> tuple[
+        list[torch.Tensor],
+        list[torch.Tensor],
+        list[list[torch.Tensor]],
+        list[list[torch.Tensor]],
     ]:
         y_d_rs = []
         y_d_gs = []

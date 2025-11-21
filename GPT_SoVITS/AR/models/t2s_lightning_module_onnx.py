@@ -5,7 +5,6 @@ import sys
 
 now_dir = os.getcwd()
 sys.path.append(now_dir)
-from typing import Dict
 
 import torch
 from pytorch_lightning import LightningModule
@@ -38,7 +37,7 @@ class Text2SemanticLightningModule(LightningModule):
             self.eval_dir = output_dir / "eval"
             self.eval_dir.mkdir(parents=True, exist_ok=True)
 
-    def training_step(self, batch: Dict, batch_idx: int):
+    def training_step(self, batch: dict, batch_idx: int):
         opt = self.optimizers()
         scheduler = self.lr_schedulers()
         loss, acc = self.model.forward(
@@ -78,7 +77,7 @@ class Text2SemanticLightningModule(LightningModule):
             sync_dist=True,
         )
 
-    def validation_step(self, batch: Dict, batch_idx: int):
+    def validation_step(self, batch: dict, batch_idx: int):
         return
 
     def configure_optimizers(self):

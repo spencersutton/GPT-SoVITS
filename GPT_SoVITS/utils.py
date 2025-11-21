@@ -59,12 +59,7 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, skip_optimizer=False
     else:
         model.load_state_dict(new_state_dict)
     print("load ")
-    logger.info(
-        "Loaded checkpoint '{}' (iteration {})".format(
-            checkpoint_path,
-            iteration,
-        )
-    )
+    logger.info(f"Loaded checkpoint '{checkpoint_path}' (iteration {iteration})")
     return model, optimizer, learning_rate, iteration
 
 
@@ -82,9 +77,7 @@ def my_save(fea, path):  #####fix issue: torch.save doesn't support chinese path
 
 def save_checkpoint(model, optimizer, learning_rate, iteration, checkpoint_path):
     logger.info(
-        "Saving model and optimizer state at iteration {} to {}".format(
-            iteration, checkpoint_path
-        )
+        f"Saving model and optimizer state at iteration {iteration} to {checkpoint_path}"
     )
     if hasattr(model, "module"):
         state_dict = model.module.state_dict()
@@ -225,7 +218,7 @@ def get_hparams(init=True, stage=1):
     args = parser.parse_args()
 
     config_path = args.config
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         data = f.read()
     config = json.loads(data)
 
@@ -281,7 +274,7 @@ def clean_checkpoints(path_to_models="logs/44k/", n_ckpts_to_keep=2, sort_by_tim
 
 def get_hparams_from_dir(model_dir):
     config_save_path = os.path.join(model_dir, "config.json")
-    with open(config_save_path, "r") as f:
+    with open(config_save_path) as f:
         data = f.read()
     config = json.loads(data)
 
@@ -291,7 +284,7 @@ def get_hparams_from_dir(model_dir):
 
 
 def get_hparams_from_file(config_path):
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         data = f.read()
     config = json.loads(data)
 
@@ -303,9 +296,7 @@ def check_git_hash(model_dir):
     source_dir = os.path.dirname(os.path.realpath(__file__))
     if not os.path.exists(os.path.join(source_dir, ".git")):
         logger.warning(
-            "{} is not a git repository, therefore hash value comparison will be ignored.".format(
-                source_dir,
-            )
+            f"{source_dir} is not a git repository, therefore hash value comparison will be ignored."
         )
         return
 
@@ -316,10 +307,7 @@ def check_git_hash(model_dir):
         saved_hash = open(path).read()
         if saved_hash != cur_hash:
             logger.warning(
-                "git hash values are different. {}(saved) != {}(current)".format(
-                    saved_hash[:8],
-                    cur_hash[:8],
-                )
+                f"git hash values are different. {saved_hash[:8]}(saved) != {cur_hash[:8]}(current)"
             )
     else:
         open(path, "w").write(cur_hash)

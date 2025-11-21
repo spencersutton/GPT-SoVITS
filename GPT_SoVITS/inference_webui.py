@@ -27,7 +27,6 @@ def set_high_priority():
 set_high_priority()
 import json
 import logging
-import os
 import re
 import sys
 import traceback
@@ -65,7 +64,7 @@ else:
     with open("./weight.json", "w", encoding="utf-8") as file:
         json.dump({"GPT": {}, "SoVITS": {}}, file)
 
-with open("./weight.json", "r", encoding="utf-8") as file:
+with open("./weight.json", encoding="utf-8") as file:
     weight_data = file.read()
     weight_data = json.loads(weight_data)
     gpt_path = os.environ.get(
@@ -639,9 +638,6 @@ def get_first(text):
     return text
 
 
-from text import chinese
-
-
 def get_phones_and_bert(text, language, version, final=False):
     text = re.sub(r" {2,}", " ", text)
     textlist = []
@@ -729,29 +725,25 @@ def denorm_spec(x):
 
 mel_fn = lambda x: mel_spectrogram_torch(
     x,
-    **{
-        "n_fft": 1024,
-        "win_size": 1024,
-        "hop_size": 256,
-        "num_mels": 100,
-        "sampling_rate": 24000,
-        "fmin": 0,
-        "fmax": None,
-        "center": False,
-    },
+    n_fft=1024,
+    win_size=1024,
+    hop_size=256,
+    num_mels=100,
+    sampling_rate=24000,
+    fmin=0,
+    fmax=None,
+    center=False,
 )
 mel_fn_v4 = lambda x: mel_spectrogram_torch(
     x,
-    **{
-        "n_fft": 1280,
-        "win_size": 1280,
-        "hop_size": 320,
-        "num_mels": 100,
-        "sampling_rate": 32000,
-        "fmin": 0,
-        "fmax": None,
-        "center": False,
-    },
+    n_fft=1280,
+    win_size=1280,
+    hop_size=320,
+    num_mels=100,
+    sampling_rate=32000,
+    fmin=0,
+    fmax=None,
+    center=False,
 )
 
 
@@ -1040,9 +1032,8 @@ def get_tts_wav(
             if model_version == "v3":
                 if bigvgan_model == None:
                     init_bigvgan()
-            else:  # v4
-                if hifigan_model == None:
-                    init_hifigan()
+            elif hifigan_model == None:
+                init_hifigan()
             vocoder_model = bigvgan_model if model_version == "v3" else hifigan_model
             with torch.inference_mode():
                 wav_gen = vocoder_model(cfm_res)
