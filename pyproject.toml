@@ -5,46 +5,55 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "ffmpeg>=1.4",
+    "einops>=0.8.1",
+    "ffmpeg-python>=0.2.0",
+    "funasr>=1.2.7",
     "gradio>=5.23.1",
+    "librosa>=0.11.0",
+    "modelscope>=1.32.0",
+    "numba",
     "psutil>=7.1.3",
+    "pytorch-lightning>=2.5.6",
     "pyyaml>=6.0.3",
     "requests>=2.32.5",
+    "rotary-embedding-torch>=0.8.9",
+    "scipy>=1.16.3",
     "torch>=2.9.1",
+    "torchaudio>=2.9.1",
 ]
 
 [dependency-groups]
-dev = [
-    "basedpyright>=1.34.0",
-    "ruff>=0.14.5",
-]
+dev = ["basedpyright>=1.34.0", "ruff>=0.14.5"]
 
 [tool.ruff.lint]
-ignore=["COM812"]
+ignore = ["COM812", "E"]
 extend-select = [
-    "C4", 
-    "COM", 
-    "ERA", 
-    "F",
-    "FLY",
-    "FURB",
-    "G",
-    "I",
-    "ICN",
-    "ISC",
-    "N",
-    "NPY",
-    "PERF",
-    "PIE",
-    "PL",
-    "PTH",
-    "Q",
-    "RUF",
-    "SLF",
-    "TC",
-    "TID",
-    "UP",
+    # "C4", 
+    # "COM", 
+    # "ERA", 
+    # "F",
+    # "FLY",
+    # "FURB",
+    # "G",
+    # "I",
+    # "ICN",
+    # "ISC",
+    # "N",
+    # "NPY",
+    # "PERF",
+    # "PIE",
+    # "PL",
+    # "PTH",
+    # "Q",
+    # "RUF",
+    # "SLF",
+    # "TC",
+    # "TID",
+    # "UP",
 ]
 
 [tool.uv]
 override-dependencies = ["pydantic>=2.12.4"]
+
+[tool.uv.sources]
+numba = { git = "https://github.com/numba/numba.git" }

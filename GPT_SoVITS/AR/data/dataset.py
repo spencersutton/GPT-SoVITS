@@ -1,7 +1,6 @@
 # modified from https://github.com/yangdongchao/SoundStorm/blob/master/soundstorm/s1/AR/data/dataset.py
 # reference: https://github.com/lifeiteng/vall-e
 
-# sys.path.append("/data/docker/liujing04/gpt-vits/mq-vits-s1bert_no_bert")
 import os
 import traceback
 
@@ -13,8 +12,6 @@ from torch.utils.data import DataLoader, Dataset
 version = os.environ.get("version", None)
 
 from text import cleaned_text_to_sequence
-
-# from config import exp_dir
 
 
 def batch_sequences(sequences: list[np.array], axis: int = 0, pad_value: int = 0):
@@ -80,13 +77,8 @@ class Text2SemanticDataset(Dataset):
                 continue
             self.phoneme_data[tmp[0]] = [tmp[1], tmp[2], tmp[3]]
 
-        # self.phoneme_data = np.load(phoneme_path, allow_pickle=True).item()
         # pad for semantic tokens
         self.PAD: int = pad_val
-        # self.hz = 25
-        # with open("/data/docker/liujing04/gpt-vits/mq-vits-s1bert_no_bert/configs/s2.json", "r") as f:data = f.read()
-        # data=json.loads(data)["model"]["semantic_frame_rate"]#50hz
-        # self.hz=int(data[:-2])#
         self.hz = int(os.environ.get("hz", "25hz")[:-2])
 
         # max seconds of semantic token
@@ -110,8 +102,6 @@ class Text2SemanticDataset(Dataset):
             self.inited = True
             del self.semantic_data
             del self.phoneme_data
-        # self.tokenizer = AutoTokenizer.from_pretrained("hfl/chinese-roberta-wwm-ext-large")
-        # self.tokenizer = AutoTokenizer.from_pretrained("/data/docker/liujing04/bert-vits2/Bert-VITS2-master20231106/bert/chinese-roberta-wwm-ext-large")
 
     def init_batch(self):
         semantic_data_len = len(self.semantic_data)
@@ -127,7 +117,6 @@ class Text2SemanticDataset(Dataset):
             # 先依次遍历
             # get str
             item_name = self.semantic_data.iloc[i, 0]
-            # print(self.phoneme_data)
             try:
                 phoneme, _word2ph, _text = self.phoneme_data[item_name]
             except Exception:
@@ -153,18 +142,13 @@ class Text2SemanticDataset(Dataset):
                 phoneme_ids = cleaned_text_to_sequence(phoneme, version)
             except:
                 traceback.print_exc()
-                # print(f"{item_name} not in self.phoneme_data !")
                 num_not_in += 1
                 continue
-            # if len(phoneme_ids) >400:###########2：改为恒定限制为semantic/2.5就行
             if (
                 len(phoneme_ids) > self.max_sec * self.hz / 2.5
             ):  ###########2：改为恒定限制为semantic/2.5就行
                 num_deleted_ps += 1
                 continue
-            # if len(semantic_ids) > 1000:###########3
-            #     num_deleted_bigger += 1
-            #     continue
 
             ps_ratio = len(phoneme_ids) / (len(semantic_ids) / self.hz)
 
@@ -172,7 +156,6 @@ class Text2SemanticDataset(Dataset):
                 ps_ratio > self.max_ps_ratio or ps_ratio < self.min_ps_ratio
             ):  ##########4#3~25#每秒多少个phone
                 num_deleted_ps += 1
-                # print(item_name)
                 continue
 
             self.semantic_phoneme.append((semantic_ids, phoneme_ids))
@@ -230,7 +213,6 @@ class Text2SemanticDataset(Dataset):
         else:
             flag = 1
         if flag == 1:
-            # bert_feature=torch.zeros_like(phoneme_ids,dtype=torch.float32)
             bert_feature = None
         else:
             assert bert_feature.shape[-1] == len(phoneme_ids)

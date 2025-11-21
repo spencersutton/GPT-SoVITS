@@ -2,8 +2,6 @@ import argparse
 import os
 import traceback
 
-# from funasr.utils import version_checker
-# version_checker.check_for_update = lambda: None
 from funasr import AutoModel
 from tqdm import tqdm
 
