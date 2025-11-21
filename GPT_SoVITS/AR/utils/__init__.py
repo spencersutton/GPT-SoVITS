@@ -1,10 +1,6 @@
 import re
 
 
-def str2bool(str):
-    return True if str.lower() == "true" else False
-
-
 def get_newest_ckpt(string_list):
     # 定义一个正则表达式模式，用于匹配字符串中的数字
     pattern = r"epoch=(\d+)-step=(\d+)\.ckpt"
@@ -22,15 +18,3 @@ def get_newest_ckpt(string_list):
     # 获取最新的 ckpt 文件名
     newest_ckpt = sorted_info[0][2]
     return newest_ckpt
-
-
-# 文本存在且不为空时 return True
-def check_txt_file(file_path):
-    try:
-        with open(file_path) as file:
-            text = file.readline().strip()
-        assert text.strip() != ""
-        return text
-    except Exception:
-        return False
-    return False

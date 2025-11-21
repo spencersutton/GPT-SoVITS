@@ -1,17 +1,12 @@
 import os
 import re
 
-import cn2an
 from pypinyin import Style, lazy_pinyin
 from pypinyin.contrib.tone_convert import to_finals_tone3, to_initials
 
 from text.symbols import punctuation
 from text.tone_sandhi import ToneSandhi
 from text.zh_normalization.text_normlization import TextNormalizer
-
-
-def normalizer(x):
-    return cn2an.transform(x, "an2cn")
 
 
 current_file_path = os.path.dirname(__file__)
@@ -30,11 +25,8 @@ import operator
 
 import jieba_fast.posseg as psg
 
-# is_g2pw_str = os.environ.get("is_g2pw", "True")##默认开启
-# is_g2pw = False#True if is_g2pw_str.lower() == 'true' else False
 is_g2pw = True  # True if is_g2pw_str.lower() == 'true' else False
 if is_g2pw:
-    # print("当前使用g2pw进行拼音推理")
     from text.g2pw import G2PWPinyin, correct_pronunciation
 
     parent_directory = os.path.dirname(current_file_path)
@@ -225,7 +217,6 @@ def _g2p(segments):
                 )
                 initials.append(sub_initials)
                 finals.append(sub_finals)
-                # assert len(sub_initials) == len(sub_finals) == len(word)
             initials = functools.reduce(operator.iadd, initials, [])
             finals = functools.reduce(operator.iadd, finals, [])
             print("pypinyin结果", initials, finals)
@@ -271,7 +262,6 @@ def _g2p(segments):
 
             initials = functools.reduce(operator.iadd, initials, [])
             finals = functools.reduce(operator.iadd, finals, [])
-            # print("g2pw结果",initials,finals)
 
         for c, v in zip(initials, finals):
             raw_pinyin = c + v
@@ -327,19 +317,6 @@ def _g2p(segments):
     return phones_list, word2ph
 
 
-def replace_punctuation_with_en(text):
-    text = text.replace("嗯", "恩").replace("呣", "母")
-    pattern = re.compile("|".join(re.escape(p) for p in rep_map.keys()))
-
-    replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
-
-    replaced_text = re.sub(
-        r"[^\u4e00-\u9fa5A-Za-z" + "".join(punctuation) + r"]+", "", replaced_text
-    )
-
-    return replaced_text
-
-
 def replace_consecutive_punctuation(text):
     punctuations = "".join(re.escape(p) for p in punctuation)
     pattern = f"([{punctuations}])([{punctuations}])+"
@@ -369,5 +346,3 @@ if __name__ == "__main__":
 
 
 # # 示例用法
-# text = "这是一个示例文本：,你好！这是一个测试..."
-# print(g2p_paddle(text))  # 输出: 这是一个示例文本你好这是一个测试

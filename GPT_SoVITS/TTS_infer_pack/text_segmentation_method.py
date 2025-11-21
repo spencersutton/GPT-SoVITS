@@ -89,15 +89,6 @@ def split(todo_text):
     return todo_texts
 
 
-# 不切
-@register_method("cut0")
-def cut0(inp):
-    if not set(inp).issubset(punctuation):
-        return inp
-    else:
-        return "/n"
-
-
 # 凑四句一切
 @register_method("cut1")
 def cut1(inp):

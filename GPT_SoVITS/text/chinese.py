@@ -1,16 +1,11 @@
 import os
 import re
 
-import cn2an
 from pypinyin import Style, lazy_pinyin
 
 from text.symbols import punctuation
 from text.tone_sandhi import ToneSandhi
 from text.zh_normalization.text_normlization import TextNormalizer
-
-
-def normalizer(x):
-    return cn2an.transform(x, "an2cn")
 
 
 current_file_path = os.path.dirname(__file__)
@@ -58,19 +53,6 @@ def replace_punctuation(text):
 
     replaced_text = re.sub(
         r"[^\u4e00-\u9fa5" + "".join(punctuation) + r"]+", "", replaced_text
-    )
-
-    return replaced_text
-
-
-def replace_punctuation_with_en(text):
-    text = text.replace("嗯", "恩").replace("呣", "母")
-    pattern = re.compile("|".join(re.escape(p) for p in rep_map.keys()))
-
-    replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
-
-    replaced_text = re.sub(
-        r"[^\u4e00-\u9fa5A-Za-z" + "".join(punctuation) + r"]+", "", replaced_text
     )
 
     return replaced_text

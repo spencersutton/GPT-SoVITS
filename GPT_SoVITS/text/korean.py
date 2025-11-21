@@ -4,7 +4,6 @@ import importlib
 import os
 import re
 
-import ko_pron
 from g2pk2 import G2p
 from jamo import h2j, j2hcj
 
@@ -199,128 +198,7 @@ def divide_hangul(text):
     return text
 
 
-def hangul_number(num, sino=True):
-    """Reference https://github.com/Kyubyong/g2pK"""
-    num = re.sub(",", "", num)
-
-    if num == "0":
-        return "영"
-    if not sino and num == "20":
-        return "스무"
-
-    digits = "123456789"
-    names = "일이삼사오육칠팔구"
-    digit2name = dict(zip(digits, names))
-
-    modifiers = "한 두 세 네 다섯 여섯 일곱 여덟 아홉"
-    decimals = "열 스물 서른 마흔 쉰 예순 일흔 여든 아흔"
-    digit2mod = dict(zip(digits, modifiers.split()))
-    digit2dec = dict(zip(digits, decimals.split()))
-
-    spelledout = []
-    for i, digit in enumerate(num):
-        i = len(num) - i - 1
-        if sino:
-            if i == 0:
-                name = digit2name.get(digit, "")
-            elif i == 1:
-                name = digit2name.get(digit, "") + "십"
-                name = name.replace("일십", "십")
-        elif i == 0:
-            name = digit2mod.get(digit, "")
-        elif i == 1:
-            name = digit2dec.get(digit, "")
-        if digit == "0":
-            if i % 4 == 0:
-                last_three = spelledout[-min(3, len(spelledout)) :]
-                if "".join(last_three) == "":
-                    spelledout.append("")
-                    continue
-            else:
-                spelledout.append("")
-                continue
-        if i == 2:
-            name = digit2name.get(digit, "") + "백"
-            name = name.replace("일백", "백")
-        elif i == 3:
-            name = digit2name.get(digit, "") + "천"
-            name = name.replace("일천", "천")
-        elif i == 4:
-            name = digit2name.get(digit, "") + "만"
-            name = name.replace("일만", "만")
-        elif i == 5:
-            name = digit2name.get(digit, "") + "십"
-            name = name.replace("일십", "십")
-        elif i == 6:
-            name = digit2name.get(digit, "") + "백"
-            name = name.replace("일백", "백")
-        elif i == 7:
-            name = digit2name.get(digit, "") + "천"
-            name = name.replace("일천", "천")
-        elif i == 8:
-            name = digit2name.get(digit, "") + "억"
-        elif i == 9:
-            name = digit2name.get(digit, "") + "십"
-        elif i == 10:
-            name = digit2name.get(digit, "") + "백"
-        elif i == 11:
-            name = digit2name.get(digit, "") + "천"
-        elif i == 12:
-            name = digit2name.get(digit, "") + "조"
-        elif i == 13:
-            name = digit2name.get(digit, "") + "십"
-        elif i == 14:
-            name = digit2name.get(digit, "") + "백"
-        elif i == 15:
-            name = digit2name.get(digit, "") + "천"
-        spelledout.append(name)
-    return "".join(elem for elem in spelledout)
-
-
-def number_to_hangul(text):
-    """Reference https://github.com/Kyubyong/g2pK"""
-    tokens = set(re.findall(r"(\d[\d,]*)([\uac00-\ud71f]+)", text))
-    for token in tokens:
-        num, classifier = token
-        if (
-            classifier[:2] in _korean_classifiers
-            or classifier[0] in _korean_classifiers
-        ):
-            spelledout = hangul_number(num, sino=False)
-        else:
-            spelledout = hangul_number(num, sino=True)
-        text = text.replace(f"{num}{classifier}", f"{spelledout}{classifier}")
-    # digit by digit for remaining digits
-    digits = "0123456789"
-    names = "영일이삼사오육칠팔구"
-    for d, n in zip(digits, names):
-        text = text.replace(d, n)
-    return text
-
-
-def korean_to_lazy_ipa(text):
-    text = latin_to_hangul(text)
-    text = number_to_hangul(text)
-    text = re.sub(
-        "[\uac00-\ud7af]+",
-        lambda x: ko_pron.romanise(x.group(0), "ipa").split("] ~ [")[0],
-        text,
-    )
-    for regex, replacement in _ipa_to_lazy_ipa:
-        text = re.sub(regex, replacement, text)
-    return text
-
-
 _g2p = G2p()
-
-
-def korean_to_ipa(text):
-    text = latin_to_hangul(text)
-    text = number_to_hangul(text)
-    text = _g2p(text)
-    text = fix_g2pk2_error(text)
-    text = korean_to_lazy_ipa(text)
-    return text.replace("ʧ", "tʃ").replace("ʥ", "dʑ")
 
 
 def post_replace_ph(ph):

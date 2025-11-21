@@ -947,17 +947,6 @@ def export_prov2(
 
 
 @torch.jit.script
-def parse_audio(ref_audio):
-    ref_audio_16k = torchaudio.functional.resample(
-        ref_audio, 48000, 16000
-    ).float()  # .to(ref_audio.device)
-    ref_audio_sr = torchaudio.functional.resample(
-        ref_audio, 48000, 32000
-    ).float()  # .to(ref_audio.device)
-    return ref_audio_16k, ref_audio_sr
-
-
-@torch.jit.script
 def resamplex(ref_audio: torch.Tensor, src_sr: int, dst_sr: int) -> torch.Tensor:
     return torchaudio.functional.resample(ref_audio, src_sr, dst_sr).float()
 
@@ -1157,22 +1146,6 @@ def test():
         )
     print("start write wav")
     soundfile.write("out.wav", audio.detach().cpu().numpy(), 32000)
-
-
-import json
-
-import text
-
-
-def export_symbel(version="v2"):
-    if version == "v1":
-        symbols = text._symbol_to_id_v1
-        with open("onnx/symbols_v1.json", "w") as file:
-            json.dump(symbols, file, indent=4)
-    else:
-        symbols = text._symbol_to_id_v2
-        with open("onnx/symbols_v2.json", "w") as file:
-            json.dump(symbols, file, indent=4)
 
 
 def main():

@@ -2,15 +2,10 @@
 
 import re
 
-import cn2an
 import ToJyutping
 
 from text.symbols import punctuation
 from text.zh_normalization.text_normlization import TextNormalizer
-
-
-def normalizer(x):
-    return cn2an.transform(x, "an2cn")
 
 
 INITIALS = [

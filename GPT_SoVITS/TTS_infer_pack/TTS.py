@@ -16,7 +16,6 @@ import functools
 import operator
 import os
 
-import ffmpeg
 import librosa
 import numpy as np
 import torch
@@ -93,29 +92,6 @@ def mel_fn_v4(x):
         fmax=None,
         center=False,
     )
-
-
-def speed_change(input_audio: np.ndarray, speed: float, sr: int):
-    # 将 NumPy 数组转换为原始 PCM 流
-    raw_audio = input_audio.astype(np.int16).tobytes()
-
-    # 设置 ffmpeg 输入流
-    input_stream = ffmpeg.input(
-        "pipe:", format="s16le", acodec="pcm_s16le", ar=str(sr), ac=1
-    )
-
-    # 变速处理
-    output_stream = input_stream.filter("atempo", speed)
-
-    # 输出流到管道
-    out, _ = output_stream.output("pipe:", format="s16le", acodec="pcm_s16le").run(
-        input=raw_audio, capture_stdout=True, capture_stderr=True
-    )
-
-    # 将管道输出解码为 NumPy 数组
-    processed_audio = np.frombuffer(out, np.int16)
-
-    return processed_audio
 
 
 class DictToAttrRecursive(dict):
@@ -1564,12 +1540,6 @@ class TTS:
 
         audio = (audio * 32768).astype(np.int16)
 
-        # try:
-        #     if speed_factor != 1.0:
-        #         audio = speed_change(audio, speed=speed_factor, sr=int(sr))
-        # except Exception as e:
-        #     print(f"Failed to change speed of audio: \n{e}")
-
         return sr, audio
 
     def using_vocoder_synthesis(
@@ -1605,8 +1575,6 @@ class TTS:
         ref_audio = ref_audio.to(self.configs.device).float()
         if ref_audio.shape[0] == 2:
             ref_audio = ref_audio.mean(0).unsqueeze(0)
-
-        # tgt_sr = self.vocoder_configs["sr"]
         tgt_sr = 24000 if self.configs.version == "v3" else 32000
         if ref_sr != tgt_sr:
             ref_audio = resample(ref_audio, ref_sr, tgt_sr, self.configs.device)
@@ -1696,8 +1664,6 @@ class TTS:
         ref_audio = ref_audio.to(self.configs.device).float()
         if ref_audio.shape[0] == 2:
             ref_audio = ref_audio.mean(0).unsqueeze(0)
-
-        # tgt_sr = self.vocoder_configs["sr"]
         tgt_sr = 24000 if self.configs.version == "v3" else 32000
         if ref_sr != tgt_sr:
             ref_audio = resample(ref_audio, ref_sr, tgt_sr, self.configs.device)

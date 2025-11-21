@@ -1,6 +1,5 @@
 import os
 
-from text import cleaned_text_to_sequence
 
 # if os.environ.get("version","v1")=="v1":
 #     from text import chinese
@@ -99,14 +98,6 @@ def clean_special(text, language, special_s, target_symbol, version=None):
         else:
             new_ph.append(ph)
     return new_ph, phones[1], norm_text
-
-
-def text_to_sequence(text, language, version=None):
-    version = os.environ.get("version", version)
-    if version is None:
-        version = "v2"
-    phones = clean_text(text)
-    return cleaned_text_to_sequence(phones, version)
 
 
 if __name__ == "__main__":

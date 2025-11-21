@@ -3,7 +3,6 @@ import glob
 import json
 import logging
 import os
-import subprocess
 import sys
 import traceback
 
@@ -152,12 +151,6 @@ def load_wav_to_torch(full_path):
     return torch.FloatTensor(data), sampling_rate
 
 
-def load_filepaths_and_text(filename, split="|"):
-    with open(filename, encoding="utf-8") as f:
-        filepaths_and_text = [line.strip().split(split) for line in f]
-    return filepaths_and_text
-
-
 def get_hparams(init=True, stage=1):
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -207,62 +200,6 @@ def get_hparams(init=True, stage=1):
     return hparams
 
 
-def clean_checkpoints(path_to_models="logs/44k/", n_ckpts_to_keep=2, sort_by_time=True):
-    """Freeing up space by deleting saved ckpts
-
-    Arguments:
-    path_to_models    --  Path to the model directory
-    n_ckpts_to_keep   --  Number of ckpts to keep, excluding G_0.pth and D_0.pth
-    sort_by_time      --  True -> chronologically delete ckpts
-                          False -> lexicographically delete ckpts
-    """
-    import re
-
-    ckpts_files = [
-        f
-        for f in os.listdir(path_to_models)
-        if os.path.isfile(os.path.join(path_to_models, f))
-    ]
-
-    def name_key(_f):
-        return int(re.compile("._(\d+)\.pth").match(_f).group(1))
-
-    def time_key(_f):
-        return os.path.getmtime(os.path.join(path_to_models, _f))
-
-    sort_key = time_key if sort_by_time else name_key
-
-    def x_sorted(_x):
-        return sorted(
-            [f for f in ckpts_files if f.startswith(_x) and not f.endswith("_0.pth")],
-            key=sort_key,
-        )
-
-    to_del = [
-        os.path.join(path_to_models, fn)
-        for fn in (x_sorted("G")[:-n_ckpts_to_keep] + x_sorted("D")[:-n_ckpts_to_keep])
-    ]
-
-    def del_info(fn):
-        return logger.info(f".. Free up space by deleting ckpt {fn}")
-
-    def del_routine(x):
-        return [os.remove(x), del_info(x)]
-
-    rs = [del_routine(fn) for fn in to_del]
-
-
-def get_hparams_from_dir(model_dir):
-    config_save_path = os.path.join(model_dir, "config.json")
-    with open(config_save_path) as f:
-        data = f.read()
-    config = json.loads(data)
-
-    hparams = HParams(**config)
-    hparams.model_dir = model_dir
-    return hparams
-
-
 def get_hparams_from_file(config_path):
     with open(config_path) as f:
         data = f.read()
@@ -270,27 +207,6 @@ def get_hparams_from_file(config_path):
 
     hparams = HParams(**config)
     return hparams
-
-
-def check_git_hash(model_dir):
-    source_dir = os.path.dirname(os.path.realpath(__file__))
-    if not os.path.exists(os.path.join(source_dir, ".git")):
-        logger.warning(
-            f"{source_dir} is not a git repository, therefore hash value comparison will be ignored."
-        )
-        return
-
-    cur_hash = subprocess.getoutput("git rev-parse HEAD")
-
-    path = os.path.join(model_dir, "githash")
-    if os.path.exists(path):
-        saved_hash = open(path).read()
-        if saved_hash != cur_hash:
-            logger.warning(
-                f"git hash values are different. {saved_hash[:8]}(saved) != {cur_hash[:8]}(current)"
-            )
-    else:
-        open(path, "w").write(cur_hash)
 
 
 def get_logger(model_dir, filename="train.log"):
