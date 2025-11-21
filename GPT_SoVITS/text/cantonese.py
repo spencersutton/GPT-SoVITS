@@ -92,7 +92,6 @@ rep_map = {
 
 
 def replace_punctuation(text):
-    # text = text.replace("嗯", "恩").replace("呣", "母")
     pattern = re.compile("|".join(re.escape(p) for p in rep_map.keys()))
 
     replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
@@ -147,13 +146,11 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
                                 syllable_without_tone[2:] or syllable_without_tone[-1],
                             ]
                         )
-                        # tones.extend([tone, tone])
                         tones.extend([-1, tone])
                         word2ph.append(2)
                     else:
                         final = syllable_without_tone[len(initial) :] or initial[-1]
                         initials_finals.extend([initial, final])
-                        # tones.extend([tone, tone])
                         tones.extend([-1, tone])
                         word2ph.append(2)
                     break
@@ -169,8 +166,6 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
         if todo not in punctuation_set:
             todo = f"Y{todo}"
         phones.append(todo)
-
-    # return initials_finals, tones, word2ph
     return phones, word2ph
 
 
@@ -202,22 +197,13 @@ def get_bert_feature(text, word2ph):
 
 
 def g2p(text):
-    # word2ph = []
     jyuping = get_jyutping(text)
-    # print(jyuping)
-    # phones, tones, word2ph = jyuping_to_initials_finals_tones(jyuping)
     phones, word2ph = jyuping_to_initials_finals_tones(jyuping)
-    # phones = ["_"] + phones + ["_"]
-    # tones = [0] + tones + [0]
-    # word2ph = [1] + word2ph + [1]
     return phones, word2ph
 
 
 if __name__ == "__main__":
-    # text = "啊！但是《原神》是由,米哈\游自主，  [研发]的一款全.新开放世界.冒险游戏"
     text = "佢個鋤頭太短啦。"
     text = text_normalize(text)
-    # phones, tones, word2ph = g2p(text)
     phones, word2ph = g2p(text)
-    # print(phones, tones, word2ph)
     print(phones, word2ph)

@@ -40,8 +40,6 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, skip_optimizer=False
     new_state_dict = {}
     for k, v in state_dict.items():
         try:
-            # assert "quantizer" not in k
-            # print("load", k)
             new_state_dict[k] = saved_state_dict[k]
             assert saved_state_dict[k].shape == v.shape, (
                 saved_state_dict[k].shape,
@@ -82,7 +80,6 @@ def save_checkpoint(model, optimizer, learning_rate, iteration, checkpoint_path)
         state_dict = model.module.state_dict()
     else:
         state_dict = model.state_dict()
-    # torch.save(
     my_save(
         {
             "model": state_dict,
@@ -171,9 +168,6 @@ def get_hparams(init=True, stage=1):
         default=None,
         help="resume step",
     )
-    # parser.add_argument('-e', '--exp_dir', type=str, required=False,default=None,help='experiment directory')
-    # parser.add_argument('-g', '--pretrained_s2G', type=str, required=False,default=None,help='pretrained sovits gererator weights')
-    # parser.add_argument('-d', '--pretrained_s2D', type=str, required=False,default=None,help='pretrained sovits discriminator weights')
 
     args = parser.parse_args()
 
@@ -185,7 +179,6 @@ def get_hparams(init=True, stage=1):
     hparams = HParams(**config)
     hparams.pretrain = args.pretrain
     hparams.resume_step = args.resume_step
-    # hparams.data.exp_dir = args.exp_dir
     if stage == 1:
         model_dir = hparams.s1_ckpt_dir
     else:

@@ -7,9 +7,6 @@ import torch.nn.functional as F
 from einops import pack, rearrange, reduce, repeat, unpack
 from einops.layers.torch import Rearrange
 from librosa import filters
-
-# from beartype.typing import Tuple, Optional, List, Callable
-# from beartype import beartype
 from rotary_embedding_torch import RotaryEmbedding
 from torch import nn
 from torch.nn import Module, ModuleList

@@ -44,11 +44,9 @@ def slice(
     _max = float(_max)
     alpha = float(alpha)
     for inp_path in input[int(i_part) :: int(all_part)]:
-        # print(inp_path)
         try:
             name = os.path.basename(inp_path)
             audio = load_audio(inp_path, 32000)
-            # print(audio.shape)
             for chunk, start, end in slicer.slice(audio):  # start和end是帧数
                 tmp_max = np.abs(chunk).max()
                 if tmp_max > 1:
@@ -57,7 +55,6 @@ def slice(
                 wavfile.write(
                     "%s/%s_%010d_%010d.wav" % (opt_root, name, start, end),
                     32000,
-                    # chunk.astype(np.float32),
                     (chunk * 32767).astype(np.int16),
                 )
         except:

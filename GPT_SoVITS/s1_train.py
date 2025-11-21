@@ -68,8 +68,6 @@ class my_model_ckpt(ModelCheckpoint):
                         to_save_od["weight"][key] = dictt[key].half()
                     to_save_od["config"] = self.config
                     to_save_od["info"] = "GPT-e%s" % (trainer.current_epoch + 1)
-                    # torch.save(
-                    # print(os.environ)
                     if os.environ.get("LOCAL_RANK", "0") == "0":
                         my_save(
                             to_save_od,
@@ -107,8 +105,6 @@ def main(args):
     trainer: Trainer = Trainer(
         max_epochs=config["train"]["epochs"],
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
-        # val_check_interval=9999999999999999999999,###不要验证
-        # check_val_every_n_epoch=None,
         limit_val_batches=0,
         devices=-1 if torch.cuda.is_available() else 1,
         benchmark=False,
@@ -133,8 +129,6 @@ def main(args):
         config,
         train_semantic_path=config["train_semantic_path"],
         train_phoneme_path=config["train_phoneme_path"],
-        # dev_semantic_path=args.dev_semantic_path,
-        # dev_phoneme_path=args.dev_phoneme_path
     )
 
     try:
@@ -157,14 +151,6 @@ if __name__ == "__main__":
         default="configs/s1longer.yaml",
         help="path of config file",
     )
-    # args for dataset
-    # parser.add_argument('--train_semantic_path',type=str,default='/data/docker/liujing04/gpt-vits/fine_tune_dataset/xuangou/6-name2semantic.tsv')
-    # parser.add_argument('--train_phoneme_path', type=str, default='/data/docker/liujing04/gpt-vits/fine_tune_dataset/xuangou/2-name2text.txt')
-
-    # parser.add_argument('--dev_semantic_path', type=str, default='dump_mix/semantic_dev.tsv')
-    # parser.add_argument('--dev_phoneme_path', type=str, default='dump_mix/phoneme_dev.npy')
-    # parser.add_argument('--output_dir',type=str,default='/data/docker/liujing04/gpt-vits/fine_tune_dataset/xuangou/logs_s1',help='directory to save the results')
-    # parser.add_argument('--output_dir',type=str,default='/liujing04/gpt_logs/s1/xuangou_ft',help='directory to save the results')
 
     args = parser.parse_args()
     logging.info(str(args))

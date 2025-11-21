@@ -78,15 +78,6 @@ with open("./weight.json", encoding="utf-8") as file:
     if isinstance(sovits_path, list):
         sovits_path = sovits_path[0]
 
-# print(2333333)
-# print(os.environ["gpt_path"])
-# print(gpt_path)
-# print(GPT_names)
-# print(weight_data)
-# print(weight_data.get("GPT", {}))
-# print(version)###GPT version里没有s2的v2pro
-# print(weight_data.get("GPT", {}).get(version, GPT_names[-1]))
-
 cnhubert_base_path = os.environ.get(
     "cnhubert_base_path", "GPT_SoVITS/pretrained_models/chinese-hubert-base"
 )
@@ -100,7 +91,6 @@ is_share = eval(is_share)
 if "_CUDA_VISIBLE_DEVICES" in os.environ:
     os.environ["CUDA_VISIBLE_DEVICES"] = os.environ["_CUDA_VISIBLE_DEVICES"]
 is_half = eval(os.environ.get("is_half", "True")) and torch.cuda.is_available()
-# is_half=False
 punctuation = {"!", "?", "…", ",", ".", "-", " "}
 import gradio as gr
 import librosa
@@ -126,8 +116,6 @@ def set_seed(seed):
     torch.cuda.manual_seed(seed)
 
 
-# set_seed(42)
-
 from time import time as ttime
 
 from AR.models.t2s_lightning_module import Text2SemanticLightningModule
@@ -141,8 +129,6 @@ from tools.i18n.i18n import I18nAuto, scan_language_list
 language = os.environ.get("language", "Auto")
 language = sys.argv[-1] if sys.argv[-1] in scan_language_list() else language
 i18n = I18nAuto(language=language)
-
-# os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'  # 确保直接启动推理UI时也能够设置。
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -318,7 +304,6 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
     else:
         hps.model.version = "v2"
     version = hps.model.version
-    # print("sovits版本:",hps.model.version)
     if model_version not in v3v4set:
         if "Pro" not in model_version:
             model_version = version
@@ -372,7 +357,6 @@ def change_sovits_weights(sovits_path, prompt_language=None, text_language=None)
         print(f"loading sovits_{model_version}_lora{lora_rank}")
         vq_model.load_state_dict(dict_s2["weight"], strict=False)
         vq_model.cfm = vq_model.cfm.merge_and_unload()
-        # torch.save(vq_model.state_dict(),"merge_win.pth")
         vq_model.eval()
 
     yield (
@@ -427,8 +411,6 @@ def change_gpt_weights(gpt_path):
         t2s_model = t2s_model.half()
     t2s_model = t2s_model.to(device)
     t2s_model.eval()
-    # total = sum([param.nelement() for param in t2s_model.parameters()])
-    # print("Number of parameter: %.2fM" % (total / 1e6))
     with open("./weight.json") as f:
         data = f.read()
         data = json.loads(data)
@@ -560,11 +542,6 @@ def resample(audio_tensor, sr0, sr1, device):
 
 
 def get_spepc(hps, filename, dtype, device, is_v2pro=False):
-    # audio = load_audio(filename, int(hps.data.sampling_rate))
-
-    # audio, sampling_rate = librosa.load(filename, sr=int(hps.data.sampling_rate))
-    # audio = torch.FloatTensor(audio)
-
     sr1 = int(hps.data.sampling_rate)
     audio, sr0 = torchaudio.load(filename)
     if sr0 != sr1:
@@ -792,7 +769,6 @@ def audio_sr(audio, sr):
 
 
 ##ref_wav_path+prompt_text+prompt_language+text(单个)+text_language+top_k+top_p+temperature
-# cache_tokens={}#暂未实现清理机制
 cache = {}
 
 
@@ -844,7 +820,6 @@ def get_tts_wav(
             prompt_text += "。" if prompt_language != "en" else "."
         print(i18n("实际输入的参考文本:"), prompt_text)
     text = text.strip("\n")
-    # if (text[0] not in splits and len(get_first(text)) < 4): text = "。" + text if text_language != "en" else "." + text
 
     print(i18n("实际输入的目标文本:"), text)
     zero_wav = np.zeros(
@@ -923,8 +898,6 @@ def get_tts_wav(
         all_phoneme_len = torch.tensor([all_phoneme_ids.shape[-1]]).to(device)
 
         t2 = ttime()
-        # cache_key="%s-%s-%s-%s-%s-%s-%s-%s"%(ref_wav_path,prompt_text,prompt_language,text,text_language,top_k,top_p,temperature)
-        # print(cache.keys(),if_freeze)
         if i_text in cache and if_freeze:
             pred_semantic = cache[i_text]
         else:
@@ -934,7 +907,6 @@ def get_tts_wav(
                     all_phoneme_len,
                     None if ref_free else prompt,
                     bert,
-                    # prompt_phone_len=ph_offset,
                     top_k=top_k,
                     top_p=top_p,
                     temperature=temperature,
@@ -944,7 +916,6 @@ def get_tts_wav(
                 cache[i_text] = pred_semantic
         t3 = ttime()
         is_v2pro = model_version in {"v2Pro", "v2ProPlus"}
-        # print(23333,is_v2pro,model_version)
         ###v3不存在以下逻辑和inp_refs
         if model_version not in v3v4set:
             refers = []
@@ -997,7 +968,6 @@ def get_tts_wav(
             tgt_sr = 24000 if model_version == "v3" else 32000
             if sr != tgt_sr:
                 ref_audio = resample(ref_audio, sr, tgt_sr, device)
-            # print("ref_audio",ref_audio.abs().mean())
             mel2 = mel_fn(ref_audio) if model_version == "v3" else mel_fn_v4(ref_audio)
             mel2 = norm_spec(mel2)
             T_min = min(mel2.shape[2], fea_ref.shape[2])
@@ -1122,7 +1092,6 @@ def cut2(inp):
             tmp_str = ""
     if tmp_str != "":
         opts.append(tmp_str)
-    # print(opts)
     if len(opts) > 1 and len(opts[-1]) < 50:  ##如果最后一个太短了，和前一个合一起
         opts[-2] = opts[-2] + opts[-1]
         opts = opts[:-1]
@@ -1410,10 +1379,6 @@ with gr.Blocks(
                     interactive=True,
                     scale=1,
                 )
-            # with gr.Column():
-            #     gr.Markdown(value=i18n("手工调整音素。当音素框不为空时使用手工音素输入推理，无视目标文本框。"))
-            #     phoneme=gr.Textbox(label=i18n("音素框"), value="")
-            #     get_phoneme_button = gr.Button(i18n("目标文本转音素"), variant="primary")
         with gr.Row():
             inference_button = gr.Button(
                 value=i18n("合成语音"), variant="primary", size="lg", scale=25
@@ -1461,27 +1426,10 @@ with gr.Blocks(
         )
         GPT_dropdown.change(change_gpt_weights, [GPT_dropdown], [])
 
-        # gr.Markdown(value=i18n("文本切分工具。太长的文本合成出来效果不一定好，所以太长建议先切。合成会根据文本的换行分开合成再拼起来。"))
-        # with gr.Row():
-        #     text_inp = gr.Textbox(label=i18n("需要合成的切分前文本"), value="")
-        #     button1 = gr.Button(i18n("凑四句一切"), variant="primary")
-        #     button2 = gr.Button(i18n("凑50字一切"), variant="primary")
-        #     button3 = gr.Button(i18n("按中文句号。切"), variant="primary")
-        #     button4 = gr.Button(i18n("按英文句号.切"), variant="primary")
-        #     button5 = gr.Button(i18n("按标点符号切"), variant="primary")
-        #     text_opt = gr.Textbox(label=i18n("切分后文本"), value="")
-        #     button1.click(cut1, [text_inp], [text_opt])
-        #     button2.click(cut2, [text_inp], [text_opt])
-        #     button3.click(cut3, [text_inp], [text_opt])
-        #     button4.click(cut4, [text_inp], [text_opt])
-        #     button5.click(cut5, [text_inp], [text_opt])
-        # gr.Markdown(html_center(i18n("后续将支持转音素、手工修改音素、语音合成分步执行。")))
-
 if __name__ == "__main__":
     app.queue().launch(  # concurrency_count=511, max_size=1022
         server_name="0.0.0.0",
         inbrowser=True,
         share=is_share,
         server_port=infer_ttswebui,
-        # quiet=True,
     )

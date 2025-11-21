@@ -46,7 +46,6 @@ torch.backends.cudnn.allow_tf32 = True
 torch.set_float32_matmul_precision(
     "medium"
 )  # 最低精度但最快（也就快一丁点），对于结果造成不了影响
-# from config import pretrained_s2G,pretrained_s2D
 global_step = 0
 
 device = "cpu"  # cuda以外的设备，等mps优化后加入
@@ -75,7 +74,6 @@ def run(rank, n_gpus, hps):
     if rank == 0:
         logger = utils.get_logger(hps.data.exp_dir)
         logger.info(hps)
-        # utils.check_git_hash(hps.s2_ckpt_dir)
         writer = SummaryWriter(log_dir=hps.s2_ckpt_dir)
         writer_eval = SummaryWriter(log_dir=os.path.join(hps.s2_ckpt_dir, "eval"))
 
@@ -113,15 +111,6 @@ def run(rank, n_gpus, hps):
             800,
             900,
             1000,
-            # 1100,
-            # 1200,
-            # 1300,
-            # 1400,
-            # 1500,
-            # 1600,
-            # 1700,
-            # 1800,
-            # 1900,
         ],
         num_replicas=n_gpus,
         rank=rank,
@@ -180,7 +169,6 @@ def run(rank, n_gpus, hps):
         net_g.cfm = get_peft_model(net_g.cfm, lora_config)
         net_g = model2cuda(net_g, rank)
         optim_g = get_optim(net_g)
-        # _, _, _, epoch_str = utils.load_checkpoint(utils.latest_checkpoint_path(hps.model_dir, "G_*.pth"), net_g, optim_g,load_opt=0)
         _, _, _, epoch_str = utils.load_checkpoint(
             utils.latest_checkpoint_path(save_root, "G_*.pth"),
             net_g,
@@ -189,7 +177,6 @@ def run(rank, n_gpus, hps):
         epoch_str += 1
         global_step = (epoch_str - 1) * len(train_loader)
     except:  # 如果首次不能加载，加载pretrain
-        # traceback.print_exc()
         epoch_str = 1
         global_step = 0
         net_g = get_model(hps)
@@ -215,9 +202,6 @@ def run(rank, n_gpus, hps):
     for name, param in net_g.named_parameters():
         if not param.requires_grad:
             no_grad_names.add(name.replace("module.", ""))
-            # print(name, "not requires_grad")
-    # print(no_grad_names)
-    # os._exit(233333)
 
     scheduler_g = torch.optim.lr_scheduler.ExponentialLR(
         optim_g, gamma=hps.train.lr_decay, last_epoch=-1
@@ -239,7 +223,6 @@ def run(rank, n_gpus, hps):
                 [optim_g, optim_d],
                 [scheduler_g, scheduler_d],
                 scaler,
-                # [train_loader, eval_loader], logger, [writer, writer_eval])
                 [train_loader, None],
                 logger,
                 [writer, writer_eval],
@@ -266,7 +249,6 @@ def train_and_evaluate(
 ):
     net_g, _net_d = nets
     optim_g, _optim_d = optims
-    # scheduler_g, scheduler_d = schedulers
     train_loader, _eval_loader = loaders
     if writers is not None:
         writer, _writer_eval = writers
@@ -384,8 +366,6 @@ def train_and_evaluate(
                 ckpt = net_g.state_dict()
             sim_ckpt = od()
             for key in ckpt:
-                # if "cfm"not in key:
-                #     print(key)
                 if key not in no_grad_names:
                     sim_ckpt[key] = ckpt[key].half().cpu()
             logger.info(

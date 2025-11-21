@@ -103,8 +103,6 @@ def _g2p(segments):
             sub_finals = tone_modifier.modified_tone(word, pos, sub_finals)
             initials.append(sub_initials)
             finals.append(sub_finals)
-
-            # assert len(sub_initials) == len(sub_finals) == len(word)
         initials = functools.reduce(operator.iadd, initials, [])
         finals = functools.reduce(operator.iadd, finals, [])
         for c, v in zip(initials, finals):
@@ -180,8 +178,3 @@ if __name__ == "__main__":
     text = "你好"
     text = text_normalize(text)
     print(g2p(text))
-
-
-# # 示例用法
-# text = "这是一个示例文本：,你好！这是一个测试..."
-# print(g2p_paddle(text))  # 输出: 这是一个示例文本你好这是一个测试

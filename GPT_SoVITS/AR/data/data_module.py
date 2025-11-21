@@ -35,12 +35,6 @@ class Text2SemanticDataModule(LightningDataModule):
             pad_val=self.config["data"]["pad_val"],
         )
         self._dev_dataset = self._train_dataset
-        # self._dev_dataset = Text2SemanticDataset(
-        #     phoneme_path=self.dev_phoneme_path,
-        #     semantic_path=self.dev_semantic_path,
-        #     max_sample=self.config['data']['max_eval_sample'],
-        #     max_sec=self.config['data']['max_sec'],
-        #     pad_val=self.config['data']['pad_val'])
 
     def train_dataloader(self):
         batch_size = (

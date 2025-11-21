@@ -4,7 +4,6 @@ from torch import nn
 from torch.nn.utils import spectral_norm, weight_norm
 
 
-# from utils import init_weights, get_padding
 def get_padding(kernel_size, dilation=1):
     return int((kernel_size * dilation - dilation) / 2)
 

@@ -54,7 +54,6 @@ class AudioPre:
             os.makedirs(vocal_root, exist_ok=True)
         X_wave, y_wave, X_spec_s, y_spec_s = {}, {}, {}, {}
         bands_n = len(self.mp.param["band"])
-        # print(bands_n)
         for d in range(bands_n, 0, -1):
             bp = self.mp.param["band"][d]
             if d == bands_n:  # high-end band
@@ -86,7 +85,6 @@ class AudioPre:
                 self.mp.param["mid_side_b2"],
                 self.mp.param["reverse"],
             )
-            # pdb.set_trace()
             if d == bands_n and self.data["high_end_process"] != "none":
                 input_high_end_h = (bp["n_fft"] // 2 - bp["crop_stop"]) + (
                     self.mp.param["pre_filter_stop"] - self.mp.param["pre_filter_start"]
@@ -242,7 +240,6 @@ class AudioPreDeEcho:
             os.makedirs(vocal_root, exist_ok=True)
         X_wave, y_wave, X_spec_s, y_spec_s = {}, {}, {}, {}
         bands_n = len(self.mp.param["band"])
-        # print(bands_n)
         for d in range(bands_n, 0, -1):
             bp = self.mp.param["band"][d]
             if d == bands_n:  # high-end band
@@ -274,7 +271,6 @@ class AudioPreDeEcho:
                 self.mp.param["mid_side_b2"],
                 self.mp.param["reverse"],
             )
-            # pdb.set_trace()
             if d == bands_n and self.data["high_end_process"] != "none":
                 input_high_end_h = (bp["n_fft"] // 2 - bp["crop_stop"]) + (
                     self.mp.param["pre_filter_stop"] - self.mp.param["pre_filter_start"]

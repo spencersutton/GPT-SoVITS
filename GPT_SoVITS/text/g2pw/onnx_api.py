@@ -25,7 +25,6 @@ try:
     onnxruntime.preload_dlls()
 except:
     pass
-    # traceback.print_exc()
 warnings.filterwarnings("ignore")
 
 model_version = "1.1"
@@ -270,7 +269,6 @@ class G2PWOnnxConverter:
                     )
                 elif char in self.char_bopomofo_dict:
                     partial_result[i] = pypinyin_result[i][0]
-                    # partial_result[i] =  self.style_convert_func(self.char_bopomofo_dict[char][0])
                 else:
                     partial_result[i] = pypinyin_result[i][0]
 

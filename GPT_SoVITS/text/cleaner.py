@@ -1,20 +1,10 @@
 import os
-
-
-# if os.environ.get("version","v1")=="v1":
-#     from text import chinese
-#     from text.symbols import symbols
-# else:
-#     from text import chinese2 as chinese
-#     from text.symbols2 import symbols
 from text import symbols as symbols_v1
 from text import symbols2 as symbols_v2
 
 special = [
-    # ("%", "zh", "SP"),
     ("￥", "zh", "SP2"),
     ("^", "zh", "SP3"),
-    # ('@', 'zh', "SP4")#不搞鬼畜了，和第二版保持一致吧
 ]
 
 

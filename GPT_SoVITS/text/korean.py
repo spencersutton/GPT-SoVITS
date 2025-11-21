@@ -81,17 +81,6 @@ _korean_classifiers = "군데 권 개 그루 닢 대 두 마리 모 모금 뭇 �
 _hangul_divided = [
     (re.compile(f"{x[0]}"), x[1])
     for x in [
-        # ('ㄳ', 'ㄱㅅ'),   # g2pk2, A Syllable-ending Rule
-        # ('ㄵ', 'ㄴㅈ'),
-        # ('ㄶ', 'ㄴㅎ'),
-        # ('ㄺ', 'ㄹㄱ'),
-        # ('ㄻ', 'ㄹㅁ'),
-        # ('ㄼ', 'ㄹㅂ'),
-        # ('ㄽ', 'ㄹㅅ'),
-        # ('ㄾ', 'ㄹㅌ'),
-        # ('ㄿ', 'ㄹㅍ'),
-        # ('ㅀ', 'ㄹㅎ'),
-        # ('ㅄ', 'ㅂㅅ'),
         ("ㅘ", "ㅗㅏ"),
         ("ㅙ", "ㅗㅐ"),
         ("ㅚ", "ㅗㅣ"),
@@ -230,7 +219,6 @@ def g2p(text):
     text = divide_hangul(text)
     text = fix_g2pk2_error(text)
     text = re.sub(r"([\u3131-\u3163])$", r"\1.", text)
-    # text = "".join([post_replace_ph(i) for i in text])
     text = [post_replace_ph(i) for i in text]
     return text
 

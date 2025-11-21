@@ -2,8 +2,6 @@ import math
 
 import torch
 from f5_tts.model import DiT
-
-# from text import symbols
 from text import symbols as symbols_v1
 from text import symbols2 as symbols_v2
 from torch import nn
@@ -663,7 +661,6 @@ class ReferenceEncoder(nn.Module):
             for i in range(K)
         ]
         self.convs = nn.ModuleList(convs)
-        # self.wns = nn.ModuleList([weight_norm(num_features=ref_enc_filters[i]) for i in range(K)])
 
         out_channels = self.calculate_channels(spec_channels, 3, 2, 1, K)
         self.gru = nn.GRU(
@@ -678,7 +675,6 @@ class ReferenceEncoder(nn.Module):
         out = inputs.view(N, 1, -1, self.spec_channels)  # [N, 1, Ty, n_freqs]
         for conv in self.convs:
             out = conv(out)
-            # out = wn(out)
             out = F.relu(out)  # [N, 128, Ty//2^K, n_mels//2^K]
 
         out = out.transpose(1, 2)  # [N, Ty//2^K, 128, n_mels//2^K]
@@ -898,20 +894,9 @@ class SynthesizerTrn(nn.Module):
             upsample_kernel_sizes,
             gin_channels=gin_channels,
         )
-        # self.enc_q = PosteriorEncoder(
-        #     spec_channels,
-        #     inter_channels,
-        #     hidden_channels,
-        #     5,
-        #     1,
-        #     16,
-        #     gin_channels=gin_channels,
-        # )
         self.flow = ResidualCouplingBlock(
             inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels
         )
-
-        # self.version=os.environ.get("version","v1")
         if self.version == "v1":
             self.ref_enc = modules.MelStyleEncoder(
                 spec_channels, style_vector_dim=gin_channels
@@ -932,9 +917,6 @@ class SynthesizerTrn(nn.Module):
         if freeze_quantizer:
             self.ssl_proj.requires_grad_(False)
             self.quantizer.requires_grad_(False)
-            # self.enc_p.text_embedding.requires_grad_(False)
-            # self.enc_p.encoder_text.requires_grad_(False)
-            # self.enc_p.mrte.requires_grad_(False)
         self.is_v2pro = self.version in v2pro_set
         if self.is_v2pro:
             self.sv_emb = nn.Linear(20480, gin_channels)
@@ -979,13 +961,10 @@ class SynthesizerTrn(nn.Module):
 class CFM(torch.nn.Module):
     def __init__(self, in_channels, dit):
         super().__init__()
-        # self.sigma_min = 1e-6
 
         self.estimator = dit
 
         self.in_channels = in_channels
-
-        # self.criterion = torch.nn.MSELoss()
 
     def forward(
         self,
@@ -1012,14 +991,9 @@ class CFM(torch.nn.Module):
 
         for j in range(ntimesteps):
             t_tensor = torch.ones(x.shape[0], device=x.device, dtype=mu.dtype) * t
-            # d_tensor = torch.ones(x.shape[0], device=x.device,dtype=mu.dtype) * d
-            # v_pred = model(x, t_tensor, d_tensor, **extra_args)
             v_pred = self.estimator(
                 x, prompt_x, x_lens, t_tensor, d_tensor, mu
             ).transpose(2, 1)
-            # if inference_cfg_rate>1e-5:
-            #     neg = self.estimator(x, prompt_x, x_lens, t_tensor, d_tensor, mu, use_grad_ckpt=False, drop_audio_cond=True, drop_text=True).transpose(2, 1)
-            #     v_pred=v_pred+(v_pred-neg)*inference_cfg_rate
             x = x + d * v_pred
             t = t + d
             x[:, :, :prompt_len] = 0.0
@@ -1104,15 +1078,9 @@ class SynthesizerTrnV3(nn.Module):
             kernel_size,
             p_dropout,
         )
-        # self.ref_enc = modules.MelStyleEncoder(spec_channels, style_vector_dim=gin_channels)###Rollback
         self.ref_enc = modules.MelStyleEncoder(
             704, style_vector_dim=gin_channels
         )  ###Rollback
-        # self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates,
-        #                      upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
-        # self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16,
-        #                               gin_channels=gin_channels)
-        # self.flow = ResidualCouplingBlock(inter_channels, hidden_channels, 5, 1, 4, gin_channels=gin_channels)
 
         ssl_dim = 768
         assert semantic_frame_rate in ["25hz", "50hz"]

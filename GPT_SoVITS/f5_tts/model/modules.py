@@ -466,12 +466,6 @@ class AttnProcessor:
             )
         else:
             attn_mask = None
-        # with torch.nn.attention.sdpa_kernel(backends=[SDPBackend.EFFICIENT_ATTENTION]):
-        # with torch.backends.cuda.sdp_kernel(enable_flash=True, enable_math=False, enable_mem_efficient=True):
-        # with torch.backends.cuda.sdp_kernel(enable_flash=True, enable_math=True, enable_mem_efficient=False):
-        #     print(torch.backends.cuda.flash_sdp_enabled())
-        #     print(torch.backends.cuda.mem_efficient_sdp_enabled())
-        #     print(torch.backends.cuda.math_sdp_enabled())
         x = F.scaled_dot_product_attention(
             query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
         )
@@ -580,7 +574,6 @@ class JointAttnProcessor:
         if mask is not None:
             mask = mask.unsqueeze(-1)
             x = x.masked_fill(~mask, 0.0)
-            # c = c.masked_fill(~mask, 0.)  # no mask for c (text)
 
         return x, c
 

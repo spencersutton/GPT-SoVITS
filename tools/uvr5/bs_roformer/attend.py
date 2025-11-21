@@ -25,14 +25,11 @@ class Attend(nn.Module):
         ), "in order to use flash attention, you must be using pytorch 2.0 or above"
 
     def flash_attn(self, q, k, v):
-        # _, heads, q_len, _, k_len, is_cuda, device = *q.shape, k.shape[-2], q.is_cuda, q.device
-
         if exists(self.scale):
             default_scale = q.shape[-1] ** -0.5
             q = q * (self.scale / default_scale)
 
         # pytorch 2.0 flash attn: q, k, v, mask, dropout, softmax_scale
-        # with torch.backends.cuda.sdp_kernel(enable_flash=True, enable_math=True, enable_mem_efficient=True):
         return F.scaled_dot_product_attention(
             q, k, v, dropout_p=self.dropout if self.training else 0.0
         )

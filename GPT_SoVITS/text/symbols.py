@@ -1,8 +1,6 @@
-# punctuation = ['!', '?', '…', ",", ".","@"]#@是SP停顿
 punctuation = ["!", "?", "…", ",", "."]  # @是SP停顿
 punctuation.append("-")
 pu_symbols = [*punctuation, "SP", "SP2", "SP3", "UNK"]
-# pu_symbols = punctuation + ["SP", 'SP2', 'SP3','SP4', "UNK"]
 pad = "_"
 
 c = [
@@ -313,10 +311,6 @@ ja_symbols = [
     "w",
     "y",
     "z",
-    # "[", #上升调型
-    # "]", #下降调型
-    # "$", #结束符
-    # "^", #开始符
 ]
 
 arpa = {

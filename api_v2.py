@@ -129,8 +129,6 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     import numpy as np
-
-# print(sys.path)
 i18n = I18nAuto()
 cut_method_names = get_cut_method_names()
 
@@ -148,7 +146,6 @@ parser.add_argument(
 parser.add_argument("-p", "--port", type=int, default="9880", help="default: 9880")
 args = parser.parse_args()
 config_path = args.tts_config
-# device = args.device
 port = args.port
 host = args.bind_addr
 argv = sys.argv
@@ -393,7 +390,6 @@ async def tts_handle(req: dict):
                         if_frist_chunk = False
                     yield pack_audio(BytesIO(), chunk, sr, media_type).getvalue()
 
-            # _media_type = f"audio/{media_type}" if not (streaming_mode and media_type in ["wav", "raw"]) else f"audio/x-{media_type}"
             return StreamingResponse(
                 streaming_generator(
                     tts_generator,
@@ -487,25 +483,6 @@ async def set_refer_aduio(refer_audio_path: str | None = None):
             content={"message": "set refer audio failed", "Exception": str(e)},
         )
     return JSONResponse(status_code=200, content={"message": "success"})
-
-
-# @APP.post("/set_refer_audio")
-# async def set_refer_aduio_post(audio_file: UploadFile = File(...)):
-#     try:
-#         # 检查文件类型，确保是音频文件
-#         if not audio_file.content_type.startswith("audio/"):
-#             return JSONResponse(status_code=400, content={"message": "file type is not supported"})
-
-#         os.makedirs("uploaded_audio", exist_ok=True)
-#         save_path = os.path.join("uploaded_audio", audio_file.filename)
-#         # 保存音频文件到服务器上的一个目录
-#         with open(save_path , "wb") as buffer:
-#             buffer.write(await audio_file.read())
-
-#         tts_pipeline.set_ref_audio(save_path)
-#     except Exception as e:
-#         return JSONResponse(status_code=400, content={"message": f"set refer audio failed", "Exception": str(e)})
-#     return JSONResponse(status_code=200, content={"message": "success"})
 
 
 @APP.get("/set_gpt_weights")

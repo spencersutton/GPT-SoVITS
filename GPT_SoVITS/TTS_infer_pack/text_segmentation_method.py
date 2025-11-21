@@ -125,7 +125,6 @@ def cut2(inp):
             tmp_str = ""
     if tmp_str != "":
         opts.append(tmp_str)
-    # print(opts)
     if len(opts) > 1 and len(opts[-1]) < 50:  ##如果最后一个太短了，和前一个合一起
         opts[-2] = opts[-2] + opts[-1]
         opts = opts[:-1]

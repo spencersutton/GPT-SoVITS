@@ -74,7 +74,6 @@ def run(rank, n_gpus, hps):
     if rank == 0:
         logger = utils.get_logger(hps.data.exp_dir)
         logger.info(hps)
-        # utils.check_git_hash(hps.s2_ckpt_dir)
         writer = SummaryWriter(log_dir=hps.s2_ckpt_dir)
         writer_eval = SummaryWriter(log_dir=os.path.join(hps.s2_ckpt_dir, "eval"))
 
@@ -144,10 +143,8 @@ def run(rank, n_gpus, hps):
 
     if torch.cuda.is_available():
         net_g = DDP(net_g, device_ids=[rank], find_unused_parameters=True)
-        # net_d = DDP(net_d, device_ids=[rank], find_unused_parameters=True)
     else:
         net_g = net_g.to(device)
-        # net_d = net_d.to(device)
 
     try:  # 如果能加载自动resume
         _, _, _, epoch_str = utils.load_checkpoint(
@@ -222,7 +219,6 @@ def run(rank, n_gpus, hps):
                 None,
             )
         scheduler_g.step()
-        # scheduler_d.step()
     print("training done")
 
 
@@ -240,7 +236,6 @@ def train_and_evaluate(
 ):
     net_g, _net_d = nets
     optim_g, _optim_d = optims
-    # scheduler_g, scheduler_d = schedulers
     train_loader, _eval_loader = loaders
     if writers is not None:
         writer, _writer_eval = writers
@@ -276,7 +271,6 @@ def train_and_evaluate(
             )
             ssl = ssl.cuda(rank, non_blocking=True)
             ssl.requires_grad = False
-            # ssl_lengths = ssl_lengths.cuda(rank, non_blocking=True)
             text, text_lengths = (
                 text.cuda(
                     rank,
@@ -292,7 +286,6 @@ def train_and_evaluate(
             mel, mel_lengths = mel.to(device), mel_lengths.to(device)
             ssl = ssl.to(device)
             ssl.requires_grad = False
-            # ssl_lengths = ssl_lengths.cuda(rank, non_blocking=True)
             text, text_lengths = text.to(device), text_lengths.to(device)
 
         with autocast(enabled=hps.train.fp16_run):
@@ -318,7 +311,6 @@ def train_and_evaluate(
         if rank == 0:
             if global_step % hps.train.log_interval == 0:
                 lr = optim_g.param_groups[0]["lr"]
-                # losses = [commit_loss,cfm_loss,mel_loss,loss_disc, loss_gen, loss_fm, loss_mel, loss_kl]
                 losses = [cfm_loss]
                 logger.info(
                     f"Train Epoch: {epoch} [{100.0 * batch_idx / len(train_loader):.0f}%]"
@@ -330,16 +322,9 @@ def train_and_evaluate(
                     "learning_rate": lr,
                     "grad_norm_g": grad_norm_g,
                 }
-                # image_dict = {
-                #     "slice/mel_org": utils.plot_spectrogram_to_numpy(y_mel[0].data.cpu().numpy()),
-                #     "slice/mel_gen": utils.plot_spectrogram_to_numpy(y_hat_mel[0].data.cpu().numpy()),
-                #     "all/mel": utils.plot_spectrogram_to_numpy(mel[0].data.cpu().numpy()),
-                #     "all/stats_ssl": utils.plot_spectrogram_to_numpy(stats_ssl[0].data.cpu().numpy()),
-                # }
                 utils.summarize(
                     writer=writer,
                     global_step=global_step,
-                    # images=image_dict,
                     scalars=scalar_dict,
                 )
 

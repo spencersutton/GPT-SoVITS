@@ -179,7 +179,6 @@ class Roformer_Loader:
 
                     if len(batch_data) >= batch_size or (i >= mix.shape[1]):
                         arr = torch.stack(batch_data, dim=0)
-                        # print(23333333,arr.dtype)
                         x = model(arr)
 
                         window = window_middle

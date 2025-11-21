@@ -45,9 +45,7 @@ class Text2SemanticDataset(Dataset):
         max_sample: int | None = None,
         max_sec: int = 100,
         pad_val: int = 1024,
-        # min value of phoneme/sec
         min_ps_ratio: int = 3,
-        # max value of phoneme/sec
         max_ps_ratio: int = 25,
     ) -> None:
         super().__init__()
@@ -88,8 +86,6 @@ class Text2SemanticDataset(Dataset):
 
         if max_sample is not None:
             self.semantic_data = self.semantic_data[:max_sample]
-
-        # {idx: (semantic, phoneme)}
         # semantic list, phoneme list
         self.semantic_phoneme = []
         self.item_names = []
@@ -121,7 +117,6 @@ class Text2SemanticDataset(Dataset):
                 phoneme, _word2ph, _text = self.phoneme_data[item_name]
             except Exception:
                 traceback.print_exc()
-                # print(f"{item_name} not in self.phoneme_data !")
                 num_not_in += 1
                 continue
 
@@ -263,17 +258,11 @@ class Text2SemanticDataset(Dataset):
                 bert_padded[idx, :, : bert.shape[-1]] = bert
 
         return {
-            # List[int]
             "ids": sample_index,
-            # torch.Tensor (B, max_phoneme_length)
             "phoneme_ids": phoneme_ids,
-            # torch.Tensor (B)
             "phoneme_ids_len": phoneme_ids_lens,
-            # torch.Tensor (B, max_semantic_ids_length)
             "semantic_ids": semantic_ids,
-            # torch.Tensor (B)
             "semantic_ids_len": semantic_ids_lens,
-            # torch.Tensor (B, 1024, max_phoneme_length)
             "bert_feature": bert_padded,
         }
 
@@ -295,13 +284,3 @@ if __name__ == "__main__":
     for i, batch in enumerate(dataloader):
         if i % 1000 == 0:
             print(i)
-        # if i == 0:
-        #     print('batch["ids"]:', batch["ids"])
-        # print('batch["phoneme_ids"]:', batch["phoneme_ids"],
-        #       batch["phoneme_ids"].shape)
-        # print('batch["phoneme_ids_len"]:', batch["phoneme_ids_len"],
-        #       batch["phoneme_ids_len"].shape)
-        # print('batch["semantic_ids"]:', batch["semantic_ids"],
-        #       batch["semantic_ids"].shape)
-        # print('batch["semantic_ids_len"]:', batch["semantic_ids_len"],
-        #       batch["semantic_ids_len"].shape)

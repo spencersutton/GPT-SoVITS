@@ -40,7 +40,6 @@ for path in site.getsitepackages():
         site_packages_roots.append(path)
 if site_packages_roots == []:
     site_packages_roots = [f"{now_dir}/runtime/Lib/site-packages"]
-# os.environ["OPENBLAS_NUM_THREADS"] = "4"
 os.environ["no_proxy"] = "localhost, 127.0.0.1, ::1"
 os.environ["all_proxy"] = ""
 for site_packages_root in site_packages_roots:
@@ -48,7 +47,6 @@ for site_packages_root in site_packages_roots:
         try:
             with open(f"{site_packages_root}/users.pth", "w") as f:
                 f.write(
-                    # "%s\n%s/runtime\n%s/tools\n%s/tools/asr\n%s/GPT_SoVITS\n%s/tools/uvr5"
                     f"{now_dir}\n{now_dir}/GPT_SoVITS/BigVGAN\n{now_dir}/tools\n{now_dir}/tools/asr\n{now_dir}/GPT_SoVITS\n{now_dir}/tools/uvr5"
                 )
             break
@@ -86,8 +84,6 @@ from tools.my_utils import check_details, check_for_existance
 
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-
-# os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1' # 当遇到mps不支持的步骤时使用cpu
 import gradio as gr
 
 n_cpu = cpu_count()
@@ -235,7 +231,6 @@ system = platform.system()
 def kill_process(pid, process_name=""):
     if system == "Windows":
         cmd = f"taskkill /t /f /pid {pid}"
-        # os.system(cmd)
         subprocess.run(
             cmd,
             check=False,
@@ -338,8 +333,6 @@ def change_tts_inference(
     else:
         cmd = f'"{python_exec}" -s GPT_SoVITS/inference_webui.py "{language}"'
     # #####v3暂不支持加速推理
-    # if version=="v3":
-    #     cmd = '"%s" GPT_SoVITS/inference_webui.py "%s"'%(python_exec, language)
     if p_tts_inference is None:
         os.environ["gpt_path"] = gpt_path
         os.environ["sovits_path"] = sovits_path
@@ -632,7 +625,6 @@ def open1Bb(
         data["train_semantic_path"] = f"{s1_dir}/6-name2semantic.tsv"
         data["train_phoneme_path"] = f"{s1_dir}/2-name2text.txt"
         data["output_dir"] = f"{s1_dir}/logs_s1_{version}"
-        # data["version"]=version
 
         os.environ["_CUDA_VISIBLE_DEVICES"] = str(
             fix_gpu_numbers(gpu_numbers.replace("-", ","))
@@ -641,7 +633,6 @@ def open1Bb(
         tmp_config_path = f"{tmp}/tmp_s1.yaml"
         with open(tmp_config_path, "w") as f:
             f.write(yaml.dump(data, default_flow_style=False))
-        # cmd = '"%s" GPT_SoVITS/s1_train.py --config_file "%s" --train_semantic_path "%s/6-name2semantic.tsv" --train_phoneme_path "%s/2-name2text.txt" --output_dir "%s/logs_s1"'%(python_exec,tmp_config_path,s1_dir,s1_dir,s1_dir)
         cmd = f'"{python_exec}" -s GPT_SoVITS/s1_train.py --config_file "{tmp_config_path}" '
         yield (
             process_info(process_name_gpt, "opened"),
@@ -1451,8 +1442,6 @@ with gr.Blocks(
                         variant="primary",
                         visible=False,
                     )
-
-            # gr.Markdown(value="0bb-" + i18n("语音降噪工具")+i18n("(不稳定，先别用，可能劣化模型效果！)"))
             with gr.Row(visible=False):
                 with gr.Column(scale=3):
                     with gr.Row():
@@ -1663,7 +1652,6 @@ with gr.Blocks(
                         with gr.Row():
                             inp_wav_dir = gr.Textbox(
                                 label=i18n("*训练集音频文件目录"),
-                                # value=r"D:\RVC1006\GPT-SoVITS\raw\xxx",
                                 interactive=True,
                                 placeholder=i18n(
                                     "填切割后音频所在目录！读取的音频文件完整路径=该目录-拼接-list文件里波形对应的文件名（不是全路径）。如果留空则使用.list文件里的绝对全路径。"
@@ -2233,5 +2221,4 @@ with gr.Blocks(
         inbrowser=True,
         share=is_share,
         server_port=webui_port_main,
-        # quiet=True,
     )

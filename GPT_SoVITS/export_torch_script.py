@@ -68,10 +68,6 @@ def logits_to_probs(
     top_p: int | None = None,
     repetition_penalty: float = 1.0,
 ):
-    # if previous_tokens is not None:
-    #     previous_tokens = previous_tokens.squeeze()
-    # print(logits.shape,previous_tokens.shape)
-    # pdb.set_trace()
     if previous_tokens is not None and repetition_penalty != 1.0:
         previous_tokens = previous_tokens.long()
         score = torch.gather(logits, dim=1, index=previous_tokens)
@@ -280,7 +276,6 @@ class T2SBlock:
 
         if padding_mask is not None:
             for i in range(batch_size):
-                # mask = padding_mask[i,:,0]
                 if self.false.device != padding_mask.device:
                     self.false = self.false.to(padding_mask.device)
                 idx = torch.where(padding_mask[i, :, 0] == self.false)[0]
@@ -336,9 +331,6 @@ class T2SBlock:
         v = v_cache.view(batch_size, kv_len, self.num_heads, -1).transpose(1, 2)
 
         attn = F.scaled_dot_product_attention(q, k, v)
-
-        # attn = attn.permute(2, 0, 1, 3).reshape(batch_size * q_len, self.hidden_dim)
-        # attn = attn.view(q_len, batch_size, self.hidden_dim).transpose(1, 0)
         attn = attn.transpose(1, 2).reshape(batch_size, q_len, -1)
         attn = F.linear(attn, self.out_w, self.out_b)
 
@@ -392,7 +384,6 @@ class T2STransformer:
 class VitsModel(nn.Module):
     def __init__(self, vits_path, version=None, is_half=True, device="cpu"):
         super().__init__()
-        # dict_s2 = torch.load(vits_path,map_location="cpu")
         dict_s2 = load_sovits_new(vits_path)
         self.hps = dict_s2["config"]
 
@@ -450,7 +441,6 @@ class T2SModel(nn.Module):
         self.num_layers = raw_t2s.model.num_layers
         self.vocab_size = raw_t2s.model.vocab_size
         self.phoneme_vocab_size = raw_t2s.model.phoneme_vocab_size
-        # self.p_dropout = float(raw_t2s.model.p_dropout)
         self.EOS: int = int(raw_t2s.model.EOS)
         self.norm_first = raw_t2s.model.norm_first
         assert self.EOS == self.vocab_size - 1
@@ -461,9 +451,6 @@ class T2SModel(nn.Module):
         self.ar_text_position = raw_t2s.model.ar_text_position
         self.ar_audio_embedding = raw_t2s.model.ar_audio_embedding
         self.ar_audio_position = raw_t2s.model.ar_audio_position
-
-        # self.t2s_transformer = T2STransformer(self.num_layers, blocks)
-        # self.t2s_transformer = raw_t2s.model.t2s_transformer
 
         blocks = []
         h = raw_t2s.model.h
@@ -496,10 +483,7 @@ class T2SModel(nn.Module):
             blocks.append(block)
 
         self.t2s_transformer = T2STransformer(self.num_layers, blocks)
-
-        # self.ar_predict_layer = nn.Linear(self.model_dim, self.vocab_size, bias=False)
         self.ar_predict_layer = raw_t2s.model.ar_predict_layer
-        # self.loss_fct = nn.CrossEntropyLoss(reduction="sum")
         self.max_sec = raw_t2s.config["data"]["max_sec"]
         self.top_k = int(raw_t2s.config["inference"]["top_k"])
         self.early_stop_num = torch.LongTensor([self.hz * self.max_sec])
@@ -528,9 +512,7 @@ class T2SModel(nn.Module):
         early_stop_num = self.early_stop_num
 
         # [1,N,512] [1,N]
-        # y, k, v, y_emb, x_example = self.first_stage_decoder(x, prompts)
         y = prompts
-        # x_example = x[:,:,0] * 0.0
 
         x_len = x.shape[1]
         x_attn_mask = torch.zeros((x_len, x_len), dtype=torch.bool)
@@ -587,7 +569,6 @@ class T2SModel(nn.Module):
         # for idx in range(1, 50):
         for idx in range(1, 1500):
             # [1, N] [N_layer, N, 1, 512] [N_layer, N, 1, 512] [1, N, 512] [1] [1, N, 512] [1, N]
-            # y, k, v, y_emb, logits, samples = self.stage_decoder(y, k, v, y_emb, x_example)
             xy_dec, k_cache, v_cache = self.t2s_transformer.decode_next_token(
                 xy_pos, k_cache, v_cache
             )
@@ -644,7 +625,6 @@ def build_phone_level_feature(res: Tensor, word2ph: IntTensor):
         repeat_feature = res[i].repeat(word2ph[i].item(), 1)
         phone_level_feature.append(repeat_feature)
     phone_level_feature = torch.cat(phone_level_feature, dim=0)
-    # [sum(word2ph), 1024]
     return phone_level_feature
 
 
@@ -774,13 +754,8 @@ def export(
     text_bert = text_bert_T.T.to(text_seq.device)
 
     ssl_content = ssl(ref_audio).to(device)
-
-    # vits_path = "SoVITS_weights_v2/xw_e8_s216.pth"
     vits = VitsModel(vits_path, device=device, is_half=False)
     vits.eval()
-
-    # gpt_path = "GPT_weights_v2/xw-e15.ckpt"
-    # dict_s1 = torch.load(gpt_path, map_location=device)
     dict_s1 = torch.load(gpt_path, weights_only=False)
     raw_t2s = get_raw_t2s_model(dict_s1).to(device)
     print("#### get_raw_t2s_model ####")
@@ -883,13 +858,8 @@ def export_prov2(
     ssl_content = ssl_content.to(device)
 
     sv_model = ExportERes2NetV2(sv_cn_model)
-
-    # vits_path = "SoVITS_weights_v2/xw_e8_s216.pth"
     vits = VitsModel(vits_path, version, is_half=is_half, device=device)
     vits.eval()
-
-    # gpt_path = "GPT_weights_v2/xw-e15.ckpt"
-    # dict_s1 = torch.load(gpt_path, map_location=device)
     dict_s1 = torch.load(gpt_path, weights_only=False)
     raw_t2s = get_raw_t2s_model(dict_s1).to(device)
     print("#### get_raw_t2s_model ####")
@@ -916,7 +886,6 @@ def export_prov2(
     torch._dynamo.mark_dynamic(text_seq, 1)
     torch._dynamo.mark_dynamic(ref_bert, 0)
     torch._dynamo.mark_dynamic(text_bert, 0)
-    # torch._dynamo.mark_dynamic(sv_emb, 0)
 
     top_k = torch.LongTensor([5]).to(device)
     # 先跑一遍 sv_model 让它加载 cache，详情见 L880
@@ -1061,25 +1030,8 @@ def test():
     ref_text = args.ref_text
 
     tokenizer = AutoTokenizer.from_pretrained(bert_path)
-    # bert_model = AutoModelForMaskedLM.from_pretrained(bert_path,output_hidden_states=True,torchscript=True)
-    # bert = MyBertModel(bert_model)
     my_bert = torch.jit.load("onnx/bert_model.pt", map_location="cuda")
-
-    # dict_s1 = torch.load(gpt_path, map_location="cuda")
-    # raw_t2s = get_raw_t2s_model(dict_s1)
-    # t2s = T2SModel(raw_t2s)
-    # t2s.eval()
-    # t2s = torch.jit.load("onnx/xw/t2s_model.pt",map_location='cuda')
-
-    # vits_path = "SoVITS_weights_v2/xw_e8_s216.pth"
-    # vits = VitsModel(vits_path)
-    # vits.eval()
-
-    # ssl = ExportSSLModel(SSLModel()).to('cuda')
-    # ssl.eval()
     ssl = torch.jit.load("onnx/by/ssl_model.pt", map_location="cuda")
-
-    # gpt_sovits = GPT_SoVITS(t2s,vits)
     gpt_sovits = torch.jit.load("onnx/by/gpt_sovits_model.pt", map_location="cuda")
 
     ref_seq_id, ref_bert_T, _ref_norm_text = get_phones_and_bert(
@@ -1087,7 +1039,6 @@ def test():
     )
     ref_seq = torch.LongTensor([ref_seq_id])
     ref_bert = ref_bert_T.T.to(ref_seq.device)
-    # text_seq_id,text_bert_T,norm_text = get_phones_and_bert("昨天晚上看见征兵文书,知道君主在大规模征兵,那么多卷征兵文册,每一卷上都有父亲的名字.","all_zh",'v2')
     text = "昨天晚上看见征兵文书,知道君主在大规模征兵,那么多卷征兵文册,每一卷上都有父亲的名字."
 
     text_seq_id, text_bert_T, _norm_text = get_phones_and_bert(text, "all_zh", "v2")
@@ -1204,4 +1155,3 @@ def main():
 if __name__ == "__main__":
     with torch.no_grad():
         main()
-    # test()

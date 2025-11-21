@@ -577,7 +577,6 @@ class Text2SemanticDecoder(nn.Module):
                 stop = True
 
             if torch.argmax(logits, dim=-1)[0] == self.EOS or samples[0, 0] == self.EOS:
-                # print(torch.argmax(logits, dim=-1)[0] == self.EOS, samples[0, 0] == self.EOS)
                 stop = True
             if stop:
                 if prompts.shape[1] == y.shape[1]:
@@ -586,9 +585,6 @@ class Text2SemanticDecoder(nn.Module):
                 print(f"T2S Decoding EOS [{prefix_len} -> {y.shape[1]}]")
                 break
             # 本次生成的 semantic_ids 和之前的 y 构成新的 y
-            # print(samples.shape)#[1,1]#第一个1是bs
-            # import os
-            # os._exit(2333)
             y = torch.concat([y, samples], dim=1)
         return y
 
@@ -631,11 +627,9 @@ class Text2SemanticDecoder(nn.Module):
         max_len = kwargs.get("max_len", x_lens.max())
         x_list = []
         for x_item, bert_item in zip(x, bert_feature):
-            # max_len = max(max_len, x_item.shape[0], bert_item.shape[1])
             x_item = self.ar_text_embedding(x_item.unsqueeze(0))
             x_item = x_item + self.bert_proj(bert_item.transpose(0, 1).unsqueeze(0))
             x_item = self.ar_text_position(x_item).squeeze(0)
-            # x_item = F.pad(x_item,(0,0,0,max_len-x_item.shape[0]),value=0) if x_item.shape[0]<max_len else x_item  ### padding right
             x_item = (
                 F.pad(x_item, (0, 0, max_len - x_item.shape[0], 0), value=0)
                 if x_item.shape[0] < max_len
@@ -692,37 +686,12 @@ class Text2SemanticDecoder(nn.Module):
             .repeat(bsz, 1, 1)
             .to(x.device)
         )
-        # padding_mask = padding_mask.unsqueeze(1) * padding_mask.unsqueeze(2) ### [b, x+y, x+y]
         ### 上面是错误的，会导致padding的token被"看见"
-
-        # 正确的padding_mask应该是：
-        # |   pad_len   |  x_len  |  y_len  |
-        # [[PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],  前3行按理说也应该被mask掉，但是为了防止计算attention时不出现nan，还是保留了，不影响结果
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6],
-        # [PAD, PAD, PAD, 1, 2, 3, 4, 5, 6]]
 
         padding_mask = padding_mask.view(bsz, 1, src_len).repeat(1, src_len, 1)
 
         attn_mask: torch.Tensor = causal_mask.logical_or(padding_mask)
         attn_mask = attn_mask.unsqueeze(1).expand(-1, self.num_head, -1, -1).bool()
-
-        # 正确的attn_mask应该是这样的：
-        # |   pad_len   |  x_len  |  y_len  |
-        # [[PAD, PAD, PAD, 1, 2, 3, EOS, EOS, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3, EOS, EOS, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3, EOS, EOS, EOS],  前3行按理说也应该被mask掉，但是为了防止计算attention时不出现nan，还是保留了，不影响结果
-        # [PAD, PAD, PAD, 1, 2, 3, EOS, EOS, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3, EOS, EOS, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3, EOS, EOS, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3,   4, EOS, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3,   4,   5, EOS],
-        # [PAD, PAD, PAD, 1, 2, 3,   4,   5,   6]]
 
         ###### decode #####
         y_list = [None] * y.shape[0]
@@ -769,7 +738,6 @@ class Text2SemanticDecoder(nn.Module):
                 l = l1.logical_or(l2)
                 removed_idx_of_batch_for_y = torch.where(l)[0].tolist()
                 reserved_idx_of_batch_for_y = torch.where(not l)[0]
-                # batch_indexs = torch.tensor(batch_idx_map, device=y.device)[removed_idx_of_batch_for_y]
                 for i in removed_idx_of_batch_for_y:
                     batch_index = batch_idx_map[i]
                     idx_list[batch_index] = idx
@@ -781,7 +749,6 @@ class Text2SemanticDecoder(nn.Module):
 
             # 只保留batch中未生成完毕的序列
             if reserved_idx_of_batch_for_y is not None:
-                # index = torch.LongTensor(batch_idx_map).to(y.device)
                 y = torch.index_select(y, dim=0, index=reserved_idx_of_batch_for_y)
                 attn_mask = torch.index_select(
                     attn_mask, dim=0, index=reserved_idx_of_batch_for_y
@@ -832,7 +799,6 @@ class Text2SemanticDecoder(nn.Module):
 
         if ref_free:
             return y_list, [0] * x.shape[0]
-        # print(idx_list)
         return y_list, idx_list
 
     def infer_panel_naive_batched(
@@ -891,7 +857,6 @@ class Text2SemanticDecoder(nn.Module):
         x_len = x.shape[1]
         x_attn_mask = torch.zeros((x_len, x_len), dtype=torch.bool)
         stop = False
-        # print(1111111,self.num_layers)
 
         k_cache = None
         v_cache = None

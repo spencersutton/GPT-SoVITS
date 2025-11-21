@@ -15,8 +15,6 @@ ans = pipeline(Tasks.acoustic_noise_suppression, model=path_denoise)
 
 def execute_denoise(input_folder, output_folder):
     os.makedirs(output_folder, exist_ok=True)
-    # print(input_folder)
-    # print(list(os.listdir(input_folder).sort()))
     for name in tqdm(os.listdir(input_folder)):
         try:
             ans(

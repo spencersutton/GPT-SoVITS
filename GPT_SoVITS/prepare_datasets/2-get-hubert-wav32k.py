@@ -25,17 +25,6 @@ from scipy.io import wavfile
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 import shutil
-
-# from config import cnhubert_base_path
-# cnhubert.cnhubert_base_path=cnhubert_base_path
-# inp_text=sys.argv[1]
-# inp_wav_dir=sys.argv[2]
-# exp_name=sys.argv[3]
-# i_part=sys.argv[4]
-# all_parts=sys.argv[5]
-# os.environ["CUDA_VISIBLE_DEVICES"]=sys.argv[6]
-# cnhubert.cnhubert_base_path=sys.argv[7]
-# opt_dir="/data/docker/liujing04/gpt-vits/fine_tune_dataset/%s"%exp_name
 from time import time as ttime
 
 from tools.my_utils import clean_path, load_audio
@@ -44,7 +33,6 @@ from tools.my_utils import clean_path, load_audio
 def my_save(fea, path):  #####fix issue: torch.save doesn't support chinese path
     dir = os.path.dirname(path)
     name = os.path.basename(path)
-    # tmp_path="%s/%s%s.pth"%(dir,ttime(),i_part)
     tmp_path = f"{ttime()}{i_part}.pth"
     torch.save(fea, tmp_path)
     shutil.move(tmp_path, f"{dir}/{name}")
@@ -60,12 +48,9 @@ maxx = 0.95
 alpha = 0.5
 if torch.cuda.is_available():
     device = "cuda:0"
-# elif torch.backends.mps.is_available():
-#     device = "mps"
 else:
     device = "cpu"
 model = cnhubert.get_model()
-# is_half=False
 if is_half:
     model = model.half().to(device)
 else:
@@ -119,7 +104,6 @@ with open(inp_text, encoding="utf8") as f:
 
 for line in lines[int(i_part) :: int(all_parts)]:
     try:
-        # wav_name,text=line.split("\t")
         wav_name, spk_name, language, text = line.split("|")
         wav_name = clean_path(wav_name)
         if inp_wav_dir not in {"", None}:

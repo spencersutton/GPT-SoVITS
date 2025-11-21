@@ -466,7 +466,6 @@ def get_sovits_weights(sovits_path):
         vq_model.cfm = get_peft_model(vq_model.cfm, lora_config)
         vq_model.load_state_dict(dict_s2["weight"], strict=False)
         vq_model.cfm = vq_model.cfm.merge_and_unload()
-        # torch.save(vq_model.state_dict(),"merge_win.pth")
         vq_model.eval()
 
     sovits = Sovits(vq_model, hps)
@@ -493,8 +492,6 @@ def get_gpt_weights(gpt_path):
         t2s_model = t2s_model.half()
     t2s_model = t2s_model.to(device)
     t2s_model.eval()
-    # total = sum([param.nelement() for param in t2s_model.parameters()])
-    # logger.info("Number of parameter: %.2fM" % (total / 1e6))
 
     gpt = Gpt(max_sec, t2s_model)
     return gpt
@@ -526,7 +523,6 @@ def get_bert_feature(text, word2ph):
         repeat_feature = res[i].repeat(word2ph[i], 1)
         phone_level_feature.append(repeat_feature)
     phone_level_feature = torch.cat(phone_level_feature, dim=0)
-    # if(is_half==True):phone_level_feature=phone_level_feature.half()
     return phone_level_feature.T
 
 
@@ -938,7 +934,6 @@ def get_tts_wav(
             refer, audio_tensor = get_spepc(hps, ref_wav_path, dtype, device)
 
     t1 = ttime()
-    # os.environ['version'] = version
     prompt_language = dict_language[prompt_language.lower()]
     text_language = dict_language[text_language.lower()]
     phones1, bert1, _norm_text1 = get_phones_and_bert(
@@ -968,7 +963,6 @@ def get_tts_wav(
                 all_phoneme_len,
                 prompt,
                 bert,
-                # prompt_phone_len=ph_offset,
                 top_k=top_k,
                 top_p=top_p,
                 temperature=temperature,
@@ -1094,7 +1088,6 @@ def get_tts_wav(
             audio_bytes = pack_audio(
                 audio_bytes, (audio_opt * 32768).astype(np.int16), sr
             )
-        # logger.info("%.3f\t%.3f\t%.3f\t%.3f" % (t1 - t0, t2 - t1, t3 - t2, t4 - t3))
         if stream_mode == "normal":
             audio_bytes, audio_chunk = read_clean_buffer(audio_bytes)
             yield audio_chunk

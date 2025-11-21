@@ -105,7 +105,6 @@ class T2SModel(nn.Module):
         self.onnx_encoder = T2SEncoder(self.t2s_model, self.vits_model)
         self.first_stage_decoder = self.t2s_model.first_stage_decoder
         self.stage_decoder = self.t2s_model.stage_decoder
-        # self.t2s_model = torch.jit.script(self.t2s_model)
 
     def forward(self, ref_seq, text_seq, ref_bert, text_bert, ssl_content):
         early_stop_num = self.t2s_model.early_stop_num
@@ -148,7 +147,6 @@ class T2SModel(nn.Module):
         project_name,
         dynamo=False,
     ):
-        # self.onnx_encoder = torch.jit.script(self.onnx_encoder)
         if dynamo:
             export_options = torch.onnx.ExportOptions(dynamic_shapes=True)
             onnx_encoder_export_output = torch.onnx.dynamo_export(
@@ -383,7 +381,6 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
     ref_bert = torch.randn((ref_seq.shape[1], 1024)).float()
     text_bert = torch.randn((text_seq.shape[1], 1024)).float()
     ref_audio = torch.randn((1, 48000 * 5)).float()
-    # ref_audio = torch.tensor([load_audio("rec.wav", 48000)]).float()
     ref_audio_16k = torchaudio.functional.resample(ref_audio, 48000, 16000).float()
     ref_audio_sr = torchaudio.functional.resample(
         ref_audio, 48000, vits.hps.data.sampling_rate
@@ -395,11 +392,7 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
         pass
 
     ssl_content = ssl(ref_audio_16k).float()
-
-    # debug = False
     debug = True
-
-    # gpt_sovits.export(ref_seq, text_seq, ref_bert, text_bert, ref_audio_sr, ssl_content, project_name)
 
     if debug:
         a, b = gpt_sovits(
@@ -440,7 +433,6 @@ def export(vits_path, gpt_path, project_name, vits_model="v2"):
         "EmbeddingDim": gpt.t2s_model.embedding_dim,
         "Dict": "BasicDict",
         "BertPath": "chinese-roberta-wwm-ext-large",
-        # "Symbol": symbols,
         "AddBlank": False,
     }
 
@@ -459,5 +451,3 @@ if __name__ == "__main__":
     vits_path = "SoVITS_weights/nahida_e30_s3930.pth"
     exp_path = "nahida"
     export(vits_path, gpt_path, exp_path)
-
-    # soundfile.write("out.wav", a, vits.hps.data.sampling_rate)

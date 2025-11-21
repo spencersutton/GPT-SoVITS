@@ -109,8 +109,6 @@ def replace_default_num(match):
 
 
 # 加减乘除
-# RE_ASMD = re.compile(
-#     r'((-?)((\d+)(\.\d+)?)|(\.(\d+)))([\+\-\×÷=])((-?)((\d+)(\.\d+)?)|(\.(\d+)))')
 RE_ASMD = re.compile(
     r"((-?)((\d+)(\.\d+)?[⁰¹²³⁴⁵⁶⁷⁸⁹ˣʸⁿ]*)|(\.\d+[⁰¹²³⁴⁵⁶⁷⁸⁹ˣʸⁿ]*)|([A-Za-z][⁰¹²³⁴⁵⁶⁷⁸⁹ˣʸⁿ]*))([\+\-\×÷=])((-?)((\d+)(\.\d+)?[⁰¹²³⁴⁵⁶⁷⁸⁹ˣʸⁿ]*)|(\.\d+[⁰¹²³⁴⁵⁶⁷⁸⁹ˣʸⁿ]*)|([A-Za-z][⁰¹²³⁴⁵⁶⁷⁸⁹ˣʸⁿ]*))"
 )
@@ -210,7 +208,6 @@ def replace_number(match) -> str:
 
 
 # 范围表达式
-# match.group(1) and match.group(8) are copy from RE_NUMBER
 
 RE_RANGE = re.compile(
     r"""
